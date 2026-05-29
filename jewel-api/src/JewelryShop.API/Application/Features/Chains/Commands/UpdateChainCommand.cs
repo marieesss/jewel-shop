@@ -10,7 +10,6 @@ public record UpdateChainCommand(
     string Name,
     string Description,
     ProductColor Color,
-    string? Url,
     decimal Cost,
     decimal Price,
     decimal Length) : IRequest<ChainDto>;
@@ -23,7 +22,6 @@ public class UpdateChainCommandValidator : AbstractValidator<UpdateChainCommand>
         RuleFor(x => x.Name).NotEmpty().MaximumLength(255);
         RuleFor(x => x.Description).MaximumLength(10000);
         RuleFor(x => x.Color).IsInEnum();
-        RuleFor(x => x.Url).MaximumLength(500);
         RuleFor(x => x.Cost).GreaterThanOrEqualTo(0);
         RuleFor(x => x.Price).GreaterThanOrEqualTo(0);
         RuleFor(x => x.Length).GreaterThan(0);
@@ -41,13 +39,12 @@ public class UpdateChainCommandHandler : IRequestHandler<UpdateChainCommand, Cha
         var chain = await _chains.GetByIdAsync(request.Id, cancellationToken)
             ?? throw new NotFoundException("Chaîne", request.Id);
 
-        chain.Name = request.Name.Trim();
+        chain.Name        = request.Name.Trim();
         chain.Description = request.Description?.Trim() ?? string.Empty;
-        chain.Color = request.Color;
-        chain.Url = request.Url?.Trim();
-        chain.Cost = request.Cost;
-        chain.Price = request.Price;
-        chain.Length = request.Length;
+        chain.Color       = request.Color;
+        chain.Cost        = request.Cost;
+        chain.Price       = request.Price;
+        chain.Length      = request.Length;
 
         _chains.Update(chain);
         await _chains.SaveChangesAsync(cancellationToken);

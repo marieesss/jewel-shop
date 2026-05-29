@@ -14,7 +14,6 @@ CREATE TABLE chains (
     name        VARCHAR(255) NOT NULL,
     description TEXT NOT NULL DEFAULT '',
     color       VARCHAR(20) NOT NULL,
-    url         VARCHAR(500),
     image_url   VARCHAR(500),
     cost        NUMERIC(10, 2) NOT NULL,
     price       NUMERIC(10, 2) NOT NULL,
@@ -26,7 +25,6 @@ CREATE TABLE charms (
     name        VARCHAR(255) NOT NULL,
     description TEXT NOT NULL DEFAULT '',
     color       VARCHAR(20) NOT NULL,
-    url         VARCHAR(500),
     image_url   VARCHAR(500),
     cost        NUMERIC(10, 2) NOT NULL,
     price       NUMERIC(10, 2) NOT NULL,
@@ -63,17 +61,6 @@ CREATE TABLE creation_items (
     charm_id    BIGINT NOT NULL REFERENCES charms(id),
     position    INT NOT NULL
 );
-
--- Table de suivi des migrations EF Core
--- Permet à 'dotnet ef database update' de reconnaître que le schéma est déjà en place.
-CREATE TABLE "__EFMigrationsHistory" (
-    "MigrationId"   VARCHAR(150) NOT NULL,
-    "ProductVersion" VARCHAR(32)  NOT NULL,
-    CONSTRAINT "PK___EFMigrationsHistory" PRIMARY KEY ("MigrationId")
-);
-
-INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-VALUES ('20260529093953_InitialCreate', '8.0.10');
 
 -- Seed admin
 INSERT INTO users (name, surname, email, password_hash, role)

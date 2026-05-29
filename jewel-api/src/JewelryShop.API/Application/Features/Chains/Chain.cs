@@ -5,7 +5,6 @@ public class Chain : BaseEntity
     public string Name { get; set; } = null!;
     public string Description { get; set; } = string.Empty;
     public ProductColor Color { get; set; }
-    public string? Url { get; set; }
     public string? ImageUrl { get; set; }
     public decimal Cost { get; set; }
     public decimal Price { get; set; }

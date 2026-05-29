@@ -67,11 +67,6 @@ namespace JewelryShop.Infrastructure.Persistence.Migrations
                         .HasColumnType("numeric(10,2)")
                         .HasColumnName("price");
 
-                    b.Property<string>("Url")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("url");
-
                     b.HasKey("Id");
 
                     b.ToTable("chains", (string)null);
@@ -123,11 +118,6 @@ namespace JewelryShop.Infrastructure.Persistence.Migrations
                         .HasColumnType("integer")
                         .HasDefaultValue(0)
                         .HasColumnName("stock");
-
-                    b.Property<string>("Url")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("url");
 
                     b.HasKey("Id");
 

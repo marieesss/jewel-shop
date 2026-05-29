@@ -1,4 +1,3 @@
-
 namespace JewelryShop.Application.Features.Chains.DTOs;
 
 public record ChainDto(
@@ -6,7 +5,6 @@ public record ChainDto(
     string Name,
     string Description,
     string Color,
-    string? Url,
     string? ImageUrl,
     decimal Cost,
     decimal Price,
@@ -19,7 +17,6 @@ public static class ChainMappingExtensions
         c.Name,
         c.Description,
         c.Color.ToString(),
-        c.Url,
         c.ImageUrl,
         c.Cost,
         c.Price,

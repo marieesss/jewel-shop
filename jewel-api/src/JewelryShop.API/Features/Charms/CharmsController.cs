@@ -45,7 +45,7 @@ public class CharmsController : ApiControllerBase
     {
         var command = new CreateCharmCommand(
             request.Name, request.Description, request.Color,
-            request.Url,  request.Cost, request.Price, request.Stock);
+            request.Cost, request.Price, request.Stock);
         var result = await Sender.Send(command, ct);
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
@@ -59,7 +59,7 @@ public class CharmsController : ApiControllerBase
     {
         var command = new UpdateCharmCommand(
             id, request.Name, request.Description, request.Color,
-            request.Url, request.Cost, request.Price, request.Stock);
+            request.Cost, request.Price, request.Stock);
         var result = await Sender.Send(command, ct);
         return Ok(result);
     }
@@ -97,7 +97,6 @@ public record CreateCharmRequest(
     string Name,
     string Description,
     ProductColor Color,
-    string? Url,
     decimal Cost,
     decimal Price,
     int Stock);
@@ -106,7 +105,6 @@ public record UpdateCharmRequest(
     string Name,
     string Description,
     ProductColor Color,
-    string? Url,
     decimal Cost,
     decimal Price,
     int Stock);

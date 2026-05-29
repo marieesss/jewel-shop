@@ -29,10 +29,6 @@ public class ChainConfiguration : IEntityTypeConfiguration<Chain>
             .HasConversion<string>()
             .IsRequired();
 
-        builder.Property(c => c.Url)
-            .HasColumnName("url")
-            .HasMaxLength(500);
-
         builder.Property(c => c.ImageUrl)
             .HasColumnName("image_url")
             .HasMaxLength(500);

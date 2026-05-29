@@ -43,7 +43,7 @@ public class ChainsController : ApiControllerBase
     {
         var command = new CreateChainCommand(
             request.Name, request.Description, request.Color,
-            request.Url,  request.Cost, request.Price, request.Length);
+            request.Cost, request.Price, request.Length);
         var result = await Sender.Send(command, ct);
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
@@ -57,7 +57,7 @@ public class ChainsController : ApiControllerBase
     {
         var command = new UpdateChainCommand(
             id, request.Name, request.Description, request.Color,
-            request.Url, request.Cost, request.Price, request.Length);
+            request.Cost, request.Price, request.Length);
         var result = await Sender.Send(command, ct);
         return Ok(result);
     }
@@ -96,7 +96,6 @@ public record CreateChainRequest(
     string Name,
     string Description,
     ProductColor Color,
-    string? Url,
     decimal Cost,
     decimal Price,
     decimal Length);
@@ -105,7 +104,6 @@ public record UpdateChainRequest(
     string Name,
     string Description,
     ProductColor Color,
-    string? Url,
     decimal Cost,
     decimal Price,
     decimal Length);

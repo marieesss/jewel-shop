@@ -10,7 +10,6 @@ public record UpdateCharmCommand(
     string Name,
     string Description,
     ProductColor Color,
-    string? Url,
     decimal Cost,
     decimal Price,
     int Stock) : IRequest<CharmDto>;
@@ -23,7 +22,6 @@ public class UpdateCharmCommandValidator : AbstractValidator<UpdateCharmCommand>
         RuleFor(x => x.Name).NotEmpty().MaximumLength(255);
         RuleFor(x => x.Description).MaximumLength(10000);
         RuleFor(x => x.Color).IsInEnum();
-        RuleFor(x => x.Url).MaximumLength(500);
         RuleFor(x => x.Cost).GreaterThanOrEqualTo(0);
         RuleFor(x => x.Price).GreaterThanOrEqualTo(0);
         RuleFor(x => x.Stock).GreaterThanOrEqualTo(0);
@@ -41,13 +39,12 @@ public class UpdateCharmCommandHandler : IRequestHandler<UpdateCharmCommand, Cha
         var charm = await _charms.GetByIdAsync(request.Id, cancellationToken)
             ?? throw new NotFoundException("Breloque", request.Id);
 
-        charm.Name = request.Name.Trim();
+        charm.Name        = request.Name.Trim();
         charm.Description = request.Description?.Trim() ?? string.Empty;
-        charm.Color = request.Color;
-        charm.Url = request.Url?.Trim();
-        charm.Cost = request.Cost;
-        charm.Price = request.Price;
-        charm.Stock = request.Stock;
+        charm.Color       = request.Color;
+        charm.Cost        = request.Cost;
+        charm.Price       = request.Price;
+        charm.Stock       = request.Stock;
 
         _charms.Update(charm);
         await _charms.SaveChangesAsync(cancellationToken);

@@ -153,6 +153,6 @@ public static class Startup
     {
         services.AddScoped<IJwtService,         JwtService>();
         services.AddScoped<IPasswordHasher,     BcryptPasswordHasher>();
-        services.AddScoped<IFileStorageService, LocalFileStorageService>();
+        services.AddScoped<IFileStorageService, CloudinaryFileStorageService>();
     }
 }

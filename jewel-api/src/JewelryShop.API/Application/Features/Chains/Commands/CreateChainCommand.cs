@@ -8,7 +8,6 @@ public record CreateChainCommand(
     string Name,
     string Description,
     ProductColor Color,
-    string? Url,
     decimal Cost,
     decimal Price,
     decimal Length) : IRequest<ChainDto>;
@@ -20,7 +19,6 @@ public class CreateChainCommandValidator : AbstractValidator<CreateChainCommand>
         RuleFor(x => x.Name).NotEmpty().MaximumLength(255);
         RuleFor(x => x.Description).MaximumLength(10000);
         RuleFor(x => x.Color).IsInEnum();
-        RuleFor(x => x.Url).MaximumLength(500);
         RuleFor(x => x.Cost).GreaterThanOrEqualTo(0);
         RuleFor(x => x.Price).GreaterThanOrEqualTo(0);
         RuleFor(x => x.Length).GreaterThan(0);
@@ -37,13 +35,12 @@ public class CreateChainCommandHandler : IRequestHandler<CreateChainCommand, Cha
     {
         var chain = new Chain
         {
-            Name = request.Name.Trim(),
+            Name        = request.Name.Trim(),
             Description = request.Description?.Trim() ?? string.Empty,
-            Color = request.Color,
-            Url = request.Url?.Trim(),
-            Cost = request.Cost,
-            Price = request.Price,
-            Length = request.Length
+            Color       = request.Color,
+            Cost        = request.Cost,
+            Price       = request.Price,
+            Length      = request.Length
         };
 
         await _chains.AddAsync(chain, cancellationToken);

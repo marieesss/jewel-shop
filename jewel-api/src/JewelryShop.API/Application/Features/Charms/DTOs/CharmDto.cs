@@ -1,4 +1,3 @@
-
 namespace JewelryShop.Application.Features.Charms.DTOs;
 
 public record CharmDto(
@@ -6,7 +5,6 @@ public record CharmDto(
     string Name,
     string Description,
     string Color,
-    string? Url,
     string? ImageUrl,
     decimal Cost,
     decimal Price,
@@ -19,7 +17,6 @@ public static class CharmMappingExtensions
         c.Name,
         c.Description,
         c.Color.ToString(),
-        c.Url,
         c.ImageUrl,
         c.Cost,
         c.Price,
