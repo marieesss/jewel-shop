@@ -1,0 +1,26 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+## Build results
+[Dd]ebug/
+[Rr]elease/
+artifacts/
+
+## Rider / Visual Studio
+.idea/
+
+## Uploads (local file storage)
+src/JewelryShop.API/wwwroot/uploads/
+uploads/
+
+## Env / secrets
+*.env
+appsettings.*.local.json
+
+## OS
+.DS_Store
+Thumbs.db
