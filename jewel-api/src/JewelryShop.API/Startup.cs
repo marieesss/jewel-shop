@@ -3,6 +3,12 @@ using FluentValidation;
 using JewelryShop.Application.Common.Behaviors;
 using JewelryShop.Application.Common.Interfaces;
 using JewelryShop.Application.Common.Persistence;
+using JewelryShop.Application.Features.Chains;
+using JewelryShop.Application.Features.Charms;
+using JewelryShop.Application.Features.Creations;
+using JewelryShop.Application.Features.Favorites;
+using JewelryShop.Application.Features.Options;
+using JewelryShop.Application.Features.Users;
 using JewelryShop.Infrastructure.Middlewares;
 using JewelryShop.Infrastructure.Persistence;
 using JewelryShop.Infrastructure.Services;
@@ -28,6 +34,7 @@ public static class Startup
         services.AddControllers();
         services.AddEndpointsApiExplorer();
 
+        AddCors(services, configuration);
         AddSwagger(services);
         AddJwtAuthentication(services, configuration);
         AddPersistence(services, configuration);
@@ -37,7 +44,6 @@ public static class Startup
 
     public static void ConfigurePipeline(this WebApplication app)
     {
-        // Doit être en premier pour intercepter toutes les exceptions
         app.UseMiddleware<ExceptionHandlingMiddleware>();
 
         if (app.Environment.IsDevelopment())
@@ -45,9 +51,16 @@ public static class Startup
             app.UseSwagger();
             app.UseSwaggerUI();
         }
+        // CORS avant la redirection HTTPS : sinon le preflight OPTIONS reçoit un
+        // 307 (que le navigateur ne suit pas sur un preflight) et l'appel échoue.
+        app.UseCors(CorsPolicyName);
 
-        app.UseHttpsRedirection();
-        app.UseStaticFiles();   // sert wwwroot/uploads/
+        // En dev, on n'impose pas le HTTPS : le front appelle http://localhost:5030
+        // directement, sans redirection 307 ni problème de certificat auto-signé.
+        if (!app.Environment.IsDevelopment())
+            app.UseHttpsRedirection();
+
+        app.UseStaticFiles();
 
         app.UseAuthentication();
         app.UseAuthorization();
@@ -55,9 +68,34 @@ public static class Startup
         app.MapControllers();
     }
 
-    // -------------------------------------------------------------------------
-    // Private helpers
-    // -------------------------------------------------------------------------
+    // ── Private helpers ───────────────────────────────────────────────────────
+
+    private const string CorsPolicyName = "FrontendCors";
+
+    private static void AddCors(IServiceCollection services, IConfiguration configuration)
+    {
+        // Origines explicitement autorisées (séparées par des virgules dans Cors__Origins) ;
+        // utile en production pour épingler le domaine du front.
+        var origins = (configuration["Cors:Origins"] ?? string.Empty)
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        services.AddCors(options =>
+        {
+            options.AddPolicy(CorsPolicyName, policy =>
+                policy.SetIsOriginAllowed(origin =>
+                      {
+                          if (origins.Contains(origin, StringComparer.OrdinalIgnoreCase))
+                              return true;
+
+                          // En dev, le port de Vite peut varier (5173, 5174, …) :
+                          // on accepte tout localhost / 127.0.0.1, quel que soit le port.
+                          return Uri.TryCreate(origin, UriKind.Absolute, out var uri)
+                              && (uri.Host == "localhost" || uri.Host == "127.0.0.1");
+                      })
+                      .AllowAnyHeader()
+                      .AllowAnyMethod());
+        });
+    }
 
     private static void AddSwagger(IServiceCollection services)
     {
@@ -65,7 +103,6 @@ public static class Startup
         {
             c.SwaggerDoc("v1", new OpenApiInfo { Title = "JewelryShop API", Version = "v1" });
 
-            // Bouton Authorize dans Swagger UI
             c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
                 Name         = "Authorization",
@@ -96,17 +133,17 @@ public static class Startup
     private static void AddJwtAuthentication(IServiceCollection services, IConfiguration configuration)
     {
         var secret = configuration["Jwt:Secret"]
-            ?? throw new InvalidOperationException("Jwt:Secret manquant dans la configuration.");
+            ?? throw new InvalidOperationException("Jwt__Secret manquant dans .env");
 
         services
-            .AddAuthentication(options =>
+            .AddAuthentication(o =>
             {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme    = JwtBearerDefaults.AuthenticationScheme;
+                o.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                o.DefaultChallengeScheme    = JwtBearerDefaults.AuthenticationScheme;
             })
-            .AddJwtBearer(options =>
+            .AddJwtBearer(o =>
             {
-                options.TokenValidationParameters = new TokenValidationParameters
+                o.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer           = true,
                     ValidateAudience         = true,
@@ -115,7 +152,7 @@ public static class Startup
                     ValidIssuer              = configuration["Jwt:Issuer"],
                     ValidAudience            = configuration["Jwt:Audience"],
                     IssuerSigningKey         = new SymmetricSecurityKey(
-                                                   Encoding.UTF8.GetBytes(secret))
+                                                  Encoding.UTF8.GetBytes(secret))
                 };
             });
 
@@ -126,18 +163,18 @@ public static class Startup
     {
         var connectionString = configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException(
-                "Connection string 'DefaultConnection' introuvable dans la configuration.");
+                "ConnectionStrings__DefaultConnection manquant dans .env");
 
         services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(connectionString));
 
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-        services.AddScoped<IUserRepository, UserRepository>();
-        services.AddScoped<IChainRepository, ChainRepository>();
-        services.AddScoped<ICharmRepository, CharmRepository>();
+        services.AddScoped<IUserRepository,     UserRepository>();
+        services.AddScoped<IChainRepository,    ChainRepository>();
+        services.AddScoped<ICharmRepository,    CharmRepository>();
         services.AddScoped<IFavoriteRepository, FavoriteRepository>();
         services.AddScoped<ICreationRepository, CreationRepository>();
-        services.AddScoped<IOptionRepository, OptionRepository>();
+        services.AddScoped<IOptionRepository,   OptionRepository>();
     }
 
     private static void AddApplication(IServiceCollection services)

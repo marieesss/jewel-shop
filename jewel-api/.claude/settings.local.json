@@ -3,7 +3,9 @@
     "allow": [
       "Bash(dotnet --version)",
       "Bash(dotnet --list-sdks)",
-      "Bash(dotnet build *)"
+      "Bash(dotnet build *)",
+      "Read(//c/laragon/www/perso/jewel-app/jewel-front/**)",
+      "Bash(npm install *)"
     ]
   }
 }

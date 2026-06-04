@@ -24,14 +24,24 @@ public class ExceptionHandlingMiddleware
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Exception non gérée : {Message}", ex.Message);
+            var (statusCode, _, _) = Map(ex);
+
+            // Les exceptions métier attendues (4xx) sont une réponse normale de l'API,
+            // pas un bug serveur : on les journalise sobrement, sans stacktrace.
+            // Seules les vraies erreurs imprévues (5xx) gardent le LogError complet.
+            if ((int)statusCode >= 500)
+                _logger.LogError(ex, "Exception non gérée : {Message}", ex.Message);
+            else
+                _logger.LogInformation("Requête refusée ({Status}) : {Message}",
+                    (int)statusCode, ex.Message);
+
             await HandleExceptionAsync(context, ex);
         }
     }
 
-    private static async Task HandleExceptionAsync(HttpContext context, Exception exception)
-    {
-        var (statusCode, title, errors) = exception switch
+    private static (HttpStatusCode StatusCode, string Title, IReadOnlyDictionary<string, string[]>? Errors) Map(
+        Exception exception) =>
+        exception switch
         {
             ValidationException ve      => (HttpStatusCode.BadRequest,        "Erreur de validation",   ve.Errors),
             NotFoundException nfe       => (HttpStatusCode.NotFound,          nfe.Message,               null),
@@ -40,6 +50,10 @@ public class ExceptionHandlingMiddleware
             UnauthorizedException ue    => (HttpStatusCode.Unauthorized,      ue.Message,                null),
             _                          => (HttpStatusCode.InternalServerError, "Une erreur est survenue.", null)
         };
+
+    private static async Task HandleExceptionAsync(HttpContext context, Exception exception)
+    {
+        var (statusCode, title, errors) = Map(exception);
 
         context.Response.ContentType = "application/json";
         context.Response.StatusCode  = (int)statusCode;
