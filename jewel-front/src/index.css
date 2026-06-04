@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --storm: #384959;
+  --slate: #6a89a7;
+  --sky: #88bdf2;
+  --mist: #bdddfc;
+  --fuchsia: #f0478a;
+  --flamant: #f77cb0;
+  --poudre: #f2b8c6;
+  --blush: #f9e4ed;
+  --creme: #faf8f5;
+  --lin: #f0ede8;
+  --encre: #2c2c2a;
+  --font-display: 'Cormorant Garamond', serif;
+  --font-body: 'Jost', sans-serif;
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    background: var(--creme);
+    font-family: var(--font-body);
+    color: var(--encre);
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* ── Animations ── */
+@keyframes sparkle {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
