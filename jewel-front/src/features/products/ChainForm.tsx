@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { observer } from 'mobx-react-lite';
 import { useProductAdminStore } from '../../stores/context';
 import { TextField } from '../../components/ui/TextField';
+import { ImageUpload } from '../../components/ui/ImageUpload';
 import { ProductFormShell } from './ProductFormShell';
 import {
   emptyProductCommon,
@@ -19,6 +20,8 @@ export const ChainForm = observer(function ChainForm() {
 
   const [common, setCommon] = useState<ProductCommonValues>(emptyProductCommon);
   const [length, setLength] = useState('');
+  const [image, setImage] = useState<File | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
   const [errors, setErrors] = useState<ChainErrors>({});
 
   const patch = (p: Partial<ProductCommonValues>) => {
@@ -35,21 +38,26 @@ export const ChainForm = observer(function ChainForm() {
     else if (lengthNum <= 0) nextErrors.length = 'La longueur doit être supérieure à 0.';
 
     setErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0) return;
+    if (Object.keys(nextErrors).length > 0 || imageError) return;
 
-    const ok = await store.createChain({
-      name: common.name.trim(),
-      description: common.description.trim(),
-      color: common.color,
-      url: common.url.trim() || null,
-      cost: toNumber(common.cost),
-      price: toNumber(common.price),
-      length: lengthNum,
-    });
+    const ok = await store.createChain(
+      {
+        name: common.name.trim(),
+        description: common.description.trim(),
+        color: common.color,
+        url: common.url.trim() || null,
+        cost: toNumber(common.cost),
+        price: toNumber(common.price),
+        length: lengthNum,
+      },
+      image
+    );
 
     if (ok) {
       setCommon(emptyProductCommon);
       setLength('');
+      setImage(null);
+      setImageError(null);
       setErrors({});
     }
   };
@@ -83,6 +91,16 @@ export const ChainForm = observer(function ChainForm() {
         placeholder="45"
         error={errors.length}
         required
+      />
+      <ImageUpload
+        label="Photo"
+        value={image}
+        onChange={(f) => {
+          setImage(f);
+          store.reset();
+        }}
+        error={imageError ?? undefined}
+        onValidationError={setImageError}
       />
     </ProductFormShell>
   );

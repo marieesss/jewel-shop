@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { observer } from 'mobx-react-lite';
 import { useProductAdminStore } from '../../stores/context';
 import { TextField } from '../../components/ui/TextField';
+import { ImageUpload } from '../../components/ui/ImageUpload';
 import { ProductFormShell } from './ProductFormShell';
 import {
   emptyProductCommon,
@@ -19,6 +20,8 @@ export const CharmForm = observer(function CharmForm() {
 
   const [common, setCommon] = useState<ProductCommonValues>(emptyProductCommon);
   const [stock, setStock] = useState('');
+  const [image, setImage] = useState<File | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
   const [errors, setErrors] = useState<CharmErrors>({});
 
   const patch = (p: Partial<ProductCommonValues>) => {
@@ -36,21 +39,26 @@ export const CharmForm = observer(function CharmForm() {
     else if (!Number.isInteger(stockNum)) nextErrors.stock = 'Le stock doit être un entier.';
 
     setErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0) return;
+    if (Object.keys(nextErrors).length > 0 || imageError) return;
 
-    const ok = await store.createCharm({
-      name: common.name.trim(),
-      description: common.description.trim(),
-      color: common.color,
-      url: common.url.trim() || null,
-      cost: toNumber(common.cost),
-      price: toNumber(common.price),
-      stock: stockNum,
-    });
+    const ok = await store.createCharm(
+      {
+        name: common.name.trim(),
+        description: common.description.trim(),
+        color: common.color,
+        url: common.url.trim() || null,
+        cost: toNumber(common.cost),
+        price: toNumber(common.price),
+        stock: stockNum,
+      },
+      image
+    );
 
     if (ok) {
       setCommon(emptyProductCommon);
       setStock('');
+      setImage(null);
+      setImageError(null);
       setErrors({});
     }
   };
@@ -84,6 +92,16 @@ export const CharmForm = observer(function CharmForm() {
         placeholder="0"
         error={errors.stock}
         required
+      />
+      <ImageUpload
+        label="Photo"
+        value={image}
+        onChange={(f) => {
+          setImage(f);
+          store.reset();
+        }}
+        error={imageError ?? undefined}
+        onValidationError={setImageError}
       />
     </ProductFormShell>
   );

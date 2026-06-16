@@ -2,6 +2,8 @@ import { makeAutoObservable, runInAction } from 'mobx';
 import {
   createCharm,
   createChain,
+  uploadCharmImage,
+  uploadChainImage,
   type CreateCharmPayload,
   type CreateChainPayload,
 } from '../api/products';
@@ -29,12 +31,18 @@ export class ProductAdminStore {
     this.lastCreated = null;
   }
 
-  async createCharm(payload: CreateCharmPayload): Promise<boolean> {
-    return this.run('charm', payload.name, () => createCharm(payload));
+  async createCharm(payload: CreateCharmPayload, image?: File | null): Promise<boolean> {
+    return this.run('charm', payload.name, async () => {
+      const charm = await createCharm(payload);
+      if (image) await uploadCharmImage(charm.id, image);
+    });
   }
 
-  async createChain(payload: CreateChainPayload): Promise<boolean> {
-    return this.run('chain', payload.name, () => createChain(payload));
+  async createChain(payload: CreateChainPayload, image?: File | null): Promise<boolean> {
+    return this.run('chain', payload.name, async () => {
+      const chain = await createChain(payload);
+      if (image) await uploadChainImage(chain.id, image);
+    });
   }
 
   private async run(

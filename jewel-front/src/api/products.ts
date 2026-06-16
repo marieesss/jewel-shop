@@ -45,6 +45,11 @@ export async function createCharm(payload: CreateCharmPayload): Promise<CharmDto
   return data;
 }
 
+/** POST /api/charms/{id}/image (Admin) → { imageUrl } */
+export async function uploadCharmImage(id: number, file: File): Promise<string> {
+  return uploadProductImage(`/api/charms/${id}/image`, file);
+}
+
 /* ── Chain (chaîne) ── */
 export interface ChainDto {
   id: number;
@@ -75,4 +80,19 @@ export async function createChain(payload: CreateChainPayload): Promise<ChainDto
     color: COLOR_TO_VALUE[payload.color],
   });
   return data;
+}
+
+/** POST /api/chains/{id}/image (Admin) → { imageUrl } */
+export async function uploadChainImage(id: number, file: File): Promise<string> {
+  return uploadProductImage(`/api/chains/${id}/image`, file);
+}
+
+/* ── Upload d'image (commun breloque/chaîne, multipart champ « file ») ── */
+async function uploadProductImage(url: string, file: File): Promise<string> {
+  const form = new FormData();
+  form.append('file', file);
+  const { data } = await api.post<{ imageUrl: string }>(url, form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return data.imageUrl;
 }
