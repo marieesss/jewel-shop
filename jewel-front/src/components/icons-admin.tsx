@@ -74,3 +74,11 @@ export function MenuIcon(props: SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+
+export function HeartIcon({ filled, ...props }: SVGProps<SVGSVGElement> & { filled?: boolean }) {
+  return (
+    <svg {...base({ ...props, fill: filled ? 'currentColor' : 'none' })}>
+      <path d="M9 15.5S2.5 11 2.5 6.5A3.5 3.5 0 0 1 9 4.6A3.5 3.5 0 0 1 15.5 6.5C15.5 11 9 15.5 9 15.5Z" />
+    </svg>
+  );
+}

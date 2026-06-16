@@ -2,22 +2,22 @@ import { Link, useParams } from 'react-router-dom';
 import { Spinner } from '../../components/ui/Spinner';
 import { Alert } from '../../components/ui/Alert';
 import { Badge } from '../../components/ui/Badge';
-import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { DetailRow } from '../../components/ui/DetailRow';
 import { useAsync } from '../../hooks/useAsync';
-import { PRODUCT_CONFIG, adminPaths } from '../../features/products/productConfig';
+import { PRODUCT_CONFIG, userPaths } from '../../features/products/productConfig';
 import { ProductImage } from '../../features/products/ProductImage';
+import { FavoriteButton } from '../../features/favorites/FavoriteButton';
 import { colorLabel, colorTone } from '../../api/products';
 import { formatPrice } from '../../lib/format';
 import type { ProductKind } from '../../stores/ProductAdminStore';
 
-interface ProductDetailPageProps {
+interface Props {
   kind: ProductKind;
 }
 
-/** Détail d'un produit (breloque ou chaîne). */
-export function ProductDetailPage({ kind }: ProductDetailPageProps) {
+/** Détail produit côté utilisateur, avec ajout/retrait des favoris. */
+export function UserProductDetailPage({ kind }: Props) {
   const config = PRODUCT_CONFIG[kind];
   const { id } = useParams();
   const productId = Number(id);
@@ -30,7 +30,7 @@ export function ProductDetailPage({ kind }: ProductDetailPageProps) {
   return (
     <div className="mx-auto w-full max-w-[760px]">
       <Link
-        to={adminPaths.list(config.slug)}
+        to={userPaths.list(config.slug)}
         className="mb-5 inline-flex items-center gap-1 font-body text-[13px] font-medium text-slate transition-colors hover:text-fuchsia"
       >
         ← Retour aux {config.plural.toLowerCase()}
@@ -59,12 +59,9 @@ export function ProductDetailPage({ kind }: ProductDetailPageProps) {
               {formatPrice(data.price)}
             </p>
 
-            <Link to={adminPaths.edit(config.slug, data.id)} className="mb-5 inline-block">
-              <Button variant="secondary" className="px-4 py-2">
-                Modifier
-              </Button>
-            </Link>
-
+            <div className="mb-5">
+              <FavoriteButton kind={kind} productId={data.id} variant="inline" />
+            </div>
 
             {data.description && (
               <p className="mb-5 font-body text-sm leading-relaxed text-encre/80">
@@ -73,15 +70,13 @@ export function ProductDetailPage({ kind }: ProductDetailPageProps) {
             )}
 
             <Card className="px-5 py-2">
-              <DetailRow label="Référence">#{data.id}</DetailRow>
               <DetailRow label="Couleur">{colorLabel(data.color)}</DetailRow>
               <DetailRow label={config.specificField(data).label}>
                 {config.specificField(data).value}
               </DetailRow>
-              <DetailRow label="Coût">{formatPrice(data.cost)}</DetailRow>
               <DetailRow label="Prix">{formatPrice(data.price)}</DetailRow>
-              <DetailRow label="Lien">
-                {data.url ? (
+              {data.url && (
+                <DetailRow label="Lien">
                   <a
                     href={data.url}
                     target="_blank"
@@ -90,10 +85,8 @@ export function ProductDetailPage({ kind }: ProductDetailPageProps) {
                   >
                     Ouvrir
                   </a>
-                ) : (
-                  <span className="text-slate">—</span>
-                )}
-              </DetailRow>
+                </DetailRow>
+              )}
             </Card>
           </div>
         </div>

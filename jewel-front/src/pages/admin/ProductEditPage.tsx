@@ -3,7 +3,7 @@ import { PageHeader } from '../../components/ui/PageHeader';
 import { Spinner } from '../../components/ui/Spinner';
 import { Alert } from '../../components/ui/Alert';
 import { useAsync } from '../../hooks/useAsync';
-import { PRODUCT_CONFIG } from '../../features/products/productConfig';
+import { PRODUCT_CONFIG, adminPaths } from '../../features/products/productConfig';
 import { CharmForm } from '../../features/products/CharmForm';
 import { ChainForm } from '../../features/products/ChainForm';
 import type { CharmDto, ChainDto } from '../../api/products';
@@ -25,12 +25,12 @@ export function ProductEditPage({ kind }: ProductEditPageProps) {
     [kind, productId]
   );
 
-  const goToDetail = () => navigate(config.detailPath(productId));
+  const goToDetail = () => navigate(adminPaths.detail(config.slug, productId));
 
   return (
     <div className="mx-auto w-full max-w-[560px]">
       <Link
-        to={config.detailPath(productId)}
+        to={adminPaths.detail(config.slug, productId)}
         className="mb-5 inline-flex items-center gap-1 font-body text-[13px] font-medium text-slate transition-colors hover:text-fuchsia"
       >
         ← Retour au détail

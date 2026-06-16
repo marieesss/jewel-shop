@@ -41,6 +41,15 @@ export interface PageParams {
   pageSize?: number;
 }
 
+/** Filtres communs de listing (color en chaîne « Gold »/« Silver » côté GET). */
+export interface ProductListParams extends PageParams {
+  color?: ProductColor;
+  minPrice?: number;
+  maxPrice?: number;
+  /** Spécifique aux breloques (ignoré pour les chaînes). */
+  inStockOnly?: boolean;
+}
+
 /* ── Charm (breloque) ── */
 export interface CharmDto {
   id: number;
@@ -73,8 +82,8 @@ export async function createCharm(payload: CreateCharmPayload): Promise<CharmDto
   return data;
 }
 
-/** GET /api/charms → liste paginée */
-export async function getCharms(params: PageParams = {}): Promise<PagedResult<CharmDto>> {
+/** GET /api/charms → liste paginée (filtres : color, inStockOnly, minPrice, maxPrice) */
+export async function getCharms(params: ProductListParams = {}): Promise<PagedResult<CharmDto>> {
   const { data } = await api.get<PagedResult<CharmDto>>('/api/charms', { params });
   return data;
 }
@@ -131,8 +140,8 @@ export async function createChain(payload: CreateChainPayload): Promise<ChainDto
   return data;
 }
 
-/** GET /api/chains → liste paginée */
-export async function getChains(params: PageParams = {}): Promise<PagedResult<ChainDto>> {
+/** GET /api/chains → liste paginée (filtres : color, minPrice, maxPrice) */
+export async function getChains(params: ProductListParams = {}): Promise<PagedResult<ChainDto>> {
   const { data } = await api.get<PagedResult<ChainDto>>('/api/chains', { params });
   return data;
 }

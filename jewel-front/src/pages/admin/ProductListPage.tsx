@@ -7,7 +7,7 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { Button } from '../../components/ui/Button';
 import { Pagination } from '../../components/ui/Pagination';
 import { useAsync } from '../../hooks/useAsync';
-import { PRODUCT_CONFIG } from '../../features/products/productConfig';
+import { PRODUCT_CONFIG, adminPaths } from '../../features/products/productConfig';
 import { ProductCard } from '../../features/products/ProductCard';
 import type { ProductKind } from '../../stores/ProductAdminStore';
 
@@ -55,7 +55,7 @@ export function ProductListPage({ kind }: ProductListPageProps) {
             {data.items.map((product) => (
               <ProductCard
                 key={product.id}
-                to={config.detailPath(product.id)}
+                to={adminPaths.detail(config.slug, product.id)}
                 name={product.name}
                 color={product.color}
                 price={product.price}
