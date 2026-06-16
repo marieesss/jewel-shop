@@ -21,6 +21,25 @@ export const emptyProductCommon: ProductCommonValues = {
 
 export type FieldErrors<T extends string> = Partial<Record<T, string>>;
 
+/** Pré-remplit les champs communs à partir d'un produit existant (édition). */
+export function commonFromProduct(p: {
+  name: string;
+  description: string;
+  color: string;
+  url: string | null;
+  cost: number;
+  price: number;
+}): ProductCommonValues {
+  return {
+    name: p.name,
+    description: p.description,
+    color: p.color as ProductColor,
+    url: p.url ?? '',
+    cost: String(p.cost),
+    price: String(p.price),
+  };
+}
+
 /** Convertit une saisie (avec virgule éventuelle) en nombre, ou NaN si vide/invalide. */
 export function toNumber(raw: string): number {
   const normalized = raw.trim().replace(',', '.');

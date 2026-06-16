@@ -85,6 +85,15 @@ export async function getCharmById(id: number): Promise<CharmDto> {
   return data;
 }
 
+/** PUT /api/charms/{id} (Admin) → CharmDto */
+export async function updateCharm(id: number, payload: CreateCharmPayload): Promise<CharmDto> {
+  const { data } = await api.put<CharmDto>(`/api/charms/${id}`, {
+    ...payload,
+    color: COLOR_TO_VALUE[payload.color],
+  });
+  return data;
+}
+
 /** POST /api/charms/{id}/image (Admin) → { imageUrl } */
 export async function uploadCharmImage(id: number, file: File): Promise<string> {
   return uploadProductImage(`/api/charms/${id}/image`, file);
@@ -131,6 +140,15 @@ export async function getChains(params: PageParams = {}): Promise<PagedResult<Ch
 /** GET /api/chains/{id} → détail */
 export async function getChainById(id: number): Promise<ChainDto> {
   const { data } = await api.get<ChainDto>(`/api/chains/${id}`);
+  return data;
+}
+
+/** PUT /api/chains/{id} (Admin) → ChainDto */
+export async function updateChain(id: number, payload: CreateChainPayload): Promise<ChainDto> {
+  const { data } = await api.put<ChainDto>(`/api/chains/${id}`, {
+    ...payload,
+    color: COLOR_TO_VALUE[payload.color],
+  });
   return data;
 }
 

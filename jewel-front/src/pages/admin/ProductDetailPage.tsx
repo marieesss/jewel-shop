@@ -2,6 +2,7 @@ import { Link, useParams } from 'react-router-dom';
 import { Spinner } from '../../components/ui/Spinner';
 import { Alert } from '../../components/ui/Alert';
 import { Badge } from '../../components/ui/Badge';
+import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { DetailRow } from '../../components/ui/DetailRow';
 import { useAsync } from '../../hooks/useAsync';
@@ -54,9 +55,16 @@ export function ProductDetailPage({ kind }: ProductDetailPageProps) {
               <Badge tone={colorTone(data.color)}>{colorLabel(data.color)}</Badge>
             </div>
 
-            <p className="mb-5 font-display text-xl font-medium text-fuchsia">
+            <p className="mb-4 font-display text-xl font-medium text-fuchsia">
               {formatPrice(data.price)}
             </p>
+
+            <Link to={`${config.detailPath(data.id)}/edit`} className="mb-5 inline-block">
+              <Button variant="secondary" className="px-4 py-2">
+                Modifier
+              </Button>
+            </Link>
+
 
             {data.description && (
               <p className="mb-5 font-body text-sm leading-relaxed text-encre/80">
