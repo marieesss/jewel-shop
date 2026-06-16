@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { DashboardIcon, GemIcon } from '../../components/icons-admin';
+import { DashboardIcon, GemIcon, ChainIcon } from '../../components/icons-admin';
 
 export interface AdminNavItem {
   to: string;
@@ -16,4 +16,6 @@ export interface AdminNavItem {
 export const adminNavItems: AdminNavItem[] = [
   { to: '/admin', label: 'Tableau de bord', icon: <DashboardIcon />, end: true },
   { to: '/admin/products/new', label: 'Créer un produit', icon: <GemIcon /> },
+  { to: '/admin/products/charms', label: 'Breloques', icon: <GemIcon /> },
+  { to: '/admin/products/chains', label: 'Chaînes', icon: <ChainIcon /> },
 ];

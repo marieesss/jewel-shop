@@ -6,6 +6,8 @@ import { HomePage } from './pages/HomePage';
 import { AdminLayout } from './features/admin/AdminLayout';
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { ProductCreatePage } from './pages/admin/ProductCreatePage';
+import { ProductListPage } from './pages/admin/ProductListPage';
+import { ProductDetailPage } from './pages/admin/ProductDetailPage';
 
 export default function App() {
   return (
@@ -25,6 +27,10 @@ export default function App() {
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminDashboardPage />} />
               <Route path="products/new" element={<ProductCreatePage />} />
+              <Route path="products/charms" element={<ProductListPage kind="charm" />} />
+              <Route path="products/charms/:id" element={<ProductDetailPage kind="charm" />} />
+              <Route path="products/chains" element={<ProductListPage kind="chain" />} />
+              <Route path="products/chains/:id" element={<ProductDetailPage kind="chain" />} />
             </Route>
           </Route>
 

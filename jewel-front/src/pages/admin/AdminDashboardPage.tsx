@@ -1,7 +1,6 @@
-import { Link } from 'react-router-dom';
 import { PageHeader } from '../../components/ui/PageHeader';
-import { Card } from '../../components/ui/Card';
-import { GemIcon } from '../../components/icons-admin';
+import { DashboardTile } from '../../features/admin/DashboardTile';
+import { GemIcon, ChainIcon } from '../../components/icons-admin';
 
 /** Accueil de la zone admin (page principale). */
 export function AdminDashboardPage() {
@@ -13,19 +12,24 @@ export function AdminDashboardPage() {
       />
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Link to="/admin/products/new" className="block">
-          <Card className="h-full transition-shadow hover:shadow-btn">
-            <div className="flex items-center gap-3 text-storm">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blush text-fuchsia">
-                <GemIcon width={20} height={20} />
-              </span>
-              <div>
-                <p className="font-body text-sm font-semibold">Créer un produit</p>
-                <p className="font-body text-[13px] text-slate">Breloque ou chaîne</p>
-              </div>
-            </div>
-          </Card>
-        </Link>
+        <DashboardTile
+          to="/admin/products/new"
+          icon={<GemIcon width={20} height={20} />}
+          title="Créer un produit"
+          description="Breloque ou chaîne"
+        />
+        <DashboardTile
+          to="/admin/products/charms"
+          icon={<GemIcon width={20} height={20} />}
+          title="Breloques"
+          description="Lister les breloques"
+        />
+        <DashboardTile
+          to="/admin/products/chains"
+          icon={<ChainIcon width={20} height={20} />}
+          title="Chaînes"
+          description="Lister les chaînes"
+        />
       </div>
     </div>
   );

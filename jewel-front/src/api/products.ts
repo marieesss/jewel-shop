@@ -13,6 +13,34 @@ export const PRODUCT_COLOR_LABELS: Record<ProductColor, string> = {
   Silver: 'Argent',
 };
 
+/** Libellé FR d'une couleur renvoyée par l'API (« Gold »/« Silver »). */
+export function colorLabel(color: string): string {
+  return PRODUCT_COLOR_LABELS[color as ProductColor] ?? color;
+}
+
+/** Tonalité de badge associée à une couleur produit. */
+export function colorTone(color: string): 'gold' | 'silver' | 'neutral' {
+  if (color === 'Gold') return 'gold';
+  if (color === 'Silver') return 'silver';
+  return 'neutral';
+}
+
+/* ── Pagination (miroir de PagedResult<T> côté back) ── */
+export interface PagedResult<T> {
+  items: T[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+  hasPrevious: boolean;
+  hasNext: boolean;
+}
+
+export interface PageParams {
+  page?: number;
+  pageSize?: number;
+}
+
 /* ── Charm (breloque) ── */
 export interface CharmDto {
   id: number;
@@ -42,6 +70,18 @@ export async function createCharm(payload: CreateCharmPayload): Promise<CharmDto
     ...payload,
     color: COLOR_TO_VALUE[payload.color],
   });
+  return data;
+}
+
+/** GET /api/charms → liste paginée */
+export async function getCharms(params: PageParams = {}): Promise<PagedResult<CharmDto>> {
+  const { data } = await api.get<PagedResult<CharmDto>>('/api/charms', { params });
+  return data;
+}
+
+/** GET /api/charms/{id} → détail */
+export async function getCharmById(id: number): Promise<CharmDto> {
+  const { data } = await api.get<CharmDto>(`/api/charms/${id}`);
   return data;
 }
 
@@ -79,6 +119,18 @@ export async function createChain(payload: CreateChainPayload): Promise<ChainDto
     ...payload,
     color: COLOR_TO_VALUE[payload.color],
   });
+  return data;
+}
+
+/** GET /api/chains → liste paginée */
+export async function getChains(params: PageParams = {}): Promise<PagedResult<ChainDto>> {
+  const { data } = await api.get<PagedResult<ChainDto>>('/api/chains', { params });
+  return data;
+}
+
+/** GET /api/chains/{id} → détail */
+export async function getChainById(id: number): Promise<ChainDto> {
+  const { data } = await api.get<ChainDto>(`/api/chains/${id}`);
   return data;
 }
 
