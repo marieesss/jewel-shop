@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { observer } from 'mobx-react-lite';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/context';
 import { FormInput } from '../components/FormInput';
 import { DecoPanel } from '../components/DecoPanel';
@@ -9,6 +10,7 @@ type Mode = 'login' | 'register';
 
 export const AuthPage = observer(function AuthPage() {
   const auth = useAuthStore();
+  const navigate = useNavigate();
 
   const [mode, setMode] = useState<Mode>('login');
   const [animKey, setAnimKey] = useState(0);
@@ -34,6 +36,7 @@ export const AuthPage = observer(function AuthPage() {
     setLocalError(null);
     auth.clearError();
 
+    let ok = false;
     if (mode === 'register') {
       if (password !== confirmPassword) {
         setLocalError('Les mots de passe ne correspondent pas.');
@@ -43,7 +46,7 @@ export const AuthPage = observer(function AuthPage() {
         setLocalError('Le mot de passe doit contenir au moins 8 caractères.');
         return;
       }
-      await auth.register({
+      ok = await auth.register({
         name,
         surname,
         email,
@@ -51,11 +54,20 @@ export const AuthPage = observer(function AuthPage() {
         birthday: birthday || null,
       });
     } else {
-      await auth.login({ email, password });
+      ok = await auth.login({ email, password });
+    }
+
+    if (ok) {
+      navigate(auth.isAdmin ? '/admin' : '/', { replace: true });
     }
   };
 
   const errorMessage = localError ?? auth.error;
+
+  // Déjà connecté : on ne réaffiche pas le formulaire.
+  if (auth.isAuthenticated) {
+    return <Navigate to={auth.isAdmin ? '/admin' : '/'} replace />;
+  }
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-creme">

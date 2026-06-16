@@ -1,39 +1,37 @@
-import { observer } from 'mobx-react-lite';
-import { StoreProvider, rootStore, useAuthStore } from './stores/context';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { StoreProvider, rootStore } from './stores/context';
+import { RequireAuth, RequireAdmin } from './routes/guards';
 import { AuthPage } from './pages/AuthPage';
-
-/**
- * Vue affichée une fois connecté. Volontairement minimale : l'objet de ce
- * livrable est l'écran « Login & Inscription ». Elle confirme que le flux
- * d'authentification fonctionne de bout en bout avec le back-end.
- */
-const Authenticated = observer(function Authenticated() {
-  const auth = useAuthStore();
-  return (
-    <div className="flex h-screen flex-col items-center justify-center gap-4 bg-creme font-body text-storm">
-      <h1 className="font-comfortaa text-[40px] font-light">Bienvenue ✨</h1>
-      <p className="text-slate">
-        Connecté · utilisateur #{auth.userId} · rôle {auth.role}
-      </p>
-      <button
-        onClick={() => auth.logout()}
-        className="rounded-xl bg-storm px-7 py-3 font-body text-sm font-medium text-white shadow-btn transition-all hover:-translate-y-0.5 hover:shadow-btn-hover"
-      >
-        Se déconnecter
-      </button>
-    </div>
-  );
-});
-
-const Root = observer(function Root() {
-  const auth = useAuthStore();
-  return auth.isAuthenticated ? <Authenticated /> : <AuthPage />;
-});
+import { HomePage } from './pages/HomePage';
+import { AdminLayout } from './features/admin/AdminLayout';
+import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
+import { ProductCreatePage } from './pages/admin/ProductCreatePage';
 
 export default function App() {
   return (
     <StoreProvider value={rootStore}>
-      <Root />
+      <BrowserRouter>
+        <Routes>
+          {/* Public */}
+          <Route path="/login" element={<AuthPage />} />
+
+          {/* Connecté */}
+          <Route element={<RequireAuth />}>
+            <Route path="/" element={<HomePage />} />
+          </Route>
+
+          {/* Admin uniquement */}
+          <Route element={<RequireAdmin />}>
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminDashboardPage />} />
+              <Route path="products/new" element={<ProductCreatePage />} />
+            </Route>
+          </Route>
+
+          {/* Repli */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
     </StoreProvider>
   );
 }

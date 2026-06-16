@@ -1,5 +1,4 @@
 import { makeAutoObservable, runInAction } from 'mobx';
-import { AxiosError } from 'axios';
 import {
   login as apiLogin,
   register as apiRegister,
@@ -7,9 +6,13 @@ import {
   type RegisterPayload,
 } from '../api/auth';
 import { TOKEN_KEY } from '../api/client';
+import { extractApiError } from '../api/errors';
+import { decodeJwt, isTokenValid } from '../lib/jwt';
+
+const ADMIN_ROLE = 'Admin';
 
 export class AuthStore {
-  token: string | null = localStorage.getItem(TOKEN_KEY);
+  token: string | null = null;
   userId: number | null = null;
   role: string | null = null;
 
@@ -18,10 +21,15 @@ export class AuthStore {
 
   constructor() {
     makeAutoObservable(this);
+    this.hydrate();
   }
 
   get isAuthenticated(): boolean {
     return this.token !== null;
+  }
+
+  get isAdmin(): boolean {
+    return this.role === ADMIN_ROLE;
   }
 
   async login(payload: LoginPayload): Promise<boolean> {
@@ -44,6 +52,22 @@ export class AuthStore {
     this.error = null;
   }
 
+  /** Restaure la session depuis le token persisté (rôle/identité, expiration). */
+  private hydrate(): void {
+    const stored = localStorage.getItem(TOKEN_KEY);
+    if (!stored) return;
+
+    if (!isTokenValid(stored)) {
+      localStorage.removeItem(TOKEN_KEY);
+      return;
+    }
+
+    const claims = decodeJwt(stored);
+    this.token = stored;
+    this.userId = claims?.userId ?? null;
+    this.role = claims?.role ?? null;
+  }
+
   /** Exécute une requête d'auth et applique la réponse, en gérant loading/error. */
   private async run(
     request: () => Promise<{ token: string; userId: number; role: string }>
@@ -61,7 +85,7 @@ export class AuthStore {
       return true;
     } catch (err) {
       runInAction(() => {
-        this.error = extractError(err);
+        this.error = extractApiError(err, 'Email ou mot de passe incorrect.');
       });
       return false;
     } finally {
@@ -70,25 +94,4 @@ export class AuthStore {
       });
     }
   }
-}
-
-/** Transforme une erreur Axios en message lisible pour l'utilisateur. */
-function extractError(err: unknown): string {
-  if (err instanceof AxiosError) {
-    const data = err.response?.data as
-      | { message?: string; title?: string; errors?: Record<string, string[]> }
-      | undefined;
-
-    if (data?.errors) {
-      const first = Object.values(data.errors).flat()[0];
-      if (first) return first;
-    }
-    if (data?.message) return data.message;
-    if (data?.title) return data.title;
-
-    if (err.response?.status === 401) return 'Email ou mot de passe incorrect.';
-    if (err.response?.status === 409) return 'Un compte existe déjà avec cet email.';
-    if (!err.response) return 'Impossible de joindre le serveur.';
-  }
-  return 'Une erreur est survenue. Veuillez réessayer.';
 }
