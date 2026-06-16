@@ -12,7 +12,8 @@ public record UpdateCharmCommand(
     ProductColor Color,
     decimal Cost,
     decimal Price,
-    int Stock) : IRequest<CharmDto>;
+    int Stock,
+    string? Url = null) : IRequest<CharmDto>;
 
 public class UpdateCharmCommandValidator : AbstractValidator<UpdateCharmCommand>
 {
@@ -25,6 +26,7 @@ public class UpdateCharmCommandValidator : AbstractValidator<UpdateCharmCommand>
         RuleFor(x => x.Cost).GreaterThanOrEqualTo(0);
         RuleFor(x => x.Price).GreaterThanOrEqualTo(0);
         RuleFor(x => x.Stock).GreaterThanOrEqualTo(0);
+        RuleFor(x => x.Url).MaximumLength(500);
     }
 }
 
@@ -45,6 +47,7 @@ public class UpdateCharmCommandHandler : IRequestHandler<UpdateCharmCommand, Cha
         charm.Cost        = request.Cost;
         charm.Price       = request.Price;
         charm.Stock       = request.Stock;
+        charm.Url         = string.IsNullOrWhiteSpace(request.Url) ? null : request.Url.Trim();
 
         _charms.Update(charm);
         await _charms.SaveChangesAsync(cancellationToken);

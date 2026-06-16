@@ -6,6 +6,7 @@ public record ChainDto(
     string Description,
     string Color,
     string? ImageUrl,
+    string? Url,
     decimal Cost,
     decimal Price,
     decimal Length);
@@ -18,6 +19,7 @@ public static class ChainMappingExtensions
         c.Description,
         c.Color.ToString(),
         c.ImageUrl,
+        c.Url,
         c.Cost,
         c.Price,
         c.Length);

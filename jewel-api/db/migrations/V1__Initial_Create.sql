@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS chains (
     description TEXT           NOT NULL DEFAULT '',
     color       VARCHAR(20)    NOT NULL,
     image_url   VARCHAR(500),
+    url         VARCHAR(500),
     cost        NUMERIC(10, 2) NOT NULL,
     price       NUMERIC(10, 2) NOT NULL,
     length      NUMERIC(6, 2)  NOT NULL
@@ -29,6 +30,7 @@ CREATE TABLE IF NOT EXISTS charms (
     description TEXT           NOT NULL DEFAULT '',
     color       VARCHAR(20)    NOT NULL,
     image_url   VARCHAR(500),
+    url         VARCHAR(500),
     cost        NUMERIC(10, 2) NOT NULL,
     price       NUMERIC(10, 2) NOT NULL,
     stock       INT            NOT NULL DEFAULT 0
@@ -63,13 +65,4 @@ CREATE TABLE IF NOT EXISTS creation_items (
     creation_id BIGINT NOT NULL REFERENCES creations(id) ON DELETE CASCADE,
     charm_id    BIGINT NOT NULL REFERENCES charms(id),
     position    INT    NOT NULL
-);
-
--- Seed admin (bcrypt de 'Admin1234!', BCrypt.Net-Next 4.0.3 workFactor=11)
-INSERT INTO users (name, surname, email, password_hash, role)
-SELECT 'Admin', 'Admin', 'admin@jewelryshop.com',
-       '$2a$11$EJFLqaz/lsaaFl1a5fR6DeV4ntS4O0XCKd4pYYp65MzE.UnMTVpZW',
-       'Admin'
-WHERE NOT EXISTS (
-    SELECT 1 FROM users WHERE email = 'admin@jewelryshop.com'
 );

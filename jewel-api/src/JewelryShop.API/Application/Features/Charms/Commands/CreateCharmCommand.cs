@@ -10,7 +10,8 @@ public record CreateCharmCommand(
     ProductColor Color,
     decimal Cost,
     decimal Price,
-    int Stock) : IRequest<CharmDto>;
+    int Stock,
+    string? Url = null) : IRequest<CharmDto>;
 
 public class CreateCharmCommandValidator : AbstractValidator<CreateCharmCommand>
 {
@@ -22,6 +23,7 @@ public class CreateCharmCommandValidator : AbstractValidator<CreateCharmCommand>
         RuleFor(x => x.Cost).GreaterThanOrEqualTo(0);
         RuleFor(x => x.Price).GreaterThanOrEqualTo(0);
         RuleFor(x => x.Stock).GreaterThanOrEqualTo(0);
+        RuleFor(x => x.Url).MaximumLength(500);
     }
 }
 
@@ -40,7 +42,8 @@ public class CreateCharmCommandHandler : IRequestHandler<CreateCharmCommand, Cha
             Color       = request.Color,
             Cost        = request.Cost,
             Price       = request.Price,
-            Stock       = request.Stock
+            Stock       = request.Stock,
+            Url         = string.IsNullOrWhiteSpace(request.Url) ? null : request.Url.Trim()
         };
 
         await _charms.AddAsync(charm, cancellationToken);

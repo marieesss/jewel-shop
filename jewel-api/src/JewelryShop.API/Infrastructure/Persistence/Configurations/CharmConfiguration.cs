@@ -33,6 +33,10 @@ public class CharmConfiguration : IEntityTypeConfiguration<Charm>
             .HasColumnName("image_url")
             .HasMaxLength(500);
 
+        builder.Property(c => c.Url)
+            .HasColumnName("url")
+            .HasMaxLength(500);
+
         builder.Property(c => c.Cost)
             .HasColumnName("cost")
             .HasColumnType("numeric(10,2)")

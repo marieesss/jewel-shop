@@ -12,7 +12,8 @@ public record UpdateChainCommand(
     ProductColor Color,
     decimal Cost,
     decimal Price,
-    decimal Length) : IRequest<ChainDto>;
+    decimal Length,
+    string? Url = null) : IRequest<ChainDto>;
 
 public class UpdateChainCommandValidator : AbstractValidator<UpdateChainCommand>
 {
@@ -25,6 +26,7 @@ public class UpdateChainCommandValidator : AbstractValidator<UpdateChainCommand>
         RuleFor(x => x.Cost).GreaterThanOrEqualTo(0);
         RuleFor(x => x.Price).GreaterThanOrEqualTo(0);
         RuleFor(x => x.Length).GreaterThan(0);
+        RuleFor(x => x.Url).MaximumLength(500);
     }
 }
 
@@ -45,6 +47,7 @@ public class UpdateChainCommandHandler : IRequestHandler<UpdateChainCommand, Cha
         chain.Cost        = request.Cost;
         chain.Price       = request.Price;
         chain.Length      = request.Length;
+        chain.Url         = string.IsNullOrWhiteSpace(request.Url) ? null : request.Url.Trim();
 
         _chains.Update(chain);
         await _chains.SaveChangesAsync(cancellationToken);
