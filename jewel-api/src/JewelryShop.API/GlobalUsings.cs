@@ -1,4 +1,3 @@
-// Entités disponibles globalement dans tout le projet (mono-projet vertical)
 global using JewelryShop.Application.Common;
 global using JewelryShop.Application.Common.Enums;
 global using JewelryShop.Application.Features.Chains;
