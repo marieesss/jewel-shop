@@ -3,7 +3,7 @@ using JewelryShop.Application.Features.Chains.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace JewelryShop.API.Features.Chains;
+namespace JewelryShop.Application.Features.Chains;
 
 [Route("api/chains")]
 public class ChainsController : ApiControllerBase

@@ -1,7 +1,7 @@
 using JewelryShop.Application.Features.Options.Queries;
 using Microsoft.AspNetCore.Mvc;
 
-namespace JewelryShop.API.Features.Options;
+namespace JewelryShop.Application.Features.Options;
 
 [Route("api/options")]
 public class OptionsController : ApiControllerBase

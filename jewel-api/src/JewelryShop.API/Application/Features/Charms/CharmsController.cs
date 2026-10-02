@@ -3,7 +3,7 @@ using JewelryShop.Application.Features.Charms.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace JewelryShop.API.Features.Charms;
+namespace JewelryShop.Application.Features.Charms;
 
 [Route("api/charms")]
 public class CharmsController : ApiControllerBase

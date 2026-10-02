@@ -1,7 +1,7 @@
 using JewelryShop.Application.Features.Auth.Commands;
 using Microsoft.AspNetCore.Mvc;
 
-namespace JewelryShop.API.Features.Auth;
+namespace JewelryShop.Application.Features.Auth;
 
 [Route("api/auth")]
 public class AuthController : ApiControllerBase

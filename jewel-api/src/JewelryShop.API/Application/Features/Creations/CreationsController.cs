@@ -3,7 +3,7 @@ using JewelryShop.Application.Features.Creations.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace JewelryShop.API.Features.Creations;
+namespace JewelryShop.Application.Features.Creations;
 
 [Route("api/creations")]
 [Authorize]

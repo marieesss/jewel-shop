@@ -2,7 +2,7 @@ using System.Security.Claims;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
-namespace JewelryShop.API.Features;
+namespace JewelryShop.Application.Common;
 
 [ApiController]
 public abstract class ApiControllerBase : ControllerBase

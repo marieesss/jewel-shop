@@ -2,7 +2,7 @@ using JewelryShop.Application.Features.Admin.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace JewelryShop.API.Features.Admin;
+namespace JewelryShop.Application.Features.Admin;
 
 [Route("api/admin")]
 [Authorize(Roles = "Admin")]

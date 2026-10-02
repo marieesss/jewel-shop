@@ -5,7 +5,12 @@
       "Bash(dotnet --list-sdks)",
       "Bash(dotnet build *)",
       "Read(//c/laragon/www/perso/jewel-app/jewel-front/**)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Read(//c/Users/mjees/Downloads/**)",
+      "Bash(python -c \"import sys; from pypdf import PdfReader; r=PdfReader\\('rust-projet 1.pdf'\\); print\\('\\\\n'.join\\(p.extract_text\\(\\) for p in r.pages\\)\\)\")",
+      "Bash(python -c \"import pdfplumber; pdf=pdfplumber.open\\('rust-projet 1.pdf'\\); print\\('\\\\n'.join\\(p.extract_text\\(\\) or '' for p in pdf.pages\\)\\)\")",
+      "Bash(cargo build *)",
+      "Bash(cargo run *)"
     ]
   }
 }

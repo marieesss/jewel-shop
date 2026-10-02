@@ -3,7 +3,7 @@ using JewelryShop.Application.Features.Favorites.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace JewelryShop.API.Features.Favorites;
+namespace JewelryShop.Application.Features.Favorites;
 
 [Route("api/favorites")]
 [Authorize]
