@@ -8,10 +8,11 @@ on:
     branches: [main]
   workflow_dispatch: # bouton "Run workflow" dans l'onglet Actions
 
-# Deux pushs rapprochés sur la même branche : on annule le run devenu obsolète.
+# Deux pushs rapprochés sur la même PR : on annule le run devenu obsolète.
+# Jamais sur main : on n'interrompt pas un déploiement en cours.
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 # Le jeton GITHUB_TOKEN de ce workflow peut seulement lire le code.
 permissions:
@@ -115,3 +116,94 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=${{ matrix.image }}
           cache-to: type=gha,scope=${{ matrix.image }},mode=max
+
+  # ── Déploiement sur le serveur ──────────────────────────────────────────────
+  deploy:
+    name: Déploiement production
+    needs: publish
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    # Les secrets de l'environnement "production" ne sont accessibles qu'ici.
+    environment:
+      name: production
+      url: https://mycharmly.eu
+    # Un seul déploiement à la fois ; le suivant attend au lieu d'annuler.
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      packages: read # GITHUB_TOKEN pourra télécharger les images privées
+    env:
+      TARGET: deploy@${{ vars.DEPLOY_HOST }}
+      APP_DIR: /srv/jewel-app
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v7
+
+      - name: Configurer SSH
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          # Empreinte du serveur connue d'avance : refuse un faux serveur.
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+      - name: Copier la configuration
+        run: |
+          scp deploy/compose.prod.yaml "$TARGET:$APP_DIR/compose.yaml"
+          scp deploy/gateway/nginx.conf "$TARGET:$APP_DIR/gateway/nginx.conf"
+          scp deploy/pgadmin/servers.json "$TARGET:$APP_DIR/pgadmin/servers.json"
+
+      - name: Écrire le .env
+        env:
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+          CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
+          CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
+          PGADMIN_EMAIL: ${{ secrets.PGADMIN_EMAIL }}
+          PGADMIN_PASSWORD: ${{ secrets.PGADMIN_PASSWORD }}
+        # Le contenu passe par l'entrée standard de ssh : il n'apparaît ni dans
+        # les logs ni dans la liste des processus du serveur. umask 077 = fichier lisible par deploy seul.
+        run: |
+          ssh "$TARGET" "umask 077 && cat > $APP_DIR/.env" <<EOF
+          IMAGE_TAG=${{ github.sha }}
+          POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+          JWT_SECRET=$JWT_SECRET
+          CLOUDINARY_CLOUD_NAME=$CLOUDINARY_CLOUD_NAME
+          CLOUDINARY_API_KEY=$CLOUDINARY_API_KEY
+          CLOUDINARY_API_SECRET=$CLOUDINARY_API_SECRET
+          PGADMIN_EMAIL=$PGADMIN_EMAIL
+          PGADMIN_PASSWORD=$PGADMIN_PASSWORD
+          EOF
+
+      - name: Mettre à jour les conteneurs
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ssh "$TARGET" bash -s <<EOF
+          set -euo pipefail
+          cd $APP_DIR
+          # Le jeton du run (valable quelques minutes) est oublié du serveur en sortie, même en cas d'échec.
+          trap 'docker logout ghcr.io >/dev/null' EXIT
+          echo "$GHCR_TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker compose pull
+          # --wait : échoue si les conteneurs ne deviennent pas "healthy" en 3 minutes.
+          docker compose up -d --remove-orphans --wait --wait-timeout 180
+          # Supprime NOS anciennes images de plus de 3 jours (label posé par metadata-action),
+          # sans jamais toucher à celles d'italian-app.
+          docker image prune -af \
+            --filter "label=org.opencontainers.image.source=https://github.com/${{ github.repository }}" \
+            --filter "until=72h"
+          docker compose ps
+          EOF
+
+      - name: Vérifier le site public
+        run: |
+          curl --fail --silent --show-error --retry 5 --retry-delay 3 --retry-all-errors \
+            -o /dev/null -w "https://mycharmly.eu/api/chains -> %{http_code}\n" \
+            https://mycharmly.eu/api/chains

@@ -1,11 +1,20 @@
-# JewelryShop — toute l'application en une commande :  docker compose up -d --build
-# Les valeurs secrètes viennent du fichier .env (non versionné, voir .env.example).
+# JewelryShop — production. Copié sur le serveur en /srv/jewel-app/compose.yaml
+# par le workflow de déploiement ; le .env à côté est écrit par ce même workflow.
+# Différences avec le compose.yaml local : images ghcr.io (pas de build),
+# limites mémoire, rotation des logs.
 
 name: jewel-app
 
+# Bloc réutilisable (ancre YAML) : Docker garde au plus 3 fichiers de 10 Mo de logs
+# par conteneur. Sans ça, les logs grossissent jusqu'à remplir le disque.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
 
-  # ── Base de données ─────────────────────────────────────────────────────────
   db:
     image: postgres:16-alpine
     restart: unless-stopped
@@ -16,18 +25,19 @@ services:
     volumes:
       - db-data:/var/lib/postgresql/data
     healthcheck:
-      # $$ = un $ littéral : la variable est lue DANS le conteneur, pas par Compose.
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks: [backend]
-    # Aucun "ports:" : la base n'est joignable que par les services du réseau backend.
+    logging: *logging
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
-  # ── API .NET ────────────────────────────────────────────────────────────────
   api:
-    build: ./jewel-api
-    image: jewel-api:local
+    image: ghcr.io/marieesss/jewel-api:${IMAGE_TAG:?IMAGE_TAG manquant dans .env}
     restart: unless-stopped
     environment:
       ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=jewelryshop;Username=jewel;Password=${POSTGRES_PASSWORD}"
@@ -38,37 +48,46 @@ services:
       Cloudinary__CloudName: ${CLOUDINARY_CLOUD_NAME:?CLOUDINARY_CLOUD_NAME manquant dans .env}
       Cloudinary__ApiKey: ${CLOUDINARY_API_KEY:?CLOUDINARY_API_KEY manquant dans .env}
       Cloudinary__ApiSecret: ${CLOUDINARY_API_SECRET:?CLOUDINARY_API_SECRET manquant dans .env}
-      # Lit X-Forwarded-For / X-Forwarded-Proto envoyés par la passerelle :
-      # l'API voit la vraie IP du visiteur et sait que la requête d'origine était en HTTPS.
       ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
     depends_on:
       db:
-        condition: service_healthy   # attend que pg_isready réponde, pas juste que le conteneur existe
+        condition: service_healthy
     networks: [backend, edge]
+    logging: *logging
+    deploy:
+      resources:
+        limits:
+          memory: 384M
 
-  # ── Front React (fichiers statiques servis par Nginx) ───────────────────────
   front:
-    build: ./jewel-front
-    image: jewel-front:local
+    image: ghcr.io/marieesss/jewel-front:${IMAGE_TAG:?IMAGE_TAG manquant dans .env}
     restart: unless-stopped
     networks: [edge]
+    logging: *logging
+    deploy:
+      resources:
+        limits:
+          memory: 64M
 
-  # ── Passerelle : point d'entrée unique, route /api → api et / → front ───────
   gateway:
     image: nginxinc/nginx-unprivileged:1.27-alpine
     restart: unless-stopped
     volumes:
-      - ./deploy/gateway/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./gateway/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     ports:
-      - "127.0.0.1:8090:8080"
+      - "127.0.0.1:8090:8080"   # joignable uniquement par le Nginx du serveur
     depends_on:
       api:
         condition: service_healthy
       front:
         condition: service_healthy
     networks: [edge]
+    logging: *logging
+    deploy:
+      resources:
+        limits:
+          memory: 64M
 
-  # ── pgAdmin : interface web pour consulter la base ──────────────────────────
   pgadmin:
     image: dpage/pgadmin4:9
     restart: unless-stopped
@@ -78,20 +97,24 @@ services:
       PGADMIN_CONFIG_SERVER_MODE: "True"
     volumes:
       - pgadmin-data:/var/lib/pgadmin
-      - ./deploy/pgadmin/servers.json:/pgadmin4/servers.json:ro
+      - ./pgadmin/servers.json:/pgadmin4/servers.json:ro
     ports:
-      - "127.0.0.1:8092:80"
+      - "127.0.0.1:8092:80"     # joignable uniquement par le Nginx du serveur
     depends_on:
       db:
         condition: service_healthy
     networks: [backend, edge]
+    logging: *logging
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
 volumes:
-  db-data:        # données Postgres : survivent à "docker compose down"
-  pgadmin-data:   # comptes et préférences pgAdmin
+  db-data:
+  pgadmin-data:
 
 networks:
-  # internal: aucun accès Internet, et rien ne peut y être publié vers l'hôte.
   backend:
     internal: true
   edge: {}
