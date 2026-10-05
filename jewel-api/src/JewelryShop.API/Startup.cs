@@ -14,6 +14,7 @@ using JewelryShop.Infrastructure.Persistence;
 using JewelryShop.Infrastructure.Services;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -40,6 +41,7 @@ public static class Startup
         AddPersistence(services, configuration);
         AddApplication(services);
         AddInfrastructureServices(services);
+        AddHealthChecks(services);
     }
 
     public static void ConfigurePipeline(this WebApplication app)
@@ -66,6 +68,11 @@ public static class Startup
         app.UseAuthorization();
 
         app.MapControllers();
+
+        // live  : le process répond (aucun check exécuté).
+        // ready : l'API peut servir du trafic (la base répond).
+        app.MapHealthChecks("/health/live",  new HealthCheckOptions { Predicate = _ => false });
+        app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = c => c.Tags.Contains("ready") });
     }
 
     // ── Private helpers ───────────────────────────────────────────────────────
@@ -191,5 +198,11 @@ public static class Startup
         services.AddScoped<IJwtService,         JwtService>();
         services.AddScoped<IPasswordHasher,     BcryptPasswordHasher>();
         services.AddScoped<IFileStorageService, CloudinaryFileStorageService>();
+    }
+
+    private static void AddHealthChecks(IServiceCollection services)
+    {
+        services.AddHealthChecks()
+            .AddDbContextCheck<AppDbContext>(name: "database", tags: new[] { "ready" });
     }
 }

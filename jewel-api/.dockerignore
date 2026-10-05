@@ -1,0 +1,20 @@
+# Artefacts de build locaux : reconstruits dans l'image
+**/bin/
+**/obj/
+
+# Secrets et config locale : ne doivent jamais entrer dans une image
+**/.env
+**/appsettings.*.local.json
+
+# Outils et éditeurs
+.vs/
+.idea/
+.claude/
+**/*.user
+
+# Inutile à l'image
+docker-compose*.yml
+Dockerfile
+.dockerignore
+db/init.sql
+db/seed_admin.sh

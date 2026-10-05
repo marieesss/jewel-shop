@@ -1,0 +1,14 @@
+# Réinstallés / reconstruits dans l'image
+node_modules
+dist
+*.tsbuildinfo
+
+# Secrets et config locale
+.env
+.env.*
+*.local
+
+# Inutile à l'image
+Dockerfile
+.dockerignore
+README.md

@@ -8,8 +8,11 @@
   </PropertyGroup>
 
 	<ItemGroup>
-		<Content Include="db\migrations\**\*.sql">
+		<!-- Les migrations vivent dans jewel-api/db/migrations (deux niveaux au-dessus du projet).
+		     Link les range sous db/migrations dans la sortie de build et de publish. -->
+		<Content Include="..\..\db\migrations\**\*.sql" Link="db\migrations\%(RecursiveDir)%(Filename)%(Extension)">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
 		</Content>
 	</ItemGroup>
 
@@ -25,6 +28,7 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.10" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.10">
     </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="8.0.10" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.10" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.0.2" />

@@ -2,3 +2,6 @@ jewel-api/obj/
 jewel-api/bin/
 jewel-api/.vs/
 
+# Résultats d'état des lieux du serveur (décrivent l'infra, ne pas publier)
+deploy/etat-des-lieux*.txt
+

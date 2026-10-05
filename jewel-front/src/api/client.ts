@@ -7,7 +7,7 @@ export const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-const TOKEN_KEY = import.meta.env.VITE_JWT_SECRET ?? (() => { throw new Error('JWT_SECRET is not defined in environment variables'); })();
+const TOKEN_KEY = 'jewelryshop_token';
 
 /** Injecte le Bearer token sur chaque requête s'il est présent. */
 api.interceptors.request.use((config) => {
