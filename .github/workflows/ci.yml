@@ -154,9 +154,12 @@ jobs:
 
       - name: Copier la configuration
         run: |
+          ssh "$TARGET" "mkdir -p $APP_DIR/scripts $APP_DIR/backups && chmod 700 $APP_DIR/backups"
           scp deploy/compose.prod.yaml "$TARGET:$APP_DIR/compose.yaml"
           scp deploy/gateway/nginx.conf "$TARGET:$APP_DIR/gateway/nginx.conf"
           scp deploy/pgadmin/servers.json "$TARGET:$APP_DIR/pgadmin/servers.json"
+          scp deploy/scripts/* "$TARGET:$APP_DIR/scripts/"
+          ssh "$TARGET" "chmod 750 $APP_DIR/scripts/*.sh"
 
       - name: Écrire le .env
         env:
@@ -181,6 +184,17 @@ jobs:
           PGADMIN_PASSWORD=$PGADMIN_PASSWORD
           EOF
 
+      - name: Écrire le mot de passe Nginx de pgAdmin
+        env:
+          BA_USER: ${{ secrets.PGADMIN_BASIC_AUTH_USER }}
+          BA_PASSWORD: ${{ secrets.PGADMIN_BASIC_AUTH_PASSWORD }}
+        # Le hash est calculé sur le runner ; seul le hash part sur le serveur.
+        # umask 027 : fichier 640 ; le dossier (setgid, groupe www-data) le rend lisible par Nginx.
+        # Nginx relit ce fichier à chaque requête : aucun rechargement nécessaire.
+        run: |
+          printf '%s:%s\n' "$BA_USER" "$(openssl passwd -apr1 "$BA_PASSWORD")" \
+            | ssh "$TARGET" "umask 027 && cat > /etc/nginx/jewel/pgadmin.htpasswd"
+
       - name: Mettre à jour les conteneurs
         env:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -192,8 +206,23 @@ jobs:
           trap 'docker logout ghcr.io >/dev/null' EXIT
           echo "$GHCR_TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
           docker compose pull
-          # --wait : échoue si les conteneurs ne deviennent pas "healthy" en 3 minutes.
+
+          # 1. Sauvegarde avant toute modification (sauf au tout premier déploiement).
+          if [ -n "\$(docker compose ps --status running --quiet db)" ]; then
+            ./scripts/backup.sh pre-deploy-${GITHUB_SHA::7}
+          fi
+
+          # 2. Base démarrée, puis migrations dans un conteneur jetable de la NOUVELLE image.
+          #    Si elles échouent, le script s'arrête ici : l'ancienne API tourne toujours.
+          docker compose up -d --wait db
+          ./scripts/sync-db-password.sh
+          docker compose run --rm --no-deps api --migrate
+
+          # 3. Remplacement des conteneurs. --wait : échoue s'ils ne sont pas "healthy" en 3 min.
           docker compose up -d --remove-orphans --wait --wait-timeout 180
+
+          # 4. Sauvegarde nocturne (remplace la crontab de deploy par celle du repo).
+          crontab scripts/crontab
           # Supprime NOS anciennes images de plus de 3 jours (label posé par metadata-action),
           # sans jamais toucher à celles d'italian-app.
           docker image prune -af \

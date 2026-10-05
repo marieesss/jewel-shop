@@ -29,7 +29,7 @@ public static class Startup
 {
     public static void ConfigureServices(this WebApplicationBuilder builder)
     {
-        var services      = builder.Services;
+        var services = builder.Services;
         var configuration = builder.Configuration;
 
         services.AddControllers();
@@ -71,7 +71,7 @@ public static class Startup
 
         // live  : le process répond (aucun check exécuté).
         // ready : l'API peut servir du trafic (la base répond).
-        app.MapHealthChecks("/health/live",  new HealthCheckOptions { Predicate = _ => false });
+        app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });
         app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = c => c.Tags.Contains("ready") });
     }
 
@@ -112,12 +112,12 @@ public static class Startup
 
             c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
-                Name         = "Authorization",
-                Type         = SecuritySchemeType.Http,
-                Scheme       = "bearer",
+                Name = "Authorization",
+                Type = SecuritySchemeType.Http,
+                Scheme = "bearer",
                 BearerFormat = "JWT",
-                In           = ParameterLocation.Header,
-                Description  = "Entrez votre JWT : Bearer {token}"
+                In = ParameterLocation.Header,
+                Description = "Entrez votre JWT : Bearer {token}"
             });
 
             c.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -146,19 +146,19 @@ public static class Startup
             .AddAuthentication(o =>
             {
                 o.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                o.DefaultChallengeScheme    = JwtBearerDefaults.AuthenticationScheme;
+                o.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             })
             .AddJwtBearer(o =>
             {
                 o.TokenValidationParameters = new TokenValidationParameters
                 {
-                    ValidateIssuer           = true,
-                    ValidateAudience         = true,
-                    ValidateLifetime         = true,
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer              = configuration["Jwt:Issuer"],
-                    ValidAudience            = configuration["Jwt:Audience"],
-                    IssuerSigningKey         = new SymmetricSecurityKey(
+                    ValidIssuer = configuration["Jwt:Issuer"],
+                    ValidAudience = configuration["Jwt:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(
                                                   Encoding.UTF8.GetBytes(secret))
                 };
             });
@@ -171,17 +171,16 @@ public static class Startup
         var connectionString = configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException(
                 "ConnectionStrings__DefaultConnection manquant dans .env");
-
         services.AddDbContext<AppDbContext>(options =>
-            options.UseNpgsql(connectionString));
+            options.UseNpgsql(connectionString, npgsql => npgsql.EnableRetryOnFailure()));
 
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-        services.AddScoped<IUserRepository,     UserRepository>();
-        services.AddScoped<IChainRepository,    ChainRepository>();
-        services.AddScoped<ICharmRepository,    CharmRepository>();
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IChainRepository, ChainRepository>();
+        services.AddScoped<ICharmRepository, CharmRepository>();
         services.AddScoped<IFavoriteRepository, FavoriteRepository>();
         services.AddScoped<ICreationRepository, CreationRepository>();
-        services.AddScoped<IOptionRepository,   OptionRepository>();
+        services.AddScoped<IOptionRepository, OptionRepository>();
     }
 
     private static void AddApplication(IServiceCollection services)
@@ -195,8 +194,8 @@ public static class Startup
 
     private static void AddInfrastructureServices(IServiceCollection services)
     {
-        services.AddScoped<IJwtService,         JwtService>();
-        services.AddScoped<IPasswordHasher,     BcryptPasswordHasher>();
+        services.AddScoped<IJwtService, JwtService>();
+        services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
         services.AddScoped<IFileStorageService, CloudinaryFileStorageService>();
     }
 

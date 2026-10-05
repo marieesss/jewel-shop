@@ -17,7 +17,27 @@ builder.ConfigureServices();
 
 var app = builder.Build();
 
-RunMigrations(app);
+// "dotnet JewelryShop.API.dll --migrate" : applique les migrations puis s'arrête,
+// sans démarrer le serveur web. Utilisé par le déploiement avant de remplacer l'API.
+if (args.Contains("--migrate"))
+{
+    try
+    {
+        RunMigrations(app);
+    }
+    catch
+    {
+        // Déjà journalisé par RunMigrations : on sort proprement avec un code d'erreur,
+        // que le script de déploiement détecte pour s'arrêter.
+        Environment.ExitCode = 1;
+    }
+    return;
+}
+
+// En dev, pratique de migrer au démarrage ; en prod, le déploiement s'en charge
+// (Database__MigrateOnStartup=false dans compose.prod.yaml).
+if (app.Configuration.GetValue("Database:MigrateOnStartup", defaultValue: true))
+    RunMigrations(app);
 
 app.ConfigurePipeline();
 app.Run();
@@ -40,7 +60,9 @@ static void RunMigrations(WebApplication app)
     {
         Locations        = new[] { migrationsPath },
         IsEraseDisabled  = true,   // Interdit DROP en production
-        EnableClusterMode = false
+        // Verrou Postgres (advisory lock) : si deux instances migrent en même temps
+        // (plusieurs réplicas sous Kubernetes), la seconde attend la première.
+        EnableClusterMode = true
     };
 
     try

@@ -1,0 +1,3 @@
+# Scripts shell : toujours en fins de ligne Unix (LF), même extraits sur Windows.
+*.sh text eol=lf
+deploy/scripts/crontab text eol=lf

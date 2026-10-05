@@ -49,6 +49,8 @@ services:
       Cloudinary__ApiKey: ${CLOUDINARY_API_KEY:?CLOUDINARY_API_KEY manquant dans .env}
       Cloudinary__ApiSecret: ${CLOUDINARY_API_SECRET:?CLOUDINARY_API_SECRET manquant dans .env}
       ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+      # Les migrations sont jouées par le déploiement (api --migrate), pas au démarrage.
+      Database__MigrateOnStartup: "false"
     depends_on:
       db:
         condition: service_healthy
@@ -96,8 +98,12 @@ services:
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:?PGADMIN_PASSWORD manquant dans .env}
       PGADMIN_CONFIG_SERVER_MODE: "True"
     volumes:
-      - pgadmin-data:/var/lib/pgadmin
       - ./pgadmin/servers.json:/pgadmin4/servers.json:ro
+    # Données pgAdmin en mémoire (tmpfs), pas dans un volume : à chaque changement de
+    # PGADMIN_EMAIL / PGADMIN_PASSWORD, le conteneur est recréé et repart des secrets GitHub.
+    # On perd seulement l'historique des requêtes et les préférences.
+    tmpfs:
+      - /var/lib/pgadmin:uid=5050,gid=5050,mode=0700
     ports:
       - "127.0.0.1:8092:80"     # joignable uniquement par le Nginx du serveur
     depends_on:
@@ -112,7 +118,6 @@ services:
 
 volumes:
   db-data:
-  pgadmin-data:
 
 networks:
   backend:

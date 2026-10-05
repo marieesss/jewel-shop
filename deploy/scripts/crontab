@@ -1,0 +1,5 @@
+# Tâches planifiées de l'utilisateur deploy (installées par le workflow avec "crontab").
+# Format : minute heure jour-du-mois mois jour-de-semaine commande   (heure du serveur, UTC)
+
+# Sauvegarde de la base chaque nuit à 03:30.
+30 3 * * * /srv/jewel-app/scripts/backup.sh daily >> /srv/jewel-app/backups/backup.log 2>&1
