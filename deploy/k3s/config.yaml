@@ -1,0 +1,12 @@
+
+
+# Les NodePorts (ports ouverts sur le nœud pour joindre un Service) n'écoutent que sur
+# 127.0.0.1 : rien ne peut être exposé à Internet par erreur avec un NodePort.
+kube-proxy-arg:
+  - nodeport-addresses=127.0.0.1/32
+
+# Le fichier d'accès admin au cluster (kubeconfig) n'est lisible que par root.
+write-kubeconfig-mode: "0600"
+
+# Nom du nœud dans le cluster (sinon : nom d'hôte de la machine).
+node-name: mycharmly-node-1

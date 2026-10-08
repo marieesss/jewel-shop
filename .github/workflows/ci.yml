@@ -121,7 +121,9 @@ jobs:
   deploy:
     name: Déploiement production
     needs: publish
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    # DÉSACTIVÉ pendant la migration vers Kubernetes (étape 7) : la production ne tourne
+    # plus sous Docker Compose. Ce job sera remplacé par un déploiement k3s à l'étape 8.
+    if: false
     runs-on: ubuntu-latest
     # Les secrets de l'environnement "production" ne sont accessibles qu'ici.
     environment:
