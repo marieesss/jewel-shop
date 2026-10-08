@@ -1,0 +1,10 @@
+# Namespace : espace isolé qui regroupe toutes les ressources de la production.
+# Les noms (Services, Secrets…) n'ont besoin d'être uniques qu'à l'intérieur d'un namespace :
+# à l'étape 8, un namespace jewel-staging contiendra une copie de l'application.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: jewel-prod
+  labels:
+    app.kubernetes.io/part-of: jewel-app
+    environment: production

@@ -1,0 +1,13 @@
+# StorageClass : décrit COMMENT créer un volume quand une application en réclame un (PVC).
+#
+# k3s fournit "local-path" (dossiers sur le disque du nœud), mais avec reclaimPolicy: Delete :
+# supprimer la demande de volume (PVC) efface aussi les données. Pour une base de données,
+# on préfère Retain : les données restent sur le disque tant qu'un humain ne les supprime pas.
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: local-path-retain
+provisioner: rancher.io/local-path        # le même créateur de volumes que "local-path"
+reclaimPolicy: Retain
+# Le volume n'est créé qu'au moment où un pod l'utilise (et donc sur le nœud de ce pod).
+volumeBindingMode: WaitForFirstConsumer

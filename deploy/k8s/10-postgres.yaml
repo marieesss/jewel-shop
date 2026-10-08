@@ -1,0 +1,88 @@
+# Postgres de production.
+# Prérequis : le Secret "postgres-credentials" (clé POSTGRES_PASSWORD), créé hors du repo.
+
+# ── Service : nom DNS stable "postgres" pour joindre la base ─────────────────
+# clusterIP: None = Service "headless" : pas d'IP virtuelle ni de répartition de charge,
+# le nom résout directement vers le pod. C'est le Service exigé par un StatefulSet.
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: jewel-prod
+  labels:
+    app.kubernetes.io/name: postgres
+spec:
+  clusterIP: None
+  selector:
+    app.kubernetes.io/name: postgres   # envoie vers les pods portant ce label
+  ports:
+    - name: postgres
+      port: 5432
+---
+# ── StatefulSet : gère un pod qui a une identité et un stockage stables ──────
+# Contrairement à un Deployment, le pod s'appelle toujours "postgres-0" et retrouve
+# toujours le MÊME volume, même s'il est recréé.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: jewel-prod
+  labels:
+    app.kubernetes.io/name: postgres
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: postgres
+  template:                              # modèle des pods créés par le StatefulSet
+    metadata:
+      labels:
+        app.kubernetes.io/name: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - name: postgres
+              containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: jewelryshop
+            - name: POSTGRES_USER
+              value: jewel
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:            # lu dans le Secret, jamais écrit dans ce fichier
+                  name: postgres-credentials
+                  key: POSTGRES_PASSWORD
+            # Les données dans un SOUS-dossier du volume : initdb refuse un dossier
+            # non vide, et certains volumes contiennent déjà des fichiers (ex. lost+found).
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+          # Équivalent du healthcheck de Compose : tant que pg_isready échoue,
+          # le pod n'est pas "Ready" et ne reçoit pas de trafic.
+          readinessProbe:
+            exec:
+              command: ["sh", "-c", "pg_isready -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\""]
+            periodSeconds: 10
+            timeoutSeconds: 5
+          resources:
+            requests:                    # ce que le scheduler réserve pour ce pod
+              cpu: 50m                   # 5 % d'un cœur
+              memory: 128Mi
+            limits:                      # plafond : au-delà, le conteneur est tué et relancé
+              memory: 512Mi
+  # Un PVC est créé automatiquement pour chaque pod (ici : data-postgres-0).
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]   # monté en écriture par un seul nœud à la fois
+        storageClassName: local-path-retain
+        resources:
+          requests:
+            storage: 5Gi
