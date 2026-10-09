@@ -1,0 +1,19 @@
+# ConfigMap : configuration NON secrète de l'API, versionnée dans le repo.
+# Les valeurs sensibles (chaîne de connexion, clé JWT, Cloudinary) sont dans le Secret
+# "api-secrets", créé hors du repo (create-secrets.sh, puis GitHub Actions à l'étape 8).
+# Chaque clé devient une variable d'environnement du conteneur (via envFrom).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-config
+  namespace: jewel-prod
+  labels:
+    app.kubernetes.io/name: api
+data:
+  Jwt__Issuer: JewelryShop
+  Jwt__Audience: JewelryShop
+  Jwt__ExpiresInDays: "7"
+  # Lit X-Forwarded-For / X-Forwarded-Proto envoyés par Traefik.
+  ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+  # Les migrations sont jouées par le Job api-migrate, pas au démarrage de l'API.
+  Database__MigrateOnStartup: "false"

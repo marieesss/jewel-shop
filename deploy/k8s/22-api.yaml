@@ -1,0 +1,82 @@
+# API .NET : Deployment (les pods) + Service (leur nom et adresse stables dans le cluster).
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  namespace: jewel-prod
+  labels:
+    app.kubernetes.io/name: api
+spec:
+  replicas: 1                     # 1 seul pod : le serveur n'a que 3,7 Go de RAM
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: api
+  # Mise à jour progressive : le nouveau pod démarre et doit être "Ready"
+  # AVANT que l'ancien soit arrêté → aucune coupure lors d'un déploiement.
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1                 # 1 pod en plus autorisé pendant la mise à jour
+      maxUnavailable: 0           # jamais moins de pods prêts que demandé
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: api
+    spec:
+      imagePullSecrets:
+        - name: ghcr-pull         # identifiants pour télécharger l'image privée de ghcr.io
+      securityContext:
+        runAsNonRoot: true        # refuse de démarrer si l'image tournait en root
+      containers:
+        - name: api
+          # TEMPORAIRE : "latest" le temps de l'étape 7 ; sha du commit à l'étape 8.
+          image: ghcr.io/marieesss/jewel-api:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8080
+          envFrom:                # toutes les clés deviennent des variables d'environnement
+            - configMapRef:
+                name: api-config
+            - secretRef:
+                name: api-secrets
+          # Kubernetes IGNORE le HEALTHCHECK du Dockerfile : il a ses propres sondes,
+          # appelées en HTTP par le kubelet depuis l'extérieur du conteneur.
+          readinessProbe:         # "puis-je recevoir du trafic ?" (la base répond-elle ?)
+            httpGet:
+              path: /health/ready
+              port: http
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:          # "suis-je vivant ?" — en échec : le conteneur est redémarré
+            httpGet:
+              path: /health/live
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 20
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 100m
+              memory: 192Mi
+            limits:
+              memory: 384Mi
+---
+# Service ClusterIP (type par défaut) : une adresse virtuelle fixe et le nom DNS "api",
+# joignables uniquement depuis l'intérieur du cluster. Répartit le trafic entre les pods
+# "Ready" portant le label app.kubernetes.io/name=api.
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+  namespace: jewel-prod
+  labels:
+    app.kubernetes.io/name: api
+spec:
+  selector:
+    app.kubernetes.io/name: api
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http

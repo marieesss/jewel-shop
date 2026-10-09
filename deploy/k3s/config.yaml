@@ -9,7 +9,5 @@ kube-proxy-arg:
 write-kubeconfig-mode: "0600"
 
 # Nom du nœud dans le cluster (sinon : nom d'hôte de la machine).
-node-name: mycharmly-node-1
-
-# Nom du nœud dans le cluster (sinon : nom d'hôte de la machine).
+# Le script 07a-installer-k3s.sh attend ce nom : ne pas le modifier sans adapter le script.
 node-name: mycharmly-node-1
