@@ -1,26 +1,12 @@
-# Routage : quel domaine et quel chemin vont vers quel Service.
+# Routage de la PRODUCTION : quel domaine et quel chemin vont vers quel Service.
 # Remplace le site Nginx du serveur ET la passerelle Nginx du Compose.
 # Appliqué par Traefik, le contrôleur Ingress installé par k3s (ingressClassName: traefik).
 
-# ── Middleware : redirection HTTP → HTTPS ────────────────────────────────────
-# Sans effet sur une requête déjà en HTTPS. N'affecte pas le défi Let's Encrypt :
-# cert-manager le sert par son propre Ingress temporaire.
-apiVersion: traefik.io/v1alpha1
-kind: Middleware
-metadata:
-  name: redirect-https
-  namespace: jewel-prod
-spec:
-  redirectScheme:
-    scheme: https
-    permanent: true                # 301 : le navigateur retient la redirection
----
 # ── Application : mycharmly.eu ───────────────────────────────────────────────
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: jewel-app
-  namespace: jewel-prod
   labels:
     app.kubernetes.io/part-of: jewel-app
   annotations:
@@ -62,7 +48,6 @@ apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
   name: pgadmin-auth
-  namespace: jewel-prod
 spec:
   basicAuth:
     # Secret contenant une clé "users" au format htpasswd (créé par create-secrets.sh).
@@ -74,7 +59,6 @@ apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
   name: pgadmin-ratelimit
-  namespace: jewel-prod
 spec:
   rateLimit:
     average: 10                    # 10 requêtes/s par IP en moyenne
@@ -85,7 +69,6 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: pgadmin
-  namespace: jewel-prod
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     # Format : <namespace>-<nom>@kubernetescrd, séparés par des virgules SANS espace,

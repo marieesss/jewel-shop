@@ -1,0 +1,59 @@
+# Routage du STAGING : staging.mycharmly.eu, entièrement protégé par mot de passe
+# (une version en cours de validation n'a pas à être publique).
+
+# Basic auth : Secret "staging-basic-auth" (clé "users" au format htpasswd),
+# créé par le pipeline à partir des secrets GitHub de l'environnement staging.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: staging-auth
+spec:
+  basicAuth:
+    secret: staging-basic-auth
+    realm: JewelryShop staging
+    removeHeader: true
+---
+# Demande aux moteurs de recherche de ne pas indexer le staging.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: noindex
+spec:
+  headers:
+    customResponseHeaders:
+      X-Robots-Tag: "noindex, nofollow"
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jewel-app
+  labels:
+    app.kubernetes.io/part-of: jewel-app
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    # <namespace>-<nom>@kubernetescrd : ici le namespace est jewel-staging.
+    traefik.ingress.kubernetes.io/router.middlewares: jewel-staging-redirect-https@kubernetescrd,jewel-staging-staging-auth@kubernetescrd,jewel-staging-noindex@kubernetescrd
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - staging.mycharmly.eu
+      secretName: jewel-app-tls
+  rules:
+    - host: staging.mycharmly.eu
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: api
+                port:
+                  name: http
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: front
+                port:
+                  name: http

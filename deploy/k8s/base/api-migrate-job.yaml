@@ -8,7 +8,6 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: api-migrate
-  namespace: jewel-prod
   labels:
     app.kubernetes.io/name: api-migrate
 spec:

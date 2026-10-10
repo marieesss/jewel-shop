@@ -1,0 +1,36 @@
+# STAGING (namespace jewel-staging, staging.mycharmly.eu).
+# = la base + son propre routage protégé par mot de passe, avec des ressources réduites.
+# Pas de pgAdmin ni de sauvegardes : les données de staging sont jetables.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: jewel-staging
+
+resources:
+  - ../../base
+  - ingress.yaml
+
+images:
+  - name: ghcr.io/marieesss/jewel-api
+    newTag: latest
+  - name: ghcr.io/marieesss/jewel-front
+    newTag: latest
+
+# Modifications ciblées de ressources de la base (format JSON Patch : opération + chemin).
+patches:
+  # Base de données plus petite : 1 Go au lieu de 5.
+  - target:
+      kind: StatefulSet
+      name: postgres
+    patch: |-
+      - op: replace
+        path: /spec/volumeClaimTemplates/0/spec/resources/requests/storage
+        value: 1Gi
+  # Moins de mémoire réservée pour l'API.
+  - target:
+      kind: Deployment
+      name: api
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: 128Mi

@@ -1,0 +1,19 @@
+# Namespaces : un espace isolé par environnement.
+# Les noms (Services, Secrets…) n'ont besoin d'être uniques qu'à l'intérieur d'un namespace :
+# staging et production contiennent les mêmes ressources, avec les mêmes noms.
+# Ressource "plateforme" : créée par l'admin, le pipeline n'a pas le droit d'en créer.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: jewel-prod
+  labels:
+    app.kubernetes.io/part-of: jewel-app
+    environment: production
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: jewel-staging
+  labels:
+    app.kubernetes.io/part-of: jewel-app
+    environment: staging

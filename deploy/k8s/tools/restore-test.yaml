@@ -2,7 +2,7 @@
 # temporaire "restore_test", compare avec la production, puis supprime la base temporaire.
 # La base de production n'est que lue.
 #
-# Lancer :   kubectl apply -f 61-postgres-restore-test.yaml
+# Lancer :   kubectl apply -f deploy/k8s/tools/restore-test.yaml
 # Résultat : kubectl -n jewel-prod logs job/postgres-restore-test
 # Relancer : kubectl -n jewel-prod delete job postgres-restore-test, puis apply à nouveau.
 

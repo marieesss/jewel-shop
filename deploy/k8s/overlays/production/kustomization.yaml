@@ -1,0 +1,20 @@
+# PRODUCTION (namespace jewel-prod, mycharmly.eu).
+# = la base + ce qui n'existe qu'en production : son routage, pgAdmin, les sauvegardes.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Ajouté à TOUTES les ressources (y compris celles de la base).
+namespace: jewel-prod
+
+resources:
+  - ../../base
+  - ingress.yaml
+  - pgadmin.yaml
+  - postgres-backup.yaml
+
+# Tag des images de l'application. Le pipeline (étape 8c) le remplace par le sha du commit.
+images:
+  - name: ghcr.io/marieesss/jewel-api
+    newTag: latest
+  - name: ghcr.io/marieesss/jewel-front
+    newTag: latest

@@ -1,0 +1,16 @@
+# BASE : ce qui est commun à tous les environnements (staging, production).
+# Aucun namespace, aucun domaine, aucun tag d'image définitif ici : ce sont les overlays
+# (overlays/staging, overlays/production) qui les fixent.
+#
+# Rendu :      kubectl kustomize overlays/production
+# Appliquer :  kubectl apply -k overlays/production
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - postgres.yaml
+  - api-config.yaml
+  - api-migrate-job.yaml
+  - api.yaml
+  - front.yaml
+  - redirect-https.yaml
