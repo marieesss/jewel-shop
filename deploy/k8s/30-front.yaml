@@ -1,0 +1,68 @@
+# Front React : fichiers statiques servis par Nginx (image de l'étape 1).
+# Même structure que l'API (22-api.yaml) : Deployment + Service ClusterIP.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: front
+  namespace: jewel-prod
+  labels:
+    app.kubernetes.io/name: front
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: front
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: front
+    spec:
+      imagePullSecrets:
+        - name: ghcr-pull
+      securityContext:
+        runAsNonRoot: true          # l'image nginx-unprivileged tourne avec l'utilisateur 101
+      containers:
+        - name: front
+          # TEMPORAIRE : "latest" le temps de l'étape 7 ; sha du commit à l'étape 8.
+          image: ghcr.io/marieesss/jewel-front:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              memory: 64Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: front
+  namespace: jewel-prod
+  labels:
+    app.kubernetes.io/name: front
+spec:
+  selector:
+    app.kubernetes.io/name: front
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http

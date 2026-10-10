@@ -1,0 +1,85 @@
+# Routage HTTP : quel domaine et quel chemin vont vers quel Service.
+# Remplace le site Nginx du serveur ET la passerelle Nginx du Compose.
+# Appliqué par Traefik, le contrôleur Ingress installé par k3s (ingressClassName: traefik).
+# Étape 7d : HTTP uniquement. Le HTTPS (bloc tls + cert-manager) arrive en 7e.
+
+# ── Application : mycharmly.eu ───────────────────────────────────────────────
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jewel-app
+  namespace: jewel-prod
+  labels:
+    app.kubernetes.io/part-of: jewel-app
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: mycharmly.eu
+      http: &app-routes            # ancre YAML : mêmes routes réutilisées pour www
+        paths:
+          # Le préfixe le plus long l'emporte : /api/... va à l'API, tout le reste au front.
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: api
+                port:
+                  name: http
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: front
+                port:
+                  name: http
+    - host: www.mycharmly.eu
+      http: *app-routes
+---
+# ── Middlewares Traefik pour pgAdmin ─────────────────────────────────────────
+# Un Middleware traite la requête AVANT qu'elle n'atteigne le Service.
+# Ressource propre à Traefik (CRD), référencée depuis l'Ingress par une annotation.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: pgadmin-auth
+  namespace: jewel-prod
+spec:
+  basicAuth:
+    # Secret contenant une clé "users" au format htpasswd (créé par create-secrets.sh).
+    secret: pgadmin-basic-auth
+    realm: Administration JewelryShop
+    removeHeader: true             # pgAdmin ne reçoit pas les identifiants du basic auth
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: pgadmin-ratelimit
+  namespace: jewel-prod
+spec:
+  rateLimit:
+    average: 10                    # 10 requêtes/s par IP en moyenne
+    burst: 40                      # rafale tolérée (chargement de la page)
+---
+# ── pgAdmin : pgadmin.mycharmly.eu ───────────────────────────────────────────
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pgadmin
+  namespace: jewel-prod
+  annotations:
+    # Format : <namespace>-<nom>@kubernetescrd, séparés par des virgules SANS espace,
+    # appliqués dans l'ordre : limite de débit d'abord, puis mot de passe.
+    traefik.ingress.kubernetes.io/router.middlewares: jewel-prod-pgadmin-ratelimit@kubernetescrd,jewel-prod-pgadmin-auth@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: pgadmin.mycharmly.eu
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: pgadmin
+                port:
+                  name: http
