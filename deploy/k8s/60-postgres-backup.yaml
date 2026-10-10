@@ -1,0 +1,135 @@
+# Sauvegarde quotidienne de la base de production (remplace le cron de l'étape 6).
+# Prérequis : le Secret "postgres-credentials" (étape 7b).
+# Optionnel : le Secret "backup-healthcheck" (clé URL) pour une alerte si la sauvegarde
+# ne s'est pas exécutée (voir le message de l'étape 7f).
+
+# ── Volume dédié aux sauvegardes ─────────────────────────────────────────────
+# Séparé du volume de la base : supprimer ou corrompre l'un n'affecte pas l'autre.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-backups
+  namespace: jewel-prod
+  labels:
+    app.kubernetes.io/name: postgres-backup
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: local-path-retain
+  resources:
+    requests:
+      storage: 5Gi
+---
+# ── Le script, monté comme fichier dans le pod (comme servers.json en 7d) ─────
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-backup-script
+  namespace: jewel-prod
+  labels:
+    app.kubernetes.io/name: postgres-backup
+data:
+  backup.sh: |
+    #!/bin/sh
+    # Exécuté dans l'image postgres:16-alpine : pg_dump et pg_restore y sont déjà.
+    set -eu
+
+    DIR=/backups
+    FILE="$DIR/jewelryshop-$(date -u +%Y%m%d-%H%M%S).dump"
+
+    echo "Sauvegarde vers $FILE"
+    # Connexion par le Service "postgres" ; mot de passe lu dans PGPASSWORD (Secret).
+    pg_dump --host=postgres --username=jewel --dbname=jewelryshop \
+            --format=custom --file="$FILE.tmp"
+
+    # VÉRIFICATION : pg_restore --list relit tout le sommaire du fichier.
+    # Il échoue si le fichier est tronqué ou corrompu ; on exige aussi des données de tables.
+    TABLES=$(pg_restore --list "$FILE.tmp" | grep -c " TABLE DATA ")
+    if [ "$TABLES" -eq 0 ]; then
+      echo "ERREUR : la sauvegarde ne contient aucune table" >&2
+      exit 1
+    fi
+    mv "$FILE.tmp" "$FILE"
+
+    # Rotation : sauvegardes de plus de RETENTION_DAYS jours, et .tmp abandonnés.
+    find "$DIR" -name 'jewelryshop-*.dump' -mtime +"$RETENTION_DAYS" -delete
+    find "$DIR" -name '*.tmp' -mmin +60 -delete
+
+    date -u +%FT%TZ > "$DIR/last-success"
+    echo "OK : $FILE ($(du -h "$FILE" | cut -f1), $TABLES tables)"
+    ls -lh "$DIR"
+
+    # Surveillance externe (facultative) : on signale "je suis passé".
+    # Si le signal n'arrive pas dans les délais, le service de surveillance alerte.
+    if [ -n "${HEALTHCHECK_URL:-}" ]; then
+      wget -q -T 10 -O /dev/null "$HEALTHCHECK_URL" \
+        && echo "Signal de surveillance envoyé" \
+        || echo "ATTENTION : signal de surveillance non envoyé"
+    fi
+---
+# ── CronJob : crée un Job selon le planning ──────────────────────────────────
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-backup
+  namespace: jewel-prod
+  labels:
+    app.kubernetes.io/name: postgres-backup
+spec:
+  schedule: "30 3 * * *"           # minute heure jour mois jour-de-semaine : 03:30 chaque jour
+  timeZone: Europe/Paris
+  concurrencyPolicy: Forbid        # si la sauvegarde précédente tourne encore, on n'en lance pas une 2e
+  startingDeadlineSeconds: 3600    # serveur éteint à 03:30 ? rattrapée si redémarré avant 04:30
+  successfulJobsHistoryLimit: 3    # garde les 3 dernières exécutions réussies (et leurs logs)
+  failedJobsHistoryLimit: 3        # et les 3 dernières en échec, pour comprendre
+  jobTemplate:                     # modèle du Job créé à chaque exécution
+    spec:
+      backoffLimit: 2              # jusqu'à 2 nouveaux essais en cas d'échec
+      activeDeadlineSeconds: 900   # tuée au-delà de 15 minutes
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: postgres-backup
+        spec:
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 70          # utilisateur "postgres" de l'image Alpine
+            runAsGroup: 70
+            fsGroup: 70
+          containers:
+            - name: backup
+              image: postgres:16-alpine
+              command: ["sh", "/scripts/backup.sh"]
+              env:
+                - name: RETENTION_DAYS
+                  value: "14"
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: postgres-credentials
+                      key: POSTGRES_PASSWORD
+                - name: HEALTHCHECK_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: backup-healthcheck
+                      key: URL
+                      optional: true   # le pod démarre même si ce Secret n'existe pas
+              volumeMounts:
+                - name: backups
+                  mountPath: /backups
+                - name: script
+                  mountPath: /scripts
+                  readOnly: true
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 64Mi
+                limits:
+                  memory: 256Mi
+          volumes:
+            - name: backups
+              persistentVolumeClaim:
+                claimName: postgres-backups
+            - name: script
+              configMap:
+                name: postgres-backup-script

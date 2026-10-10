@@ -1,0 +1,99 @@
+# TEST DE RESTAURATION, non destructif : restaure la DERNIÈRE sauvegarde dans une base
+# temporaire "restore_test", compare avec la production, puis supprime la base temporaire.
+# La base de production n'est que lue.
+#
+# Lancer :   kubectl apply -f 61-postgres-restore-test.yaml
+# Résultat : kubectl -n jewel-prod logs job/postgres-restore-test
+# Relancer : kubectl -n jewel-prod delete job postgres-restore-test, puis apply à nouveau.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-restore-test-script
+  namespace: jewel-prod
+  labels:
+    app.kubernetes.io/name: postgres-restore-test
+data:
+  restore-test.sh: |
+    #!/bin/sh
+    set -eu
+    PG="--host=postgres --username=jewel"
+    TESTDB=restore_test
+
+    LATEST=$(ls -1t /backups/jewelryshop-*.dump 2>/dev/null | head -1)
+    [ -n "$LATEST" ] || { echo "ERREUR : aucune sauvegarde dans /backups" >&2; exit 1; }
+    echo "Sauvegarde testée : $LATEST (du $(cat /backups/last-success 2>/dev/null || echo '?'))"
+
+    # La base temporaire est supprimée en sortie, même en cas d'échec.
+    cleanup() { psql $PG -d jewelryshop -qc "DROP DATABASE IF EXISTS $TESTDB" >/dev/null; }
+    trap cleanup EXIT
+
+    psql $PG -d jewelryshop -qc "DROP DATABASE IF EXISTS $TESTDB"
+    psql $PG -d jewelryshop -qc "CREATE DATABASE $TESTDB"
+    pg_restore $PG --dbname=$TESTDB --no-owner --exit-on-error "$LATEST"
+
+    # Comparaison table par table. La production a pu évoluer depuis la sauvegarde :
+    # un écart n'est pas forcément une erreur, mais une table vide ou absente en est une.
+    FAIL=0
+    for t in users chains charms options favorites creations creation_items changelog; do
+      PROD=$(psql $PG -d jewelryshop -tAc "SELECT count(*) FROM $t")
+      REST=$(psql $PG -d $TESTDB    -tAc "SELECT count(*) FROM $t" 2>/dev/null || echo "ABSENTE")
+      printf '%-15s production=%-6s sauvegarde=%s\n' "$t" "$PROD" "$REST"
+      [ "$REST" = "ABSENTE" ] && FAIL=1
+    done
+
+    [ "$FAIL" -eq 0 ] && echo "RESTAURATION OK : la sauvegarde est exploitable" \
+                      || { echo "RESTAURATION EN ÉCHEC" >&2; exit 1; }
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: postgres-restore-test
+  namespace: jewel-prod
+  labels:
+    app.kubernetes.io/name: postgres-restore-test
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 600
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: postgres-restore-test
+    spec:
+      restartPolicy: Never
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 70
+        runAsGroup: 70
+        fsGroup: 70
+      containers:
+        - name: restore-test
+          image: postgres:16-alpine
+          command: ["sh", "/scripts/restore-test.sh"]
+          env:
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: POSTGRES_PASSWORD
+          volumeMounts:
+            - name: backups
+              mountPath: /backups
+              readOnly: true            # le test ne peut pas abîmer les sauvegardes
+            - name: script
+              mountPath: /scripts
+              readOnly: true
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
+      volumes:
+        - name: backups
+          persistentVolumeClaim:
+            claimName: postgres-backups
+        - name: script
+          configMap:
+            name: postgres-restore-test-script
