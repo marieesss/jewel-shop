@@ -1,0 +1,41 @@
+# cert-manager : obtient et renouvelle automatiquement les certificats TLS (Let's Encrypt).
+# Ressource "plateforme" : installée une fois par l'admin du cluster, pas par le pipeline.
+#
+# HelmChart est une ressource propre à k3s : elle installe un chart Helm de façon
+# déclarative (k3s exécute "helm install" pour nous, comme il l'a fait pour Traefik).
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: cert-manager
+  namespace: kube-system           # les HelmChart de k3s vivent dans kube-system…
+spec:
+  repo: https://charts.jetstack.io
+  chart: cert-manager
+  version: v1.21.2                 # version épinglée
+  targetNamespace: cert-manager    # …mais installent l'application dans son propre namespace
+  createNamespace: true
+  valuesContent: |-
+    # Installe aussi les CRD (Certificate, ClusterIssuer…) : les nouveaux types d'objets
+    # que cert-manager ajoute à Kubernetes.
+    crds:
+      enabled: true
+    resources:
+      requests:
+        cpu: 10m
+        memory: 64Mi
+      limits:
+        memory: 192Mi
+    webhook:
+      resources:
+        requests:
+          cpu: 10m
+          memory: 32Mi
+        limits:
+          memory: 96Mi
+    cainjector:
+      resources:
+        requests:
+          cpu: 10m
+          memory: 64Mi
+        limits:
+          memory: 192Mi

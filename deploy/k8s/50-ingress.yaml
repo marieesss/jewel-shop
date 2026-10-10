@@ -1,8 +1,20 @@
-# Routage HTTP : quel domaine et quel chemin vont vers quel Service.
+# Routage : quel domaine et quel chemin vont vers quel Service.
 # Remplace le site Nginx du serveur ET la passerelle Nginx du Compose.
 # Appliqué par Traefik, le contrôleur Ingress installé par k3s (ingressClassName: traefik).
-# Étape 7d : HTTP uniquement. Le HTTPS (bloc tls + cert-manager) arrive en 7e.
 
+# ── Middleware : redirection HTTP → HTTPS ────────────────────────────────────
+# Sans effet sur une requête déjà en HTTPS. N'affecte pas le défi Let's Encrypt :
+# cert-manager le sert par son propre Ingress temporaire.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: redirect-https
+  namespace: jewel-prod
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: true                # 301 : le navigateur retient la redirection
+---
 # ── Application : mycharmly.eu ───────────────────────────────────────────────
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -11,8 +23,16 @@ metadata:
   namespace: jewel-prod
   labels:
     app.kubernetes.io/part-of: jewel-app
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/router.middlewares: jewel-prod-redirect-https@kubernetescrd
 spec:
   ingressClassName: traefik
+  tls:
+    - hosts:
+        - mycharmly.eu
+        - www.mycharmly.eu
+      secretName: jewel-app-tls    # un seul certificat valable pour les deux noms
   rules:
     - host: mycharmly.eu
       http: &app-routes            # ancre YAML : mêmes routes réutilisées pour www
@@ -67,11 +87,17 @@ metadata:
   name: pgadmin
   namespace: jewel-prod
   annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
     # Format : <namespace>-<nom>@kubernetescrd, séparés par des virgules SANS espace,
-    # appliqués dans l'ordre : limite de débit d'abord, puis mot de passe.
-    traefik.ingress.kubernetes.io/router.middlewares: jewel-prod-pgadmin-ratelimit@kubernetescrd,jewel-prod-pgadmin-auth@kubernetescrd
+    # appliqués dans l'ordre : HTTPS d'abord (le mot de passe ne part jamais en clair),
+    # puis limite de débit, puis mot de passe.
+    traefik.ingress.kubernetes.io/router.middlewares: jewel-prod-redirect-https@kubernetescrd,jewel-prod-pgadmin-ratelimit@kubernetescrd,jewel-prod-pgadmin-auth@kubernetescrd
 spec:
   ingressClassName: traefik
+  tls:
+    - hosts:
+        - pgadmin.mycharmly.eu
+      secretName: pgadmin-tls
   rules:
     - host: pgadmin.mycharmly.eu
       http:
