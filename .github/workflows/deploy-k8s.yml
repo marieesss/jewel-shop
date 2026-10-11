@@ -1,0 +1,172 @@
+# Déploiement sur Kubernetes, RÉUTILISABLE : appelé par ci.yml pour staging puis production.
+# Écrit une seule fois : les deux environnements suivent exactement la même procédure.
+name: Déploiement Kubernetes
+
+on:
+  workflow_call:
+    inputs:
+      environment:        # nom de l'environnement GitHub : staging | production
+        type: string
+        required: true
+      url:                # adresse publique, affichée dans GitHub et testée à la fin
+        type: string
+        required: true
+
+jobs:
+  deploy:
+    name: Déployer en ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    # Les secrets de l'environnement ne sont fournis qu'ici. Pour "production",
+    # la règle "Required reviewers" fait ATTENDRE ce job jusqu'à ta validation.
+    environment:
+      name: ${{ inputs.environment }}
+      url: ${{ inputs.url }}
+    concurrency:
+      group: deploy-${{ inputs.environment }}
+      cancel-in-progress: false   # on n'interrompt jamais un déploiement en cours
+    permissions:
+      contents: read
+    env:
+      ENVIRONMENT: ${{ inputs.environment }}
+      OVERLAY: deploy/k8s/overlays/${{ inputs.environment }}
+      KUBECONFIG: ${{ github.workspace }}/.kube/config
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v7
+
+      - name: Installer kubectl (même version mineure que le cluster)
+        uses: azure/setup-kubectl@v5
+        with:
+          version: v1.36.5
+
+      # ── Accès au cluster : tunnel SSH + jeton du ServiceAccount ─────────────
+      - name: Ouvrir le tunnel vers l'API Kubernetes
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          KUBECONFIG_CONTENT: ${{ secrets.KUBECONFIG }}
+        run: |
+          install -d -m 700 ~/.ssh "$(dirname "$KUBECONFIG")"
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519 && chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          printf '%s\n' "$KUBECONFIG_CONTENT" > "$KUBECONFIG" && chmod 600 "$KUBECONFIG"
+          # -f : passe en arrière-plan une fois connecté ; -N : aucune commande, tunnel seul.
+          # ExitOnForwardFailure : échoue tout de suite si le tunnel ne peut pas s'ouvrir.
+          ssh -f -N -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 \
+            -L 6443:127.0.0.1:6443 "deploy@${{ vars.DEPLOY_HOST }}"
+          kubectl version
+          kubectl auth whoami
+
+      # ── Phase 0 : secrets ───────────────────────────────────────────────────
+      - name: Mettre à jour les Secrets depuis GitHub
+        env:
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+          CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
+          CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
+          GHCR_PULL_USER: ${{ secrets.GHCR_PULL_USER }}
+          GHCR_PULL_TOKEN: ${{ secrets.GHCR_PULL_TOKEN }}
+          PGADMIN_EMAIL: ${{ secrets.PGADMIN_EMAIL }}
+          PGADMIN_PASSWORD: ${{ secrets.PGADMIN_PASSWORD }}
+          PGADMIN_BASIC_AUTH_USER: ${{ secrets.PGADMIN_BASIC_AUTH_USER }}
+          PGADMIN_BASIC_AUTH_PASSWORD: ${{ secrets.PGADMIN_BASIC_AUTH_PASSWORD }}
+          BACKUP_HEALTHCHECK_URL: ${{ secrets.BACKUP_HEALTHCHECK_URL }}
+          STAGING_BASIC_AUTH_USER: ${{ secrets.STAGING_BASIC_AUTH_USER }}
+          STAGING_BASIC_AUTH_PASSWORD: ${{ secrets.STAGING_BASIC_AUTH_PASSWORD }}
+        run: bash deploy/k8s/tools/apply-secrets.sh "$ENVIRONMENT"
+
+      # ── Rendu des manifests pour CE commit ──────────────────────────────────
+      - name: Générer les manifests (Kustomize)
+        run: |
+          # Tag des images = sha du commit (l'image publiée par le job "publish").
+          sed -i "s/newTag: .*/newTag: ${GITHUB_SHA}/" "$OVERLAY/kustomization.yaml"
+          kubectl kustomize "$OVERLAY" > rendered.yaml
+          # Empreintes des secrets dans les annotations des modèles de pods.
+          sed -i \
+            -e "s|checksum/db-password: manual|checksum/db-password: \"$CHECKSUM_DB_PASSWORD\"|" \
+            -e "s|checksum/api-secrets: manual|checksum/api-secrets: \"$CHECKSUM_API_SECRETS\"|" \
+            -e "s|checksum/pgadmin-secrets: manual|checksum/pgadmin-secrets: \"$CHECKSUM_PGADMIN_SECRETS\"|" \
+            rendered.yaml
+          # Découpage en 3 lots, appliqués dans l'ordre (yq est installé sur les runners GitHub).
+          yq 'select(.kind != "Deployment" and .kind != "Job")' rendered.yaml > 1-socle.yaml
+          yq 'select(.kind == "Job")'                            rendered.yaml > 2-migration.yaml
+          yq 'select(.kind == "Deployment")'                     rendered.yaml > 3-applications.yaml
+          echo "Images déployées :" && grep -h 'image: ghcr.io' rendered.yaml | sort -u
+
+      - name: Différences avec ce qui tourne
+        # Pour information dans les logs : ce que ce déploiement va changer.
+        # (kubectl diff renvoie 1 quand il y a des différences : ce n'est pas une erreur.)
+        run: kubectl diff -f rendered.yaml || true
+
+      # ── Phase 1 : socle (config, services, base de données, routage) ────────
+      - name: Appliquer le socle
+        run: |
+          kubectl apply -f 1-socle.yaml
+          kubectl rollout status statefulset/postgres --timeout=300s
+
+      # ── Phase 2 : sauvegarde (production) puis migrations ───────────────────
+      - name: Sauvegarder la base avant migration
+        if: inputs.environment == 'production'
+        run: |
+          JOB="pre-deploy-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          kubectl create job --from=cronjob/postgres-backup "$JOB"
+          kubectl wait --for=condition=complete "job/$JOB" --timeout=300s
+          kubectl logs "job/$JOB"
+          # Les Jobs créés à la main ne sont pas nettoyés par le CronJob : on garde les 3 derniers.
+          kubectl get jobs -l app.kubernetes.io/name=postgres-backup \
+              --sort-by=.metadata.creationTimestamp -o name \
+            | grep '/pre-deploy-' | head -n -3 | xargs -r kubectl delete
+
+      - name: Migrations de la base
+        run: |
+          # Un Job terminé ne se relance pas : on supprime le précédent, puis on recrée.
+          kubectl delete job api-migrate --ignore-not-found --wait=true
+          kubectl apply -f 2-migration.yaml
+          # Attend la réussite OU l'échec (le premier des deux).
+          kubectl wait --for=condition=complete job/api-migrate --timeout=300s &
+          WAIT_OK=$!
+          kubectl wait --for=condition=failed   job/api-migrate --timeout=300s &
+          WAIT_KO=$!
+          wait -n "$WAIT_OK" "$WAIT_KO"; kill "$WAIT_OK" "$WAIT_KO" 2>/dev/null || true
+          kubectl logs job/api-migrate
+          if [ "$(kubectl get job api-migrate -o jsonpath='{.status.succeeded}')" != "1" ]; then
+            echo "::error::Migration en échec : les applications n'ont PAS été mises à jour."
+            exit 1
+          fi
+
+      # ── Phase 3 : applications, avec retour arrière automatique ─────────────
+      - name: Déployer les applications
+        run: |
+          kubectl apply -f 3-applications.yaml
+          for d in $(yq -N '.metadata.name' 3-applications.yaml); do
+            if ! kubectl rollout status "deployment/$d" --timeout=300s; then
+              echo "::error::deployment/$d ne démarre pas : retour à la version précédente."
+              kubectl describe "deployment/$d" | tail -n 20
+              kubectl rollout undo "deployment/$d"
+              kubectl rollout status "deployment/$d" --timeout=300s
+              exit 1
+            fi
+          done
+
+      # ── Vérification de bout en bout, comme un visiteur ─────────────────────
+      - name: Tests de fumée
+        id: smoke                 # référencé par le step de retour arrière ci-dessous
+        env:
+          BASIC_USER: ${{ secrets.STAGING_BASIC_AUTH_USER }}
+          BASIC_PASSWORD: ${{ secrets.STAGING_BASIC_AUTH_PASSWORD }}
+        run: |
+          AUTH=()
+          if [ "$ENVIRONMENT" = staging ]; then AUTH=(--user "$BASIC_USER:$BASIC_PASSWORD"); fi
+          for path in / /api/chains; do
+            curl --fail --silent --show-error --retry 10 --retry-delay 6 --retry-all-errors \
+              "${AUTH[@]}" -o /dev/null -w "${{ inputs.url }}$path -> %{http_code}\n" \
+              "${{ inputs.url }}$path"
+          done
+
+      - name: Retour arrière si les tests de fumée échouent
+        if: failure() && steps.smoke.outcome == 'failure'
+        run: |
+          for d in $(yq -N '.metadata.name' 3-applications.yaml); do
+            kubectl rollout undo "deployment/$d"
+          done

@@ -22,6 +22,11 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: api
+      annotations:
+        # Empreinte des valeurs du Secret api-secrets, calculée par le pipeline.
+        # Un Secret modifié ne redémarre PAS les pods ; une annotation du modèle de pod
+        # modifiée, si : changer l'empreinte déclenche une mise à jour progressive.
+        checksum/api-secrets: manual
     spec:
       imagePullSecrets:
         - name: ghcr-pull         # identifiants pour télécharger l'image privée de ghcr.io

@@ -8,3 +8,6 @@ deploy/etat-des-lieux*.txt
 
 # Secrets locaux de Docker Compose
 .env
+
+# Clés publiques copiées temporairement pour les envoyer au serveur
+*.pub

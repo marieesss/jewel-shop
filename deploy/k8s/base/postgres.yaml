@@ -37,6 +37,10 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: postgres
+      annotations:
+        # Empreinte de POSTGRES_PASSWORD (pipeline) : si le mot de passe change dans GitHub,
+        # le pod redémarre et le hook postStart ci-dessous l'applique à la base.
+        checksum/db-password: manual
     spec:
       containers:
         - name: postgres
@@ -61,6 +65,26 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /var/lib/postgresql/data
+          # Postgres ne lit POSTGRES_PASSWORD qu'à la création de la base ; ensuite le mot
+          # de passe est stocké DANS la base. Ce hook, exécuté par Kubernetes à chaque
+          # démarrage du conteneur, l'y réécrit : le secret GitHub reste la source de vérité
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                  - sh
+                  - -c
+                  - |
+                    # Attend le VRAI serveur : pendant l'initialisation, le serveur temporaire
+                    # n'écoute pas en TCP. Connexion par le socket local (sans mot de passe).
+                    for i in $(seq 1 60); do
+                      if pg_isready -q -h 127.0.0.1 -U "$POSTGRES_USER"; then
+                        printf 'ALTER ROLE "%s" WITH PASSWORD $pw$%s$pw$;\n' "$POSTGRES_USER" "$POSTGRES_PASSWORD" \
+                          | psql -q -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" && exit 0
+                      fi
+                      sleep 2
+                    done
+                    exit 1
           # Équivalent du healthcheck de Compose : tant que pg_isready échoue,
           # le pod n'est pas "Ready" et ne reçoit pas de trafic.
           readinessProbe:

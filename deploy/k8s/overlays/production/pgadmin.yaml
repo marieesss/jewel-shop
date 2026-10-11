@@ -43,6 +43,10 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: pgadmin
+      annotations:
+        # Empreinte de pgadmin-credentials (pipeline) : un nouveau mot de passe dans GitHub
+        # redémarre pgAdmin, qui repart des nouveaux identifiants (emptyDir).
+        checksum/pgadmin-secrets: manual
     spec:
       securityContext:
         # L'image déclare son utilisateur par son NOM ("pgadmin") : Kubernetes ne peut pas
@@ -92,7 +96,6 @@ spec:
               memory: 512Mi
       volumes:
         # emptyDir : dossier vide créé avec le pod et détruit avec lui. Même logique que le
-        # tmpfs de l'étape 6 : chaque nouveau pod repart des identifiants du Secret.
         - name: data
           emptyDir: {}
         - name: servers
