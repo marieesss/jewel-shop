@@ -14,3 +14,4 @@ resources:
   - api.yaml
   - front.yaml
   - redirect-https.yaml
+  - network-policies.yaml

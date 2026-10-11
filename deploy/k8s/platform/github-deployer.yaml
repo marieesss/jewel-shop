@@ -69,6 +69,10 @@ rules:
   - apiGroups: [networking.k8s.io]
     resources: [ingresses]
     verbs: [get, list, watch, create, update, patch, delete]
+  # Pare-feu entre pods (étape 9a) : géré avec l'application, car il en suit la structure.
+  - apiGroups: [networking.k8s.io]
+    resources: [networkpolicies]
+    verbs: [get, list, watch, create, update, patch, delete]
   - apiGroups: [traefik.io]
     resources: [middlewares]
     verbs: [get, list, watch, create, update, patch, delete]
@@ -146,6 +150,10 @@ rules:
   # Routage.
   - apiGroups: [networking.k8s.io]
     resources: [ingresses]
+    verbs: [get, list, watch, create, update, patch, delete]
+  # Pare-feu entre pods (étape 9a) : géré avec l'application, car il en suit la structure.
+  - apiGroups: [networking.k8s.io]
+    resources: [networkpolicies]
     verbs: [get, list, watch, create, update, patch, delete]
   - apiGroups: [traefik.io]
     resources: [middlewares]

@@ -45,7 +45,16 @@ jobs:
           SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
           KUBECONFIG_CONTENT: ${{ secrets.KUBECONFIG }}
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
         run: |
+          # Un réglage manquant donne sinon des erreurs obscures ("Could not resolve hostname :").
+          missing=0
+          [ -n "$DEPLOY_HOST" ]        || { echo "::error::Variable DEPLOY_HOST absente de l'environnement $ENVIRONMENT (onglet Variables, pas Secrets)"; missing=1; }
+          [ -n "$SSH_KEY" ]            || { echo "::error::Secret DEPLOY_SSH_KEY absent de l'environnement $ENVIRONMENT"; missing=1; }
+          [ -n "$KNOWN_HOSTS" ]        || { echo "::error::Secret DEPLOY_KNOWN_HOSTS absent de l'environnement $ENVIRONMENT"; missing=1; }
+          [ -n "$KUBECONFIG_CONTENT" ] || { echo "::error::Secret KUBECONFIG absent de l'environnement $ENVIRONMENT"; missing=1; }
+          [ "$missing" -eq 0 ] || exit 1
+
           install -d -m 700 ~/.ssh "$(dirname "$KUBECONFIG")"
           printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519 && chmod 600 ~/.ssh/id_ed25519
           printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
@@ -53,7 +62,7 @@ jobs:
           # -f : passe en arrière-plan une fois connecté ; -N : aucune commande, tunnel seul.
           # ExitOnForwardFailure : échoue tout de suite si le tunnel ne peut pas s'ouvrir.
           ssh -f -N -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 \
-            -L 6443:127.0.0.1:6443 "deploy@${{ vars.DEPLOY_HOST }}"
+            -L 6443:127.0.0.1:6443 "deploy@$DEPLOY_HOST"
           kubectl version
           kubectl auth whoami
 

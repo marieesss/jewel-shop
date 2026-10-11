@@ -1,0 +1,101 @@
+# NetworkPolicies : pare-feu ENTRE les pods, appliqué par le contrôleur intégré à k3s.
+# Sans elles, le réseau du cluster est totalement ouvert : n'importe quel pod (même d'un
+# autre namespace) peut joindre la base de données.
+#
+# Principe : tout trafic ENTRANT est refusé par défaut, puis chaque flux nécessaire est
+# autorisé explicitement. Les règles s'additionnent : un pod accepte un trafic dès
+# qu'UNE politique qui le sélectionne l'autorise.
+#
+# Les sondes (readiness/liveness) viennent du nœud lui-même : k3s les laisse passer.
+
+# ── 1. Refus par défaut ──────────────────────────────────────────────────────
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+spec:
+  podSelector: {}                  # {} = TOUS les pods du namespace
+  policyTypes: [Ingress]           # aucune règle "ingress" listée → tout entrant refusé
+---
+# ── 2. Traefik → applications web ────────────────────────────────────────────
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-traefik-to-web
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app.kubernetes.io/name
+        operator: In
+        values: [front, api, pgadmin]
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        # Les deux sélecteurs dans le MÊME élément = ET : pods "traefik" du namespace kube-system.
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: traefik
+      ports:
+        - port: 8080
+---
+# ── 3. Traefik → solveur ACME de cert-manager ────────────────────────────────
+# Pod temporaire créé dans CE namespace lors d'une demande ou d'un renouvellement de
+# certificat. Sans cette règle, le renouvellement échouerait en silence.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-traefik-to-acme-solver
+spec:
+  podSelector:
+    matchLabels:
+      acme.cert-manager.io/http01-solver: "true"
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: traefik
+      ports:
+        - port: 8089
+---
+# ── 4. Clients autorisés de la base de données ───────────────────────────────
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-db-clients
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: postgres
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        # Pas de namespaceSelector = pods du MÊME namespace uniquement :
+        # l'API de staging ne peut pas joindre la base de production.
+        - podSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values: [api, api-migrate, pgadmin, postgres-backup, postgres-restore-test]
+      ports:
+        - port: 5432
+---
+# ── 5. La base ne peut rien initier ──────────────────────────────────────────
+# Sortie (egress) entièrement refusée pour Postgres : même compromis, il ne pourrait
+# ni exfiltrer de données vers Internet ni atteindre un autre service.
+# (Équivalent du réseau "internal: true" de Docker Compose, étape 2.)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: postgres-deny-egress
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: postgres
+  policyTypes: [Egress]            # aucune règle "egress" listée → toute sortie refusée
