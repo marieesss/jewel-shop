@@ -1,0 +1,170 @@
+# Identité de GitHub Actions dans le cluster, une par environnement.
+# Ressource "plateforme" : appliquée par l'admin. Le pipeline ne peut PAS modifier ses
+# propres droits (aucun droit sur les Roles / RoleBindings).
+#
+# Un ServiceAccount de jewel-staging n'a AUCUN droit dans jewel-prod, et inversement :
+# une fuite des secrets de staging ne compromet pas la production.
+#
+# Droits accordés (et seulement dans le namespace) : ce que font "kubectl apply -k",
+# "kubectl wait" et "kubectl rollout status/undo". Volontairement absents :
+#   - supprimer un PVC ou un StatefulSet (les données de la base) ;
+#   - toute ressource du cluster (nodes, namespaces, StorageClass, ClusterIssuer…) ;
+#   - modifier des droits (roles, rolebindings) ;
+#   - entrer dans un pod (pods/exec) ou rediriger un port (pods/portforward).
+
+# ══════════════════════════════ STAGING ══════════════════════════════════════
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: github-deployer
+  namespace: jewel-staging
+---
+# Jeton d'accès durable du ServiceAccount, rangé dans ce Secret par Kubernetes.
+# Révocation : supprimer ce Secret (un nouveau jeton sera créé si on le réapplique).
+apiVersion: v1
+kind: Secret
+metadata:
+  name: github-deployer-token
+  namespace: jewel-staging
+  annotations:
+    kubernetes.io/service-account.name: github-deployer
+type: kubernetes.io/service-account-token
+---
+# Role : liste de droits valables dans UN namespace.
+# Chaque règle = groupe d'API + types de ressources + verbes (actions) autorisés.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: deployer
+  namespace: jewel-staging
+rules:
+  # Configuration, secrets, services : gestion complète.
+  - apiGroups: [""]
+    resources: [configmaps, secrets, services]
+    verbs: [get, list, watch, create, update, patch, delete]
+  # Volumes : création possible (premier déploiement), JAMAIS de suppression.
+  - apiGroups: [""]
+    resources: [persistentvolumeclaims]
+    verbs: [get, list, watch, create, update, patch]
+  # Lecture seule : état des pods, logs, événements (pour diagnostiquer un échec).
+  - apiGroups: [""]
+    resources: [pods, pods/log, events]
+    verbs: [get, list, watch]
+  # Applications : pas de suppression de StatefulSet (la base).
+  - apiGroups: [apps]
+    resources: [deployments, statefulsets]
+    verbs: [get, list, watch, create, update, patch]
+  # ReplicaSets : lus par "rollout status" et "rollout undo" (historique des versions).
+  - apiGroups: [apps]
+    resources: [replicasets]
+    verbs: [get, list, watch]
+  # Jobs : suppression autorisée (le Job de migration est recréé à chaque déploiement).
+  - apiGroups: [batch]
+    resources: [jobs]
+    verbs: [get, list, watch, create, update, patch, delete]
+  - apiGroups: [batch]
+    resources: [cronjobs]
+    verbs: [get, list, watch, create, update, patch]
+  # Routage.
+  - apiGroups: [networking.k8s.io]
+    resources: [ingresses]
+    verbs: [get, list, watch, create, update, patch, delete]
+  - apiGroups: [traefik.io]
+    resources: [middlewares]
+    verbs: [get, list, watch, create, update, patch, delete]
+  # Certificats : lecture seule (cert-manager les gère lui-même).
+  - apiGroups: [cert-manager.io]
+    resources: [certificates]
+    verbs: [get, list, watch]
+---
+# RoleBinding : attribue le Role au ServiceAccount, dans ce namespace.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: github-deployer
+  namespace: jewel-staging
+subjects:
+  - kind: ServiceAccount
+    name: github-deployer
+    namespace: jewel-staging
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: deployer
+---
+# ════════════════════════════ PRODUCTION ═════════════════════════════════════
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: github-deployer
+  namespace: jewel-prod
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: github-deployer-token
+  namespace: jewel-prod
+  annotations:
+    kubernetes.io/service-account.name: github-deployer
+type: kubernetes.io/service-account-token
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: deployer
+  namespace: jewel-prod
+# Exactement les mêmes droits que pour staging, dans l'autre namespace.
+# (Une ancre YAML ne peut pas servir ici : elle ne traverse pas les séparateurs ---.)
+rules:
+  # Configuration, secrets, services : gestion complète.
+  - apiGroups: [""]
+    resources: [configmaps, secrets, services]
+    verbs: [get, list, watch, create, update, patch, delete]
+  # Volumes : création possible (premier déploiement), JAMAIS de suppression.
+  - apiGroups: [""]
+    resources: [persistentvolumeclaims]
+    verbs: [get, list, watch, create, update, patch]
+  # Lecture seule : état des pods, logs, événements (pour diagnostiquer un échec).
+  - apiGroups: [""]
+    resources: [pods, pods/log, events]
+    verbs: [get, list, watch]
+  # Applications : pas de suppression de StatefulSet (la base).
+  - apiGroups: [apps]
+    resources: [deployments, statefulsets]
+    verbs: [get, list, watch, create, update, patch]
+  # ReplicaSets : lus par "rollout status" et "rollout undo" (historique des versions).
+  - apiGroups: [apps]
+    resources: [replicasets]
+    verbs: [get, list, watch]
+  # Jobs : suppression autorisée (le Job de migration est recréé à chaque déploiement).
+  - apiGroups: [batch]
+    resources: [jobs]
+    verbs: [get, list, watch, create, update, patch, delete]
+  - apiGroups: [batch]
+    resources: [cronjobs]
+    verbs: [get, list, watch, create, update, patch]
+  # Routage.
+  - apiGroups: [networking.k8s.io]
+    resources: [ingresses]
+    verbs: [get, list, watch, create, update, patch, delete]
+  - apiGroups: [traefik.io]
+    resources: [middlewares]
+    verbs: [get, list, watch, create, update, patch, delete]
+  # Certificats : lecture seule (cert-manager les gère lui-même).
+  - apiGroups: [cert-manager.io]
+    resources: [certificates]
+    verbs: [get, list, watch]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: github-deployer
+  namespace: jewel-prod
+subjects:
+  - kind: ServiceAccount
+    name: github-deployer
+    namespace: jewel-prod
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: deployer
