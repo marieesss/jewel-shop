@@ -5,3 +5,4 @@ dist-ssr
 .vite
 .env
 *.tsbuildinfo
+vite.config.d.ts
