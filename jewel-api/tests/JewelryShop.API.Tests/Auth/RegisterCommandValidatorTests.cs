@@ -18,21 +18,54 @@ public class RegisterCommandValidatorTests
     }
 
     [Theory]
-    [InlineData("")]
-    [InlineData("pas-un-email")]
-    public void Refuse_un_email_invalide(string email)
+    [InlineData("", "Le prénom est requis.")]
+    [InlineData(101, "100 caractères maximum.")]
+    public void Refuse_un_prenom_invalide(object name, string expectedMessage)
+    {
+        var result = _validator.Validate(ValidCommand() with { Name = ValidationAssert.TextOf(name) });
+
+        ValidationAssert.HasError(result, nameof(RegisterCommand.Name), expectedMessage);
+    }
+
+    [Theory]
+    [InlineData("", "Le nom est requis.")]
+    [InlineData(101, "100 caractères maximum.")]
+    public void Refuse_un_nom_invalide(object surname, string expectedMessage)
+    {
+        var result = _validator.Validate(ValidCommand() with { Surname = ValidationAssert.TextOf(surname) });
+
+        ValidationAssert.HasError(result, nameof(RegisterCommand.Surname), expectedMessage);
+    }
+
+    [Theory]
+    [InlineData("", "L'email est requis.")]
+    [InlineData("pas-un-email", "L'email n'est pas valide.")]
+    public void Refuse_un_email_invalide(string email, string expectedMessage)
     {
         var result = _validator.Validate(ValidCommand() with { Email = email });
 
-        Assert.Contains(result.Errors, e => e.PropertyName == nameof(RegisterCommand.Email));
+        ValidationAssert.HasError(result, nameof(RegisterCommand.Email), expectedMessage);
     }
 
     [Fact]
-    public void Refuse_un_mot_de_passe_de_moins_de_8_caracteres()
+    public void Refuse_un_email_de_plus_de_255_caracteres()
     {
-        var result = _validator.Validate(ValidCommand() with { Password = "court" });
+        var email = new string('a', 250) + "@x.com";
 
-        Assert.Contains(result.Errors, e => e.PropertyName == nameof(RegisterCommand.Password));
+        var result = _validator.Validate(ValidCommand() with { Email = email });
+
+        ValidationAssert.HasError(result, nameof(RegisterCommand.Email), "255 caractères maximum.");
+    }
+
+    [Theory]
+    [InlineData("", "Le mot de passe est requis.")]
+    [InlineData("court", "Le mot de passe doit contenir au moins 8 caractères.")]
+    [InlineData(101, "100 caractères maximum.")]
+    public void Refuse_un_mot_de_passe_invalide(object password, string expectedMessage)
+    {
+        var result = _validator.Validate(ValidCommand() with { Password = ValidationAssert.TextOf(password) });
+
+        ValidationAssert.HasError(result, nameof(RegisterCommand.Password), expectedMessage);
     }
 
     [Fact]
@@ -42,6 +75,9 @@ public class RegisterCommandValidatorTests
 
         var result = _validator.Validate(ValidCommand() with { Birthday = tomorrow });
 
-        Assert.Contains(result.Errors, e => e.PropertyName == nameof(RegisterCommand.Birthday));
+        ValidationAssert.HasError(
+            result,
+            nameof(RegisterCommand.Birthday),
+            "La date de naissance doit être dans le passé.");
     }
 }
