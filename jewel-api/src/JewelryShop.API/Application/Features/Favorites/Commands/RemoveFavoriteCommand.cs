@@ -17,7 +17,7 @@ public class RemoveFavoriteCommandHandler : IRequestHandler<RemoveFavoriteComman
             ?? throw new NotFoundException("Favori", request.FavoriteId);
 
         if (favorite.UserId != request.UserId)
-            throw new ForbiddenAccessException("Ce favori ne t'appartient pas.");
+            throw new ForbiddenAccessException("Ce favori ne vous appartient pas.");
 
         _favorites.Delete(favorite);
         await _favorites.SaveChangesAsync(cancellationToken);
