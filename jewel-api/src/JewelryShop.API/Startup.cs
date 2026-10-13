@@ -1,5 +1,6 @@
 using System.Text;
 using FluentValidation;
+using JewelryShop.Application.Common;
 using JewelryShop.Application.Common.Behaviors;
 using JewelryShop.Application.Common.Interfaces;
 using JewelryShop.Application.Common.Persistence;
@@ -189,6 +190,7 @@ public static class Startup
 
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(assembly));
         services.AddValidatorsFromAssembly(assembly);
+        ValidationCulture.UseFrench();
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
     }
 
