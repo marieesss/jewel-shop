@@ -13,11 +13,11 @@ public class AddFavoriteCommandValidator : AbstractValidator<AddFavoriteCommand>
 {
     public AddFavoriteCommandValidator()
     {
-        RuleFor(x => x.UserId).GreaterThan(0);
+        RuleFor(x => x.UserId).GreaterThan(0).WithMessage("Identifiant invalide.");
 
         RuleFor(x => x)
             .Must(x => x.ChainId.HasValue ^ x.CharmId.HasValue)
-            .WithMessage("Renseigne exactement un produit : soit chainId, soit charmId (pas les deux, pas aucun).");
+            .WithMessage("Renseignez exactement un produit : chainId ou charmId, mais pas les deux.");
     }
 }
 
@@ -54,7 +54,7 @@ public class AddFavoriteCommandHandler : IRequestHandler<AddFavoriteCommand, Fav
         }
 
         if (await _favorites.ExistsAsync(request.UserId, request.ChainId, request.CharmId, cancellationToken))
-            throw new ConflictException("Ce produit est déjà dans tes favoris.");
+            throw new ConflictException("Ce produit est déjà dans vos favoris.");
 
         var favorite = new Favorite
         {
