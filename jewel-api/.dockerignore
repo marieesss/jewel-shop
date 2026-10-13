@@ -16,5 +16,4 @@
 docker-compose*.yml
 Dockerfile
 .dockerignore
-db/init.sql
 db/seed_admin.sh
