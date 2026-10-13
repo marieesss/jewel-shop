@@ -18,10 +18,20 @@ public class RegisterCommandValidator : AbstractValidator<RegisterCommand>
 {
     public RegisterCommandValidator()
     {
-        RuleFor(x => x.Name).NotEmpty().MaximumLength(100);
-        RuleFor(x => x.Surname).NotEmpty().MaximumLength(100);
-        RuleFor(x => x.Email).NotEmpty().EmailAddress().MaximumLength(255);
-        RuleFor(x => x.Password).NotEmpty().MinimumLength(8).MaximumLength(100);
+        RuleFor(x => x.Name)
+            .NotEmpty().WithMessage("Le prénom est requis.")
+            .MaximumLength(100).WithMessage("100 caractères maximum.");
+        RuleFor(x => x.Surname)
+            .NotEmpty().WithMessage("Le nom est requis.")
+            .MaximumLength(100).WithMessage("100 caractères maximum.");
+        RuleFor(x => x.Email)
+            .NotEmpty().WithMessage("L'email est requis.")
+            .EmailAddress().WithMessage("L'email n'est pas valide.")
+            .MaximumLength(255).WithMessage("255 caractères maximum.");
+        RuleFor(x => x.Password)
+            .NotEmpty().WithMessage("Le mot de passe est requis.")
+            .MinimumLength(8).WithMessage("Le mot de passe doit contenir au moins 8 caractères.")
+            .MaximumLength(100).WithMessage("100 caractères maximum.");
         RuleFor(x => x.Birthday)
             .Must(b => b is null || b.Value < DateOnly.FromDateTime(DateTime.UtcNow))
             .WithMessage("La date de naissance doit être dans le passé.");
