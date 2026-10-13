@@ -53,7 +53,7 @@ Règles :
 
 - **Un controller ne contient pas de logique métier** : il construit une commande ou une requête et l'envoie via `Sender`.
 - **Toute commande a un validateur FluentValidation**. Le `ValidationBehavior` l'exécute automatiquement avant le handler.
-- **Chaque règle de validation porte un message français explicite** (`.WithMessage("…")`), identique au message du front.
+- **Chaque règle de validation porte un message français explicite** (`.WithMessage("…")`), identique au message du front. En filet de sécurité, la culture des messages de FluentValidation est fixée au français au démarrage (`ValidationCulture.UseFrench()`, appelé dans `Startup.AddApplication`) : une règle oubliée renvoie le message par défaut en français, et non en anglais comme le ferait la culture neutre du serveur. Ce filet ne dispense pas du `WithMessage`.
 - **Les erreurs passent par les exceptions dédiées** (`NotFoundException`, `ConflictException`, `ForbiddenAccessException`, `UnauthorizedException`, `ValidationException`). `ExceptionHandlingMiddleware` les convertit en réponse JSON `{ status, title, errors }` avec le bon code HTTP. Ne renvoyez pas de `BadRequest()` à la main.
 - La configuration EF de chaque entité va dans `Infrastructure/Persistence/Configurations/` (noms de tables et colonnes explicites, en snake_case). Un nouveau repository est enregistré dans `Startup.cs`.
 - Les accès aux données passent par les repositories. Les lectures sont en `AsNoTracking()`, les listes sont paginées avec `PaginationDefaults.Normalize` et renvoient un `PagedResult<T>`.
