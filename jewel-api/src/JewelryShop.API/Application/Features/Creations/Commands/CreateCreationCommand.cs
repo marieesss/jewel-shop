@@ -20,17 +20,22 @@ public class CreateCreationCommandValidator : AbstractValidator<CreateCreationCo
 {
     public CreateCreationCommandValidator()
     {
-        RuleFor(x => x.UserId).GreaterThan(0);
-        RuleFor(x => x.ChainId).GreaterThan(0);
-        RuleFor(x => x.OptionId).GreaterThan(0);
+        RuleFor(x => x.UserId)
+            .GreaterThan(0).WithMessage("Identifiant invalide.");
+        RuleFor(x => x.ChainId)
+            .GreaterThan(0).WithMessage("Identifiant invalide.");
+        RuleFor(x => x.OptionId)
+            .GreaterThan(0).WithMessage("Identifiant invalide.");
 
         RuleFor(x => x.Items)
             .NotEmpty().WithMessage("Une création doit contenir au moins une breloque.");
 
         RuleForEach(x => x.Items).ChildRules(item =>
         {
-            item.RuleFor(i => i.CharmId).GreaterThan(0);
-            item.RuleFor(i => i.Position).GreaterThanOrEqualTo(0);
+            item.RuleFor(i => i.CharmId)
+                .GreaterThan(0).WithMessage("Identifiant invalide.");
+            item.RuleFor(i => i.Position)
+                .GreaterThanOrEqualTo(0).WithMessage("La position doit être positive.");
         });
 
         RuleFor(x => x.Items)
