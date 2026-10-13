@@ -1,7 +1,7 @@
 # Contribuer à jewel-shop
 
 Ce guide explique comment passer **d'une issue GitHub à une pull request mergée**.
-Il s'adresse à toute personne qui contribue, développeur ou agent IA (Claude, etc.). Un agent qui lit ce fichier, le code et une issue doit pouvoir livrer la fonctionnalité sans autre consigne.
+Il s'adresse à toute personne qui contribue.
 
 ---
 
@@ -73,7 +73,7 @@ cd jewel-front && npm ci && npm run build
    - S'il reste une question ouverte ou une règle ambiguë, **ne devinez pas**. Posez la question en commentaire de l'issue et attendez la réponse avant de coder la partie concernée.
 2. **Créer une branche** depuis `main` à jour : `feature/<n°>-description-courte`, `fix/<n°>-…` ou `infra/<n°>-…`.
 3. **Explorer le code** concerné et la fonctionnalité existante la plus proche (§1).
-4. **Découper le travail en petites étapes** et faire **un commit par étape** (§8). Par exemple :
+4. **Découper le travail en petites étapes** et faire **un commit par étape** (§7). Par exemple :
    1. la migration SQL ;
    2. l'entité et sa configuration EF ;
    3. la commande ou la requête, avec son validateur, son handler et **leurs tests** ;
@@ -89,7 +89,7 @@ cd jewel-front && npm ci && npm run build
    cd jewel-front && npm run build
    ```
 
-6. **Pousser la branche et ouvrir la pull request dès le dernier commit**, sans attendre (§8). La PR cible `main`.
+6. **Pousser la branche et ouvrir la pull request dès le dernier commit**, sans attendre (§7). La PR cible `main`.
 7. **Suivre la CI** et corriger sur la même branche, avec de nouveaux commits, jusqu'à ce qu'elle soit verte.
 
 Limites pour un agent :
@@ -117,7 +117,6 @@ Limites pour un agent :
 - [ ] La CI est verte : build et tests de l'API, build du front (`tsc` et `vite build`).
 - [ ] La migration SQL, si elle est nécessaire, est fournie et reprend les données existantes (§6).
 - [ ] Les validations sont identiques côté back (FluentValidation) et côté front.
-- [ ] Le code suit les règles de lisibilité du §7 : pas de code commenté, pas de commentaire qui paraphrase le code, pas de commentaire devenu faux.
 - [ ] La PR est relue et mergée sur `main`.
 - [ ] Le déploiement en staging a réussi et les tests de fumée passent.
 - [ ] La production est validée par une approbation manuelle dans GitHub.
@@ -170,68 +169,7 @@ Côté front, la CI ne fait aujourd'hui que vérifier les types et construire. S
 
 ---
 
-## 7. Lisibilité du code et commentaires
-
-On suit les pratiques de *Clean Code* : **c'est le code qui doit s'expliquer, pas les commentaires.**
-
-### Rendre le code lisible avant de commenter
-
-- **Des noms qui disent l'intention** : `GetByIdWithItemsAsync`, `ExistsByEmailAsync`, `PaginationDefaults.Normalize`, et pas `Get2`, `data`, `tmp`, `flag`.
-- **Des fonctions courtes qui font une seule chose**. Si un bloc a besoin d'un commentaire pour dire ce qu'il fait, extrayez-le dans une méthode dont le nom dit ce qu'il fait.
-- **Pas de nombres ni de chaînes magiques** : utilisez une constante ou une énumération nommée (voir `PaginationDefaults.MaxPageSize`).
-- **Des conditions lisibles** : une condition complexe va dans une variable ou une méthode au nom explicite (`favorite.IsValid` plutôt que `ChainId.HasValue ^ CharmId.HasValue` répété).
-- Restez cohérent avec le code qui entoure : mêmes conventions, même style, même niveau de détail.
-
-### Quand écrire un commentaire
-
-Un commentaire explique **pourquoi**, jamais **quoi**. Il a sa place quand le code fait un **détour** que le lecteur ne pourrait pas deviner seul :
-
-- une contrainte extérieure (comportement d'une librairie, d'un outil, de l'infra) ;
-- un choix volontaire qui paraît étrange, ou une solution plus simple écartée pour une raison précise ;
-- un piège ou un effet de bord non évident ;
-- le contrat d'une interface publique quand la signature ne suffit pas (`/// <summary>`).
-
-Exemples tirés du projet :
-
-```csharp
-// ✅ Explique un choix : pourquoi les 4xx ne sont pas loggées en erreur.
-// Les exceptions métier attendues (4xx) sont une réponse normale de l'API,
-// pas un bug serveur : on les journalise sobrement, sans stacktrace.
-```
-
-```bash
-# ✅ Explique un détour imposé par l'outil.
-# Un Job terminé ne se relance pas : on supprime le précédent, puis on recrée.
-kubectl delete job api-migrate --ignore-not-found --wait=true
-```
-
-```csharp
-/// ✅ Précise un contrat que la signature ne dit pas.
-/// Supprime un fichier précédemment stocké (no-op si introuvable).
-void Delete(string? publicPath);
-```
-
-```csharp
-// ❌ Paraphrase le code : à supprimer.
-// Supprime l'ancienne image si elle existait
-if (!string.IsNullOrWhiteSpace(chain.ImageUrl))
-    _storage.Delete(chain.ImageUrl);
-```
-
-### À ne pas faire
-
-- **Paraphraser le code** (`// incrémente i`, `// appelle le repository`).
-- **Laisser du code commenté** : git garde l'historique, supprimez-le.
-- **Écrire un journal ou une signature** (`// modifié par X le …`) : c'est le rôle de git.
-- **Laisser un `TODO` sans issue** : soit vous le traitez, soit vous créez une issue et vous la citez (`// TODO(#42) : …`).
-- **Mettre des commentaires de séparation ou décoratifs** dans le code applicatif quand des fonctions ou des fichiers séparés feraient mieux l'affaire.
-- **Laisser un commentaire obsolète** : un commentaire faux est pire qu'aucun commentaire. Quand vous modifiez du code, mettez à jour ou supprimez les commentaires qui l'accompagnent.
-
-Les fichiers d'infra (`deploy/`, workflows, scripts) sont plus commentés que le code applicatif, parce que les commandes et options des outils sont rarement évidentes. La règle reste la même : expliquer le pourquoi et les détours, pas reformuler la commande.
-
----
-
-## 8. Commits et pull requests
+## 7. Commits et pull requests
 
 ### Commits : petits et fréquents
 
@@ -258,7 +196,7 @@ Les fichiers d'infra (`deploy/`, workflows, scripts) sont plus commentés que le
 
 ---
 
-## 9. Intégration et déploiement continus
+## 8. Intégration et déploiement continus
 
 Sur chaque PR, la CI exécute :
 
@@ -275,7 +213,7 @@ Si vous ajoutez un endpoint critique, proposez de l'ajouter aux tests de fumée 
 
 ---
 
-## 10. Secrets et sécurité
+## 9. Secrets et sécurité
 
 - **Les secrets GitHub (environnements `staging` et `production`) font foi.** Ils sont poussés dans le cluster à chaque déploiement (`deploy/k8s/tools/apply-secrets.sh`).
 - Ne commitez jamais `.env`, une clé, un kubeconfig ou un fichier `deploy/etat-des-lieux*.txt` (ils sont dans `.gitignore`).
