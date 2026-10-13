@@ -119,7 +119,7 @@ docker compose up -d --build
 # Base PostgreSQL seule, sur le port 5433 (et pgAdmin sur http://localhost:5050)
 cd jewel-api && docker compose up -d postgres
 
-# API : http://localhost:5030, Swagger sur /swagger. Migrations jouées au démarrage.
+# API : http://localhost:5030, Swagger sur /api/swagger. Migrations jouées au démarrage.
 cd jewel-api && cp .env.example .env && dotnet run --project src/JewelryShop.API --launch-profile http
 
 # Front : http://localhost:5173
