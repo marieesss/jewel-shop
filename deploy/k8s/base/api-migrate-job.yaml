@@ -22,6 +22,31 @@ spec:
       restartPolicy: Never        # un Job ne redémarre pas son conteneur en boucle
       imagePullSecrets:
         - name: ghcr-pull
+      # Un pod tout juste créé peut être refusé par la NetworkPolicy "allow-db-clients"
+      # tant que k3s n'a pas enregistré son IP. Avec backoffLimit: 0, la migration
+      # échouerait sans nouvel essai : on attend d'abord que la base réponde.
+      initContainers:
+        - name: wait-postgres
+          image: postgres:16-alpine
+          command:
+            - sh
+            - -c
+            - |
+              TRIES=30
+              until pg_isready --host=postgres --port=5432 --quiet; do
+                TRIES=$((TRIES - 1))
+                if [ "$TRIES" -eq 0 ]; then
+                  echo "ERREUR : PostgreSQL injoignable après 60 s" >&2
+                  exit 1
+                fi
+                sleep 2
+              done
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              memory: 32Mi
       containers:
         - name: migrate
           # TEMPORAIRE : "latest" le temps de l'étape 7. À l'étape 8, le pipeline posera

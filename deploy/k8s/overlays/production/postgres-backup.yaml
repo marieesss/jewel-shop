@@ -34,6 +34,18 @@ data:
     DIR=/backups
     FILE="$DIR/jewelryshop-$(date -u +%Y%m%d-%H%M%S).dump"
 
+    # Un pod tout juste créé peut être refusé par la NetworkPolicy "allow-db-clients"
+    # tant que k3s n'a pas enregistré son IP : on attend que la base réponde.
+    TRIES=30
+    until pg_isready --host=postgres --port=5432 --quiet; do
+      TRIES=$((TRIES - 1))
+      if [ "$TRIES" -eq 0 ]; then
+        echo "ERREUR : PostgreSQL injoignable après 60 s" >&2
+        exit 1
+      fi
+      sleep 2
+    done
+
     echo "Sauvegarde vers $FILE"
     # Connexion par le Service "postgres" ; mot de passe lu dans PGPASSWORD (Secret).
     pg_dump --host=postgres --username=jewel --dbname=jewelryshop \

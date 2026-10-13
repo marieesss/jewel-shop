@@ -63,7 +63,16 @@ jobs:
           # ExitOnForwardFailure : échoue tout de suite si le tunnel ne peut pas s'ouvrir.
           ssh -f -N -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 \
             -L 6443:127.0.0.1:6443 "deploy@$DEPLOY_HOST"
-          kubectl version
+          # Un disque lent sur le VPS ralentit l'API k3s : on lui laisse plusieurs essais.
+          for attempt in 1 2 3 4 5; do
+            kubectl version --request-timeout=20s && break
+            if [ "$attempt" -eq 5 ]; then
+              echo "::error::API Kubernetes injoignable à travers le tunnel après 5 essais"
+              exit 1
+            fi
+            echo "API Kubernetes pas encore joignable (essai $attempt/5), nouvel essai dans 10 s"
+            sleep 10
+          done
           kubectl auth whoami
 
       # ── Phase 0 : secrets ───────────────────────────────────────────────────
@@ -120,7 +129,19 @@ jobs:
         run: |
           JOB="pre-deploy-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           kubectl create job --from=cronjob/postgres-backup "$JOB"
-          kubectl wait --for=condition=complete "job/$JOB" --timeout=300s
+          # Attend la réussite OU l'échec (le premier des deux), comme pour les migrations.
+          kubectl wait --for=condition=complete "job/$JOB" --timeout=300s &
+          WAIT_OK=$!
+          kubectl wait --for=condition=failed   "job/$JOB" --timeout=300s &
+          WAIT_KO=$!
+          wait -n "$WAIT_OK" "$WAIT_KO" || true  # délai dépassé : on affiche quand même les logs
+          kill "$WAIT_OK" "$WAIT_KO" 2>/dev/null || true
+          if [ "$(kubectl get job "$JOB" -o jsonpath='{.status.succeeded}')" != "1" ]; then
+            kubectl logs "job/$JOB" --all-containers --all-pods || true
+            kubectl describe job "$JOB" | tail -n 20
+            echo "::error::Sauvegarde en échec : la base n'a PAS été migrée ni les applications mises à jour."
+            exit 1
+          fi
           kubectl logs "job/$JOB"
           # Les Jobs créés à la main ne sont pas nettoyés par le CronJob : on garde les 3 derniers.
           kubectl get jobs -l app.kubernetes.io/name=postgres-backup \
@@ -138,7 +159,7 @@ jobs:
           kubectl wait --for=condition=failed   job/api-migrate --timeout=300s &
           WAIT_KO=$!
           wait -n "$WAIT_OK" "$WAIT_KO"; kill "$WAIT_OK" "$WAIT_KO" 2>/dev/null || true
-          kubectl logs job/api-migrate
+          kubectl logs job/api-migrate --all-containers  # inclut l'attente de PostgreSQL
           if [ "$(kubectl get job api-migrate -o jsonpath='{.status.succeeded}')" != "1" ]; then
             echo "::error::Migration en échec : les applications n'ont PAS été mises à jour."
             exit 1
