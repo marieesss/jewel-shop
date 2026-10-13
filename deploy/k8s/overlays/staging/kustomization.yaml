@@ -34,3 +34,15 @@ patches:
       - op: replace
         path: /spec/template/spec/containers/0/resources/requests/memory
         value: 128Mi
+  # Environnement ASP.NET Core "Staging" (le Dockerfile fixe "Production") : active Swagger
+  # sous /api/swagger, derrière l'authentification basique. La base n'a pas de liste env
+  # (seulement envFrom) : le patch la crée.
+  - target:
+      kind: Deployment
+      name: api
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/env
+        value:
+          - name: ASPNETCORE_ENVIRONMENT
+            value: Staging
