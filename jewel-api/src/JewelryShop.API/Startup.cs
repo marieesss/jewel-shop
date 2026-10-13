@@ -49,10 +49,16 @@ public static class Startup
     {
         app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-        if (app.Environment.IsDevelopment())
+        if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
         {
-            app.UseSwagger();
-            app.UseSwaggerUI();
+            // Sous /api : l'ingress et la passerelle n'envoient à l'API que ce préfixe,
+            // tout le reste part vers le front.
+            app.UseSwagger(c => c.RouteTemplate = "api/swagger/{documentName}/swagger.json");
+            app.UseSwaggerUI(c =>
+            {
+                c.RoutePrefix = "api/swagger";
+                c.SwaggerEndpoint("/api/swagger/v1/swagger.json", "JewelryShop API v1");
+            });
         }
         // CORS avant la redirection HTTPS : sinon le preflight OPTIONS reçoit un
         // 307 (que le navigateur ne suit pas sur un preflight) et l'appel échoue.
