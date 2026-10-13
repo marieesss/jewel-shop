@@ -24,10 +24,7 @@ export function FormInput({
   const hasValue = value.length > 0;
 
   return (
-    <div
-      className="group animate-slide-up"
-      style={{ animationDelay: `${delay}s` }}
-    >
+    <div className="group animate-slide-up" style={{ animationDelay: `${delay}s` }}>
       <label className="mb-1.5 block font-body text-[11px] font-medium uppercase tracking-[0.08em] text-slate transition-colors group-focus-within:text-fuchsia">
         {label}
       </label>
@@ -48,9 +45,7 @@ export function FormInput({
           }`}
         />
         {hasValue && (
-          <span className="absolute right-3.5 animate-fade-in text-sm text-fuchsia">
-            ✓
-          </span>
+          <span className="absolute right-3.5 animate-fade-in text-sm text-fuchsia">✓</span>
         )}
       </div>
     </div>

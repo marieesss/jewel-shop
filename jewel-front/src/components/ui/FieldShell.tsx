@@ -28,7 +28,9 @@ export function FieldShell({
         className="mb-1.5 block font-body text-[11px] font-medium uppercase tracking-[0.08em] text-slate transition-colors group-focus-within:text-fuchsia"
       >
         {label}
-        {!required && <span className="ml-1 normal-case tracking-normal text-slate/60">(optionnel)</span>}
+        {!required && (
+          <span className="ml-1 normal-case tracking-normal text-slate/60">(optionnel)</span>
+        )}
       </label>
       {children}
       {hint && !error && <p className="mt-1 font-body text-[11px] text-slate/80">{hint}</p>}

@@ -37,13 +37,13 @@ public class CreateChainCommandHandler : IRequestHandler<CreateChainCommand, Cha
     {
         var chain = new Chain
         {
-            Name        = request.Name.Trim(),
+            Name = request.Name.Trim(),
             Description = request.Description?.Trim() ?? string.Empty,
-            Color       = request.Color,
-            Cost        = request.Cost,
-            Price       = request.Price,
-            Length      = request.Length,
-            Url         = string.IsNullOrWhiteSpace(request.Url) ? null : request.Url.Trim()
+            Color = request.Color,
+            Cost = request.Cost,
+            Price = request.Price,
+            Length = request.Length,
+            Url = string.IsNullOrWhiteSpace(request.Url) ? null : request.Url.Trim()
         };
 
         await _chains.AddAsync(chain, cancellationToken);

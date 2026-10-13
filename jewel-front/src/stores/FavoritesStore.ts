@@ -1,10 +1,5 @@
 import { makeAutoObservable, runInAction } from 'mobx';
-import {
-  getMyFavorites,
-  addFavorite,
-  removeFavorite,
-  type FavoriteDto,
-} from '../api/favorites';
+import { getMyFavorites, addFavorite, removeFavorite, type FavoriteDto } from '../api/favorites';
 import { extractApiError } from '../api/errors';
 import type { ProductKind } from './ProductAdminStore';
 

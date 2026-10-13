@@ -13,7 +13,7 @@ public class AuthController : ApiControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken ct)
     {
-        var command  = new RegisterCommand(request.Name, request.Surname, request.Email, request.Password, request.Birthday);
+        var command = new RegisterCommand(request.Name, request.Surname, request.Email, request.Password, request.Birthday);
         var response = await Sender.Send(command, ct);
         return CreatedAtAction(nameof(Register), response);
     }
@@ -24,7 +24,7 @@ public class AuthController : ApiControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken ct)
     {
-        var command  = new LoginCommand(request.Email, request.Password);
+        var command = new LoginCommand(request.Email, request.Password);
         var response = await Sender.Send(command, ct);
         return Ok(response);
     }

@@ -1,7 +1,7 @@
+using System.Text.RegularExpressions;
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 using JewelryShop.Application.Common.Interfaces;
-using System.Text.RegularExpressions;
 
 namespace JewelryShop.Infrastructure.Services;
 
@@ -13,13 +13,13 @@ public class CloudinaryFileStorageService : IFileStorageService
     {
         var cloudName = configuration["Cloudinary:CloudName"]
             ?? throw new InvalidOperationException("Cloudinary__CloudName manquant dans .env");
-        var apiKey    = configuration["Cloudinary:ApiKey"]
+        var apiKey = configuration["Cloudinary:ApiKey"]
             ?? throw new InvalidOperationException("Cloudinary__ApiKey manquant dans .env");
         var apiSecret = configuration["Cloudinary:ApiSecret"]
             ?? throw new InvalidOperationException("Cloudinary__ApiSecret manquant dans .env");
 
-        var account  = new Account(cloudName, apiKey, apiSecret);
-        _cloudinary  = new Cloudinary(account) { Api = { Secure = true } };
+        var account = new Account(cloudName, apiKey, apiSecret);
+        _cloudinary = new Cloudinary(account) { Api = { Secure = true } };
     }
 
     public async Task<string> SaveAsync(
@@ -30,7 +30,7 @@ public class CloudinaryFileStorageService : IFileStorageService
     {
         var uploadParams = new ImageUploadParams
         {
-            File   = new FileDescription(fileName, content),
+            File = new FileDescription(fileName, content),
             Folder = $"jewelryshop/{subFolder}",
 
             // f_auto : Cloudinary choisit le format optimal pour chaque navigateur

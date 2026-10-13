@@ -49,14 +49,22 @@ export class ProductAdminStore {
     });
   }
 
-  async updateCharm(id: number, payload: CreateCharmPayload, image?: File | null): Promise<boolean> {
+  async updateCharm(
+    id: number,
+    payload: CreateCharmPayload,
+    image?: File | null
+  ): Promise<boolean> {
     return this.run('charm', 'update', payload.name, async () => {
       await updateCharm(id, payload);
       if (image) await uploadCharmImage(id, image);
     });
   }
 
-  async updateChain(id: number, payload: CreateChainPayload, image?: File | null): Promise<boolean> {
+  async updateChain(
+    id: number,
+    payload: CreateChainPayload,
+    image?: File | null
+  ): Promise<boolean> {
     return this.run('chain', 'update', payload.name, async () => {
       await updateChain(id, payload);
       if (image) await uploadChainImage(id, image);

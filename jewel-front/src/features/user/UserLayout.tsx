@@ -24,7 +24,10 @@ export const UserLayout = observer(function UserLayout() {
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-creme">
       <header className="flex items-center gap-4 border-b border-lin bg-white px-5 py-3">
-        <Link to="/charms" className="font-display text-[22px] font-light tracking-[0.04em] text-storm">
+        <Link
+          to="/charms"
+          className="font-display text-[22px] font-light tracking-[0.04em] text-storm"
+        >
           Jewellery Shop
         </Link>
 

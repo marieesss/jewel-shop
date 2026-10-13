@@ -37,13 +37,13 @@ VITE_API_URL=http://localhost:5030
 
 ## Structure
 
-| Dossier | Rôle |
-|---|---|
-| `src/api/` | Client Axios + endpoints `auth` (`login`, `register`) |
-| `src/stores/` | `AuthStore` (MobX) + contexte React (`useAuthStore`) |
-| `src/components/` | `FormInput`, `DecoPanel`, icônes SVG |
-| `src/pages/AuthPage.tsx` | Écran Connexion / Inscription (design) |
-| `src/App.tsx` | Bascule connecté / non connecté |
+| Dossier                  | Rôle                                                  |
+| ------------------------ | ----------------------------------------------------- |
+| `src/api/`               | Client Axios + endpoints `auth` (`login`, `register`) |
+| `src/stores/`            | `AuthStore` (MobX) + contexte React (`useAuthStore`)  |
+| `src/components/`        | `FormInput`, `DecoPanel`, icônes SVG                  |
+| `src/pages/AuthPage.tsx` | Écran Connexion / Inscription (design)                |
+| `src/App.tsx`            | Bascule connecté / non connecté                       |
 
 ## Flux d'authentification
 

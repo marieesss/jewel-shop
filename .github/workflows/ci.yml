@@ -37,6 +37,10 @@ jobs:
       - name: Restaurer les paquets NuGet
         run: dotnet restore JewelryShop.sln
 
+      # Règles de .editorconfig (racine du repo). Pour corriger : dotnet format JewelryShop.sln
+      - name: Vérifier le formatage
+        run: dotnet format JewelryShop.sln --verify-no-changes --no-restore
+
       - name: Compiler
         run: dotnet build JewelryShop.sln --configuration Release --no-restore
 
@@ -53,15 +57,22 @@ jobs:
       - name: Récupérer le code
         uses: actions/checkout@v7
 
-      - name: Installer Node.js 20
+      - name: Installer Node.js (version de .nvmrc)
         uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version-file: jewel-front/.nvmrc
           cache: npm
           cache-dependency-path: jewel-front/package-lock.json
 
       - name: Installer les dépendances
         run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      # Pour corriger : npm run format
+      - name: Vérifier le formatage
+        run: npm run format:check
 
       - name: Vérifier les types et construire
         run: npm run build

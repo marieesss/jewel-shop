@@ -22,10 +22,7 @@ export function UserProductDetailPage({ kind }: Props) {
   const { id } = useParams();
   const productId = Number(id);
 
-  const { data, loading, error } = useAsync(
-    () => config.fetchById(productId),
-    [kind, productId]
-  );
+  const { data, loading, error } = useAsync(() => config.fetchById(productId), [kind, productId]);
 
   return (
     <div className="mx-auto w-full max-w-[760px]">

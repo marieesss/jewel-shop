@@ -29,7 +29,9 @@ export function Tabs<T extends string>({ items, value, onChange, className }: Ta
             onClick={() => onChange(item.value)}
             className={cn(
               'flex flex-1 items-center justify-center gap-2 rounded-[11px] py-[11px] font-body text-[13px] font-medium tracking-[0.03em] transition-all duration-300',
-              active ? 'bg-white text-fuchsia shadow-toggle' : 'bg-transparent text-slate hover:text-storm'
+              active
+                ? 'bg-white text-fuchsia shadow-toggle'
+                : 'bg-transparent text-slate hover:text-storm'
             )}
           >
             {item.icon}

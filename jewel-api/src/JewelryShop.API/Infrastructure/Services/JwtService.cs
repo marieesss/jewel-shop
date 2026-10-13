@@ -16,15 +16,15 @@ public class JwtService : IJwtService
 
     public JwtService(IConfiguration configuration)
     {
-        _secret   = configuration["Jwt:Secret"]   ?? throw new InvalidOperationException("Jwt:Secret manquant.");
-        _issuer   = configuration["Jwt:Issuer"]   ?? "JewelryShop";
+        _secret = configuration["Jwt:Secret"] ?? throw new InvalidOperationException("Jwt:Secret manquant.");
+        _issuer = configuration["Jwt:Issuer"] ?? "JewelryShop";
         _audience = configuration["Jwt:Audience"] ?? "JewelryShop";
         _expiresInDays = int.TryParse(configuration["Jwt:ExpiresInDays"], out var d) ? d : 7;
     }
 
     public string GenerateToken(User user)
     {
-        var key         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secret));
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secret));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var claims = new[]
@@ -36,10 +36,10 @@ public class JwtService : IJwtService
         };
 
         var token = new JwtSecurityToken(
-            issuer:             _issuer,
-            audience:           _audience,
-            claims:             claims,
-            expires:            DateTime.UtcNow.AddDays(_expiresInDays),
+            issuer: _issuer,
+            audience: _audience,
+            claims: claims,
+            expires: DateTime.UtcNow.AddDays(_expiresInDays),
             signingCredentials: credentials);
 
         return new JwtSecurityTokenHandler().WriteToken(token);

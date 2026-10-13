@@ -39,9 +39,9 @@ public class CreationsController : ApiControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Create([FromBody] CreateCreationRequest request, CancellationToken ct)
     {
-        var items   = request.Items.Select(i => new CreateCreationItemInput(i.CharmId, i.Position)).ToList();
+        var items = request.Items.Select(i => new CreateCreationItemInput(i.CharmId, i.Position)).ToList();
         var command = new CreateCreationCommand(GetUserId(), request.ChainId, request.OptionId, items);
-        var result  = await Sender.Send(command, ct);
+        var result = await Sender.Send(command, ct);
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 

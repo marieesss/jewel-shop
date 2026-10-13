@@ -14,10 +14,7 @@ export function ProductImage({ src, alt, className }: ProductImageProps) {
   }
   return (
     <div
-      className={cn(
-        'flex items-center justify-center bg-blush text-fuchsia/50',
-        className
-      )}
+      className={cn('flex items-center justify-center bg-blush text-fuchsia/50', className)}
       aria-label="Aucune image"
     >
       <GemIcon width={28} height={28} />

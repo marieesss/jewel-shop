@@ -20,9 +20,7 @@ export function SidebarLink({ to, icon, label, end, onNavigate }: SidebarLinkPro
       className={({ isActive }) =>
         cn(
           'flex items-center gap-3 rounded-xl px-3.5 py-2.5 font-body text-sm font-medium transition-all',
-          isActive
-            ? 'bg-white/15 text-white'
-            : 'text-mist/80 hover:bg-white/10 hover:text-white'
+          isActive ? 'bg-white/15 text-white' : 'text-mist/80 hover:bg-white/10 hover:text-white'
         )
       }
     >

@@ -10,9 +10,7 @@ export function DecoPanel() {
           Jewellery Shop
         </h1>
         <div className="mx-auto mb-3 h-px w-10 bg-flamant opacity-60" />
-        <p className="mb-4 font-display text-[18px] italic text-poudre">
-          Créez vos bijoux uniques
-        </p>
+        <p className="mb-4 font-display text-[18px] italic text-poudre">Créez vos bijoux uniques</p>
         <p className="font-body text-xs uppercase tracking-[0.15em] text-mist">
           Or · Argent · Charmes
         </p>

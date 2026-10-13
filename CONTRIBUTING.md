@@ -131,9 +131,14 @@ L'API lit sa configuration dans `jewel-api/.env` (modèle : `jewel-api/.env.exam
 ### Vérifications avant de pousser
 
 ```bash
-cd jewel-api && dotnet build JewelryShop.sln && dotnet test JewelryShop.sln
-cd jewel-front && npm run build        # tsc -b puis vite build
+# API : formatage (.editorconfig), build, tests
+cd jewel-api && dotnet format JewelryShop.sln --verify-no-changes && dotnet build JewelryShop.sln && dotnet test JewelryShop.sln
+
+# Front : lint (ESLint), formatage (Prettier), types et build
+cd jewel-front && npm run lint && npm run format:check && npm run build
 ```
+
+Pour corriger le formatage automatiquement : `dotnet format JewelryShop.sln` dans `jewel-api`, `npm run format` dans `jewel-front`. Les règles sont dans `.editorconfig` (racine), `jewel-front/eslint.config.js` et `jewel-front/.prettierrc.json`. Un reformatage se fait dans un commit séparé, sans changement de comportement.
 
 ---
 
@@ -186,7 +191,7 @@ Le label `ready` est posé à la main après relecture de l'issue, jamais automa
 - [ ] Tous les critères d'acceptation sont remplis.
 - [ ] Le code est conforme à ce guide, y compris les règles de lisibilité (§1) : pas de code commenté, pas de commentaire qui paraphrase le code ou devenu faux.
 - [ ] **Les tests unitaires ont été ajoutés ou mis à jour** pour couvrir le changement (§5).
-- [ ] La CI est verte.
+- [ ] La CI est verte (formatage, lint, build et tests).
 - [ ] La migration SQL, si elle est nécessaire, est fournie, rétrocompatible et testée en local (§6).
 - [ ] Les validations sont identiques côté back (FluentValidation) et côté front, et les erreurs sont gérées.
 - [ ] Aucun secret ni donnée de configuration sensible n'est commité.
@@ -337,8 +342,10 @@ Section « Impact production » d'une PR :
 
 Sur chaque PR, la CI exécute :
 
-1. **API** : `dotnet restore`, `build` en Release, puis `test`.
-2. **Front** : `npm ci`, puis `npm run build` (vérification des types et build Vite).
+1. **API** : `dotnet restore`, vérification du formatage (`dotnet format --verify-no-changes`), `build` en Release, puis `test`.
+2. **Front** : `npm ci`, `npm run lint`, `npm run format:check`, puis `npm run build` (vérification des types et build Vite).
+
+Ces deux jobs, `API (.NET)` et `Front (React)`, sont obligatoires pour merger sur `main`.
 
 Après le merge sur `main` :
 

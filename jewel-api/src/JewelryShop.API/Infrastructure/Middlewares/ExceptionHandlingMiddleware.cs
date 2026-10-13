@@ -12,7 +12,7 @@ public class ExceptionHandlingMiddleware
 
     public ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
     {
-        _next   = next;
+        _next = next;
         _logger = logger;
     }
 
@@ -43,12 +43,12 @@ public class ExceptionHandlingMiddleware
         Exception exception) =>
         exception switch
         {
-            ValidationException ve      => (HttpStatusCode.BadRequest,        "Erreur de validation",   ve.Errors),
-            NotFoundException nfe       => (HttpStatusCode.NotFound,          nfe.Message,               null),
-            ConflictException ce        => (HttpStatusCode.Conflict,          ce.Message,                null),
-            ForbiddenAccessException fe => (HttpStatusCode.Forbidden,         fe.Message,                null),
-            UnauthorizedException ue    => (HttpStatusCode.Unauthorized,      ue.Message,                null),
-            _                          => (HttpStatusCode.InternalServerError, "Une erreur est survenue.", null)
+            ValidationException ve => (HttpStatusCode.BadRequest, "Erreur de validation", ve.Errors),
+            NotFoundException nfe => (HttpStatusCode.NotFound, nfe.Message, null),
+            ConflictException ce => (HttpStatusCode.Conflict, ce.Message, null),
+            ForbiddenAccessException fe => (HttpStatusCode.Forbidden, fe.Message, null),
+            UnauthorizedException ue => (HttpStatusCode.Unauthorized, ue.Message, null),
+            _ => (HttpStatusCode.InternalServerError, "Une erreur est survenue.", null)
         };
 
     private static async Task HandleExceptionAsync(HttpContext context, Exception exception)
@@ -56,7 +56,7 @@ public class ExceptionHandlingMiddleware
         var (statusCode, title, errors) = Map(exception);
 
         context.Response.ContentType = "application/json";
-        context.Response.StatusCode  = (int)statusCode;
+        context.Response.StatusCode = (int)statusCode;
 
         var response = new
         {

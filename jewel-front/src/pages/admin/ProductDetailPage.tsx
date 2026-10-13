@@ -22,10 +22,7 @@ export function ProductDetailPage({ kind }: ProductDetailPageProps) {
   const { id } = useParams();
   const productId = Number(id);
 
-  const { data, loading, error } = useAsync(
-    () => config.fetchById(productId),
-    [kind, productId]
-  );
+  const { data, loading, error } = useAsync(() => config.fetchById(productId), [kind, productId]);
 
   return (
     <div className="mx-auto w-full max-w-[760px]">
@@ -64,7 +61,6 @@ export function ProductDetailPage({ kind }: ProductDetailPageProps) {
                 Modifier
               </Button>
             </Link>
-
 
             {data.description && (
               <p className="mb-5 font-body text-sm leading-relaxed text-encre/80">
