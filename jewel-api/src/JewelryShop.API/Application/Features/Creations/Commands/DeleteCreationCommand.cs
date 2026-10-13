@@ -17,7 +17,7 @@ public class DeleteCreationCommandHandler : IRequestHandler<DeleteCreationComman
             ?? throw new NotFoundException("Création", request.CreationId);
 
         if (creation.UserId != request.UserId)
-            throw new ForbiddenAccessException("Cette création ne t'appartient pas.");
+            throw new ForbiddenAccessException("Cette création ne vous appartient pas.");
 
         _creations.Delete(creation);
         await _creations.SaveChangesAsync(cancellationToken);
