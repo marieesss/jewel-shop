@@ -29,7 +29,7 @@ public class FavoritesController : ApiControllerBase
     public async Task<IActionResult> Add([FromBody] AddFavoriteRequest request, CancellationToken ct)
     {
         var command = new AddFavoriteCommand(GetUserId(), request.ChainId, request.CharmId);
-        var result  = await Sender.Send(command, ct);
+        var result = await Sender.Send(command, ct);
         return CreatedAtAction(nameof(GetMyFavorites), new { }, result);
     }
 

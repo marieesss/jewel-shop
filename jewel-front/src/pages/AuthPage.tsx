@@ -90,9 +90,7 @@ export const AuthPage = observer(function AuthPage() {
                 type="button"
                 onClick={() => switchMode(m)}
                 className={`flex-1 rounded-[11px] py-[11px] font-body text-[13px] font-medium tracking-[0.03em] transition-all duration-300 ${
-                  mode === m
-                    ? 'bg-white text-fuchsia shadow-toggle'
-                    : 'bg-transparent text-slate'
+                  mode === m ? 'bg-white text-fuchsia shadow-toggle' : 'bg-transparent text-slate'
                 }`}
               >
                 {m === 'login' ? 'Connexion' : 'Inscription'}

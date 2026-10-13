@@ -2,8 +2,10 @@ import { useId, type TextareaHTMLAttributes } from 'react';
 import { cn } from '../../lib/cn';
 import { FieldShell, controlClass } from './FieldShell';
 
-interface TextAreaProps
-  extends Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'onChange' | 'value'> {
+interface TextAreaProps extends Omit<
+  TextareaHTMLAttributes<HTMLTextAreaElement>,
+  'onChange' | 'value'
+> {
   label: string;
   value: string;
   onChange: (value: string) => void;

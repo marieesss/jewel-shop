@@ -20,10 +20,7 @@ export function ProductEditPage({ kind }: ProductEditPageProps) {
   const productId = Number(id);
   const navigate = useNavigate();
 
-  const { data, loading, error } = useAsync(
-    () => config.fetchById(productId),
-    [kind, productId]
-  );
+  const { data, loading, error } = useAsync(() => config.fetchById(productId), [kind, productId]);
 
   const goToDetail = () => navigate(adminPaths.detail(config.slug, productId));
 
@@ -43,13 +40,14 @@ export function ProductEditPage({ kind }: ProductEditPageProps) {
         <Alert>{error ?? 'Identifiant de produit invalide.'}</Alert>
       )}
 
-      {!loading && !error && data && (
-        kind === 'charm' ? (
+      {!loading &&
+        !error &&
+        data &&
+        (kind === 'charm' ? (
           <CharmForm product={data as CharmDto} onSuccess={goToDetail} />
         ) : (
           <ChainForm product={data as ChainDto} onSuccess={goToDetail} />
-        )
-      )}
+        ))}
     </div>
   );
 }

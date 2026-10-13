@@ -84,7 +84,7 @@ public class ChainsController : ApiControllerBase
         if (file is null || file.Length == 0)
             return BadRequest("Aucun fichier fourni.");
 
-        var command  = new UploadChainImageCommand(id, file.OpenReadStream(), file.FileName, file.ContentType);
+        var command = new UploadChainImageCommand(id, file.OpenReadStream(), file.FileName, file.ContentType);
         var imageUrl = await Sender.Send(command, ct);
         return Ok(new { imageUrl });
     }

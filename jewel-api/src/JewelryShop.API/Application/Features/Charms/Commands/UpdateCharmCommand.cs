@@ -41,13 +41,13 @@ public class UpdateCharmCommandHandler : IRequestHandler<UpdateCharmCommand, Cha
         var charm = await _charms.GetByIdAsync(request.Id, cancellationToken)
             ?? throw new NotFoundException("Breloque", request.Id);
 
-        charm.Name        = request.Name.Trim();
+        charm.Name = request.Name.Trim();
         charm.Description = request.Description?.Trim() ?? string.Empty;
-        charm.Color       = request.Color;
-        charm.Cost        = request.Cost;
-        charm.Price       = request.Price;
-        charm.Stock       = request.Stock;
-        charm.Url         = string.IsNullOrWhiteSpace(request.Url) ? null : request.Url.Trim();
+        charm.Color = request.Color;
+        charm.Cost = request.Cost;
+        charm.Price = request.Price;
+        charm.Stock = request.Stock;
+        charm.Url = string.IsNullOrWhiteSpace(request.Url) ? null : request.Url.Trim();
 
         _charms.Update(charm);
         await _charms.SaveChangesAsync(cancellationToken);

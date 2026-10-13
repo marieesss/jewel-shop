@@ -2,8 +2,7 @@ import { useId, type InputHTMLAttributes } from 'react';
 import { cn } from '../../lib/cn';
 import { FieldShell, controlClass } from './FieldShell';
 
-interface TextFieldProps
-  extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'value'> {
+interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'value'> {
   label: string;
   value: string;
   onChange: (value: string) => void;

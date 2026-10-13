@@ -12,7 +12,10 @@ interface ApiErrorBody {
  * Transforme une erreur Axios en message lisible pour l'utilisateur, en
  * privilégiant les erreurs de validation détaillées de l'API.
  */
-export function extractApiError(err: unknown, fallback = 'Une erreur est survenue. Veuillez réessayer.'): string {
+export function extractApiError(
+  err: unknown,
+  fallback = 'Une erreur est survenue. Veuillez réessayer.'
+): string {
   if (err instanceof AxiosError) {
     const data = err.response?.data as ApiErrorBody | undefined;
 
@@ -25,7 +28,7 @@ export function extractApiError(err: unknown, fallback = 'Une erreur est survenu
 
     if (!err.response) return 'Impossible de joindre le serveur.';
     if (err.response.status === 401) return "Vous n'êtes pas autorisé à effectuer cette action.";
-    if (err.response.status === 403) return "Accès réservé aux administrateurs.";
+    if (err.response.status === 403) return 'Accès réservé aux administrateurs.';
   }
   return fallback;
 }

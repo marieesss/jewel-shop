@@ -74,16 +74,10 @@ export function ImageUpload({
 
       {value && preview ? (
         <div className="flex items-center gap-3 rounded-xl border border-lin bg-white p-3">
-          <img
-            src={preview}
-            alt="Aperçu"
-            className="h-16 w-16 shrink-0 rounded-lg object-cover"
-          />
+          <img src={preview} alt="Aperçu" className="h-16 w-16 shrink-0 rounded-lg object-cover" />
           <div className="min-w-0 flex-1">
             <p className="truncate font-body text-sm font-medium text-encre">{value.name}</p>
-            <p className="font-body text-[11px] text-slate">
-              {(value.size / 1024).toFixed(0)} Ko
-            </p>
+            <p className="font-body text-[11px] text-slate">{(value.size / 1024).toFixed(0)} Ko</p>
           </div>
           <button
             type="button"

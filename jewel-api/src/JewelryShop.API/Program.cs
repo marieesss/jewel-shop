@@ -45,7 +45,7 @@ app.Run();
 
 static void RunMigrations(WebApplication app)
 {
-    var logger           = app.Logger;
+    var logger = app.Logger;
     var connectionString = app.Configuration.GetConnectionString("DefaultConnection")
         ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection introuvable.");
 
@@ -58,8 +58,8 @@ static void RunMigrations(WebApplication app)
 
     var evolve = new Evolve(cnx, msg => logger.LogInformation("[Evolve] {Msg}", msg))
     {
-        Locations        = new[] { migrationsPath },
-        IsEraseDisabled  = true,   // Interdit DROP en production
+        Locations = new[] { migrationsPath },
+        IsEraseDisabled = true,   // Interdit DROP en production
         // Verrou Postgres (advisory lock) : si deux instances migrent en même temps
         // (plusieurs réplicas sous Kubernetes), la seconde attend la première.
         EnableClusterMode = true
