@@ -63,7 +63,16 @@ jobs:
           # ExitOnForwardFailure : échoue tout de suite si le tunnel ne peut pas s'ouvrir.
           ssh -f -N -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 \
             -L 6443:127.0.0.1:6443 "deploy@$DEPLOY_HOST"
-          kubectl version
+          # Un disque lent sur le VPS ralentit l'API k3s : on lui laisse plusieurs essais.
+          for attempt in 1 2 3 4 5; do
+            kubectl version --request-timeout=20s && break
+            if [ "$attempt" -eq 5 ]; then
+              echo "::error::API Kubernetes injoignable à travers le tunnel après 5 essais"
+              exit 1
+            fi
+            echo "API Kubernetes pas encore joignable (essai $attempt/5), nouvel essai dans 10 s"
+            sleep 10
+          done
           kubectl auth whoami
 
       # ── Phase 0 : secrets ───────────────────────────────────────────────────
