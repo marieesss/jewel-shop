@@ -3,6 +3,8 @@ import { observer } from 'mobx-react-lite';
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../stores/context';
 import { postLoginPath } from '../lib/returnUrl';
+import { validatePassword } from '../lib/passwordPolicy';
+import { PasswordRules } from '../features/auth/PasswordRules';
 import { FormInput } from '../components/FormInput';
 import { DecoPanel } from '../components/DecoPanel';
 import { MailIcon, LockIcon, UserIcon, CalendarIcon } from '../components/icons';
@@ -41,12 +43,13 @@ export const AuthPage = observer(function AuthPage() {
 
     let ok = false;
     if (mode === 'register') {
-      if (password !== confirmPassword) {
-        setLocalError('Les mots de passe ne correspondent pas.');
+      const [firstPolicyError] = validatePassword(password);
+      if (firstPolicyError) {
+        setLocalError(firstPolicyError);
         return;
       }
-      if (password.length < 8) {
-        setLocalError('Le mot de passe doit contenir au moins 8 caractères.');
+      if (password !== confirmPassword) {
+        setLocalError('Les mots de passe ne correspondent pas.');
         return;
       }
       ok = await auth.register({
@@ -175,6 +178,7 @@ export const AuthPage = observer(function AuthPage() {
                 >
                   {showPassword ? 'Masquer' : 'Afficher'}
                 </button>
+                {mode === 'register' && <PasswordRules password={password} />}
               </div>
 
               {mode === 'register' && (
