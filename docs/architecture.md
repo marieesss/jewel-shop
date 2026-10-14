@@ -122,16 +122,17 @@ src/
 ├── stores/       # MobX : AuthStore, ProductAdminStore, FavoritesStore, RootStore + hooks d'accès
 ├── routes/       # guards.tsx : ProtectedRoute, AdminRoute
 ├── pages/        # pages routées : AuthPage, user/, admin/
-├── features/     # composants métier : admin/, products/, favorites/, user/
+├── features/     # composants métier : admin/, auth/, products/, favorites/, user/
 ├── components/ui # composants génériques (Button, TextField, Pagination…)
 ├── hooks/        # useAsync
-└── lib/          # cn, format, jwt (décodage des claims côté client), returnUrl (redirection après connexion)
+└── lib/          # cn, format, jwt (décodage des claims côté client), returnUrl (redirection après connexion),
+                  # passwordPolicy (règles du mot de passe, identiques au back)
 ```
 
 - Routage déclaré dans `App.tsx`. `/login` est public. L'espace client (`/charms`, `/chains`, `/favorites`) exige une session. `/admin/...` exige le rôle `Admin`.
 - Le JWT est stocké dans `localStorage` et restauré au chargement (`AuthStore.hydrate`). Un token expiré est supprimé.
 - `VITE_API_URL` est figée **au build**. Vide en production : URL relatives.
-- Les validations de formulaire reprennent celles du back (`features/products/productForm.ts`).
+- Les validations de formulaire reprennent celles du back (`features/products/productForm.ts`, `lib/passwordPolicy.ts`).
 
 ---
 
@@ -181,7 +182,7 @@ Le retour arrière remet l'ancienne version du code, **pas l'ancien schéma** : 
 | Sujet | Impact sur l'architecture |
 |---|---|
 | Service d'email | Interface `IEmailSender` (Mailpit en dev, ajouté à `compose.yaml` ; fournisseur SMTP/API en prod). Table **outbox** et `BackgroundService` d'envoi : premier traitement asynchrone de l'API. Templates côté back. Nouveau flux sortant vers le fournisseur de mail (NetworkPolicy à prévoir). |
-| Politique de mot de passe | Fait côté back : la règle FluentValidation réutilisable `PasswordPolicy()` (`Features/Auth/Validation/PasswordPolicyRules.cs`) est appliquée à l'inscription, et le sera à la réinitialisation. La connexion ne l'applique pas, pour ne pas bloquer les comptes existants. Le front reprendra les mêmes règles et messages (#28). |
+| Politique de mot de passe | Fait côté back : la règle FluentValidation réutilisable `PasswordPolicy()` (`Features/Auth/Validation/PasswordPolicyRules.cs`) est appliquée à l'inscription, et le sera à la réinitialisation. La connexion ne l'applique pas, pour ne pas bloquer les comptes existants. Le front reprend les mêmes règles et messages (`lib/passwordPolicy.ts`) et les affiche cochées en direct à l'inscription (`features/auth/PasswordRules`). |
 | Refresh token | Access token JWT de 15 min (au lieu de 7 jours). Nouvelle table de refresh tokens hachés, cookie `httpOnly` `Secure` `SameSite=Strict`, rotation et détection de réutilisation. Front : intercepteur axios (401 → refresh → rejeu, file d'attente). Le stockage du token d'accès dans `localStorage` est à revoir. |
 | Protection des routes front | Fait : les guards `ProtectedRoute` / `AdminRoute` redirigent vers `/login?returnUrl=…`, et `AuthPage` renvoie sur la page demandée après connexion si le chemin est interne et autorisé pour le rôle. |
 | Mot de passe oublié | Table de tokens de réinitialisation hachés, à usage unique. Révocation des refresh tokens. |
