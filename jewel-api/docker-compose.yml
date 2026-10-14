@@ -29,5 +29,14 @@ services:
     depends_on:
       - postgres
 
+  # Faux serveur SMTP : capture les mails de l'API lancée hors Docker (Email__Smtp__Host=localhost).
+  mailpit:
+    image: axllent/mailpit:v1.31.3
+    container_name: jewelryshop-mailpit
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8025:8025"   # interface web
+      - "127.0.0.1:1025:1025"   # SMTP
+
 volumes:
   postgres_data:

@@ -38,6 +38,12 @@ services:
       Cloudinary__CloudName: ${CLOUDINARY_CLOUD_NAME:?CLOUDINARY_CLOUD_NAME manquant dans .env}
       Cloudinary__ApiKey: ${CLOUDINARY_API_KEY:?CLOUDINARY_API_KEY manquant dans .env}
       Cloudinary__ApiSecret: ${CLOUDINARY_API_SECRET:?CLOUDINARY_API_SECRET manquant dans .env}
+      # Mails envoyés à Mailpit : rien ne part vers l'extérieur, tout se consulte sur http://127.0.0.1:8025.
+      Email__Smtp__Host: mailpit
+      Email__Smtp__Port: "1025"
+      Email__Smtp__UseSsl: "false"
+      Email__FromAddress: no-reply@mycharmly.eu
+      Email__FromName: mycharmly
       # Lit X-Forwarded-For / X-Forwarded-Proto envoyés par la passerelle :
       # l'API voit la vraie IP du visiteur et sait que la requête d'origine était en HTTPS.
       ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
@@ -66,6 +72,15 @@ services:
         condition: service_healthy
       front:
         condition: service_healthy
+    networks: [edge]
+
+  # ── Mailpit : faux serveur SMTP qui capture les mails envoyés par l'API ─────
+  mailpit:
+    image: axllent/mailpit:v1.31.3
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8025:8025"   # interface web ; le SMTP (1025) reste interne à Docker
+    # Sur edge et non sur backend : un réseau internal ne peut pas publier de port vers l'hôte.
     networks: [edge]
 
   # ── pgAdmin : interface web pour consulter la base ──────────────────────────
