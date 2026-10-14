@@ -3,7 +3,7 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../stores/context';
 
 /** Exige une session authentifiée ; sinon redirige vers /login. */
-export const RequireAuth = observer(function RequireAuth() {
+export const ProtectedRoute = observer(function ProtectedRoute() {
   const auth = useAuthStore();
   const location = useLocation();
 
@@ -14,7 +14,7 @@ export const RequireAuth = observer(function RequireAuth() {
 });
 
 /** Exige le rôle Admin ; non connecté → /login, connecté non-admin → accueil. */
-export const RequireAdmin = observer(function RequireAdmin() {
+export const AdminRoute = observer(function AdminRoute() {
   const auth = useAuthStore();
   const location = useLocation();
 
