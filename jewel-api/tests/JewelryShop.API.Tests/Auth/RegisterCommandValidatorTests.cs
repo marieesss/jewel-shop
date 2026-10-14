@@ -68,6 +68,94 @@ public class RegisterCommandValidatorTests
         ValidationAssert.HasError(result, nameof(RegisterCommand.Password), expectedMessage);
     }
 
+    [Theory]
+    [InlineData("Abcdef1!")]
+    [InlineData("Écrin12!")]
+    public void Accepte_un_mot_de_passe_conforme_a_la_politique(string password)
+    {
+        var result = _validator.Validate(ValidCommand() with { Password = password });
+
+        Assert.True(result.IsValid);
+    }
+
+    [Fact]
+    public void Refuse_un_mot_de_passe_sans_majuscule()
+    {
+        var result = _validator.Validate(ValidCommand() with { Password = "abcdef1!" });
+
+        ValidationAssert.HasError(
+            result,
+            nameof(RegisterCommand.Password),
+            "Le mot de passe doit contenir au moins une majuscule.");
+    }
+
+    [Fact]
+    public void Ne_compte_pas_une_minuscule_accentuee_comme_majuscule_ni_comme_caractere_special()
+    {
+        var result = _validator.Validate(ValidCommand() with { Password = "éabcde1!" });
+
+        Assert.Equal(
+            ["Le mot de passe doit contenir au moins une majuscule."],
+            result.Errors.Select(e => e.ErrorMessage));
+    }
+
+    [Fact]
+    public void Refuse_un_mot_de_passe_sans_chiffre()
+    {
+        var result = _validator.Validate(ValidCommand() with { Password = "Abcdefg!" });
+
+        ValidationAssert.HasError(
+            result,
+            nameof(RegisterCommand.Password),
+            "Le mot de passe doit contenir au moins un chiffre.");
+    }
+
+    [Fact]
+    public void Refuse_un_mot_de_passe_sans_caractere_special()
+    {
+        var result = _validator.Validate(ValidCommand() with { Password = "Abcdefg1" });
+
+        ValidationAssert.HasError(
+            result,
+            nameof(RegisterCommand.Password),
+            "Le mot de passe doit contenir au moins un caractère spécial.");
+    }
+
+    [Theory]
+    [InlineData("Abcd ef1!")]
+    [InlineData("Abcd\tef1!")]
+    public void Refuse_un_mot_de_passe_contenant_un_espace(string password)
+    {
+        var result = _validator.Validate(ValidCommand() with { Password = password });
+
+        ValidationAssert.HasError(
+            result,
+            nameof(RegisterCommand.Password),
+            "Le mot de passe ne doit pas contenir d'espace.");
+    }
+
+    [Fact]
+    public void Renvoie_les_messages_de_toutes_les_regles_non_respectees()
+    {
+        var result = _validator.Validate(ValidCommand() with { Password = "Ab1 " });
+
+        Assert.Equal(
+            [
+                "Le mot de passe doit contenir au moins 8 caractères.",
+                "Le mot de passe doit contenir au moins un caractère spécial.",
+                "Le mot de passe ne doit pas contenir d'espace.",
+            ],
+            result.Errors.Select(e => e.ErrorMessage));
+    }
+
+    [Fact]
+    public void Renvoie_seulement_le_message_requis_pour_un_mot_de_passe_vide()
+    {
+        var result = _validator.Validate(ValidCommand() with { Password = "" });
+
+        Assert.Equal(["Le mot de passe est requis."], result.Errors.Select(e => e.ErrorMessage));
+    }
+
     [Fact]
     public void Refuse_une_date_de_naissance_dans_le_futur()
     {
