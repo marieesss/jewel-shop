@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { StoreProvider, rootStore } from './stores/context';
-import { RequireAuth, RequireAdmin } from './routes/guards';
+import { ProtectedRoute, AdminRoute } from './routes/guards';
 import { AuthPage } from './pages/AuthPage';
 import { UserLayout } from './features/user/UserLayout';
 import { UserProductListPage } from './pages/user/UserProductListPage';
@@ -22,7 +22,7 @@ export default function App() {
           <Route path="/login" element={<AuthPage />} />
 
           {/* Espace utilisateur connecté (navbar horizontale) */}
-          <Route element={<RequireAuth />}>
+          <Route element={<ProtectedRoute />}>
             <Route element={<UserLayout />}>
               <Route index element={<Navigate to="/charms" replace />} />
               <Route path="/charms" element={<UserProductListPage kind="charm" />} />
@@ -34,7 +34,7 @@ export default function App() {
           </Route>
 
           {/* Admin uniquement */}
-          <Route element={<RequireAdmin />}>
+          <Route element={<AdminRoute />}>
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminDashboardPage />} />
               <Route path="products/new" element={<ProductCreatePage />} />

@@ -120,12 +120,12 @@ erDiagram
 src/
 ├── api/          # client axios (Bearer token injecté), une fonction par endpoint, types des DTO
 ├── stores/       # MobX : AuthStore, ProductAdminStore, FavoritesStore, RootStore + hooks d'accès
-├── routes/       # guards.tsx : RequireAuth, RequireAdmin
+├── routes/       # guards.tsx : ProtectedRoute, AdminRoute
 ├── pages/        # pages routées : AuthPage, user/, admin/
 ├── features/     # composants métier : admin/, products/, favorites/, user/
 ├── components/ui # composants génériques (Button, TextField, Pagination…)
 ├── hooks/        # useAsync
-└── lib/          # cn, format, jwt (décodage des claims côté client)
+└── lib/          # cn, format, jwt (décodage des claims côté client), returnUrl (redirection après connexion)
 ```
 
 - Routage déclaré dans `App.tsx`. `/login` est public. L'espace client (`/charms`, `/chains`, `/favorites`) exige une session. `/admin/...` exige le rôle `Admin`.
@@ -183,7 +183,7 @@ Le retour arrière remet l'ancienne version du code, **pas l'ancien schéma** : 
 | Service d'email | Interface `IEmailSender` (Mailpit en dev, ajouté à `compose.yaml` ; fournisseur SMTP/API en prod). Table **outbox** et `BackgroundService` d'envoi : premier traitement asynchrone de l'API. Templates côté back. Nouveau flux sortant vers le fournisseur de mail (NetworkPolicy à prévoir). |
 | Politique de mot de passe | Règles partagées entre le validateur d'inscription et le front. |
 | Refresh token | Access token JWT de 15 min (au lieu de 7 jours). Nouvelle table de refresh tokens hachés, cookie `httpOnly` `Secure` `SameSite=Strict`, rotation et détection de réutilisation. Front : intercepteur axios (401 → refresh → rejeu, file d'attente). Le stockage du token d'accès dans `localStorage` est à revoir. |
-| Protection des routes front | Les guards `RequireAuth` / `RequireAdmin` existent. Il faut ajouter le `returnUrl` après connexion. |
+| Protection des routes front | Fait : les guards `ProtectedRoute` / `AdminRoute` redirigent vers `/login?returnUrl=…`, et `AuthPage` renvoie sur la page demandée après connexion si le chemin est interne et autorisé pour le rôle. |
 | Mot de passe oublié | Table de tokens de réinitialisation hachés, à usage unique. Révocation des refresh tokens. |
 | Inscription sur invitation | Table `Invitation`. `POST /api/auth/register` devient conditionné par une invitation valide. C'est un **changement de comportement** de l'endpoint public existant. |
 | Gestion des utilisateurs | `GET /api/admin/users` existe. Ajout des invitations et d'une page admin « Utilisateurs ». |

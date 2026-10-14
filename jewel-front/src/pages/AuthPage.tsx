@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react';
 import { observer } from 'mobx-react-lite';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../stores/context';
+import { postLoginPath } from '../lib/returnUrl';
 import { FormInput } from '../components/FormInput';
 import { DecoPanel } from '../components/DecoPanel';
 import { MailIcon, LockIcon, UserIcon, CalendarIcon } from '../components/icons';
@@ -11,6 +12,8 @@ type Mode = 'login' | 'register';
 export const AuthPage = observer(function AuthPage() {
   const auth = useAuthStore();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const destination = () => postLoginPath(searchParams.get('returnUrl'), auth.isAdmin);
 
   const [mode, setMode] = useState<Mode>('login');
   const [animKey, setAnimKey] = useState(0);
@@ -58,7 +61,7 @@ export const AuthPage = observer(function AuthPage() {
     }
 
     if (ok) {
-      navigate(auth.isAdmin ? '/admin' : '/', { replace: true });
+      navigate(destination(), { replace: true });
     }
   };
 
@@ -66,7 +69,7 @@ export const AuthPage = observer(function AuthPage() {
 
   // Déjà connecté : on ne réaffiche pas le formulaire.
   if (auth.isAuthenticated) {
-    return <Navigate to={auth.isAdmin ? '/admin' : '/'} replace />;
+    return <Navigate to={destination()} replace />;
   }
 
   return (
