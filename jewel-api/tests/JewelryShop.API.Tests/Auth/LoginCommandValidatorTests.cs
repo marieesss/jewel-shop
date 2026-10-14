@@ -16,6 +16,14 @@ public class LoginCommandValidatorTests
         Assert.True(result.IsValid);
     }
 
+    [Fact]
+    public void Accepte_un_ancien_mot_de_passe_qui_ne_respecte_pas_la_politique()
+    {
+        var result = _validator.Validate(ValidCommand() with { Password = "faible" });
+
+        Assert.True(result.IsValid);
+    }
+
     [Theory]
     [InlineData("", "L'email est requis.")]
     [InlineData("pas-un-email", "L'email n'est pas valide.")]
