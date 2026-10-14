@@ -134,8 +134,8 @@ L'API lit sa configuration dans `jewel-api/.env` (modèle : `jewel-api/.env.exam
 # API : formatage (.editorconfig), build, tests
 cd jewel-api && dotnet format JewelryShop.sln --verify-no-changes && dotnet build JewelryShop.sln && dotnet test JewelryShop.sln
 
-# Front : lint (ESLint), formatage (Prettier), types et build
-cd jewel-front && npm run lint && npm run format:check && npm run build
+# Front : lint (ESLint), formatage (Prettier), types et build, tests
+cd jewel-front && npm run lint && npm run format:check && npm run build && npm test
 ```
 
 Pour corriger le formatage automatiquement : `dotnet format JewelryShop.sln` dans `jewel-api`, `npm run format` dans `jewel-front`. Les règles sont dans `.editorconfig` (racine), `jewel-front/eslint.config.js` et `jewel-front/.prettierrc.json`. Un reformatage se fait dans un commit séparé, sans changement de comportement.
@@ -229,7 +229,7 @@ Conventions (voir `jewel-api/tests/JewelryShop.API.Tests/`) :
 cd jewel-api && dotnet test JewelryShop.sln
 ```
 
-Côté front, la CI ne fait aujourd'hui que vérifier les types et construire. Si une issue ajoute de la logique pure côté front (calcul, validation, formatage), ajoutez un lanceur de tests (Vitest), placez les tests à côté du fichier (`*.test.ts`) et branchez-les dans `ci.yml`.
+Côté front, la logique pure (calcul, validation, formatage) est testée avec Vitest. Les tests sont placés à côté du fichier testé (`*.test.ts`), avec la même convention de noms en français, et la CI les lance avec `npm test`.
 
 ---
 
@@ -343,7 +343,7 @@ Section « Impact production » d'une PR :
 Sur chaque PR, la CI exécute :
 
 1. **API** : `dotnet restore`, vérification du formatage (`dotnet format --verify-no-changes`), `build` en Release, puis `test`.
-2. **Front** : `npm ci`, `npm run lint`, `npm run format:check`, puis `npm run build` (vérification des types et build Vite).
+2. **Front** : `npm ci`, `npm run lint`, `npm run format:check`, `npm run build` (vérification des types et build Vite), puis `npm test` (Vitest).
 
 Ces deux jobs, `API (.NET)` et `Front (React)`, sont obligatoires pour merger sur `main`.
 

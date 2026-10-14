@@ -77,6 +77,9 @@ jobs:
       - name: Vérifier les types et construire
         run: npm run build
 
+      - name: Tests unitaires
+        run: npm test
+
   # ── Publication des images Docker sur ghcr.io ───────────────────────────────
   publish:
     name: Image ${{ matrix.image }}
