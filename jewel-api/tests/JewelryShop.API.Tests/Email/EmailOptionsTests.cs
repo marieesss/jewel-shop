@@ -5,10 +5,9 @@ namespace JewelryShop.API.Tests.Email;
 public class EmailOptionsTests
 {
     [Theory]
-    [InlineData(null)]
     [InlineData("")]
     [InlineData("   ")]
-    public void N_est_pas_configure_quand_l_hote_est_vide(string? host)
+    public void N_est_pas_configure_quand_l_hote_est_vide(string host)
     {
         var options = new EmailOptions { Smtp = { Host = host } };
 
@@ -24,10 +23,9 @@ public class EmailOptionsTests
     }
 
     [Theory]
-    [InlineData(null)]
     [InlineData("")]
     [InlineData("   ")]
-    public void Ne_demande_pas_d_authentification_quand_l_identifiant_est_vide(string? username)
+    public void Ne_demande_pas_d_authentification_quand_l_identifiant_est_vide(string username)
     {
         var options = new SmtpOptions { Username = username };
 

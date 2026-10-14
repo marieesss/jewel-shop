@@ -10,6 +10,7 @@ using JewelryShop.Application.Features.Creations;
 using JewelryShop.Application.Features.Favorites;
 using JewelryShop.Application.Features.Options;
 using JewelryShop.Application.Features.Users;
+using JewelryShop.Infrastructure.Email;
 using JewelryShop.Infrastructure.Middlewares;
 using JewelryShop.Infrastructure.Persistence;
 using JewelryShop.Infrastructure.Services;
@@ -17,6 +18,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
@@ -41,12 +43,14 @@ public static class Startup
         AddJwtAuthentication(services, configuration);
         AddPersistence(services, configuration);
         AddApplication(services);
-        AddInfrastructureServices(services);
+        AddInfrastructureServices(services, configuration);
         AddHealthChecks(services);
     }
 
     public static void ConfigurePipeline(this WebApplication app)
     {
+        WarnIfEmailNotConfigured(app);
+
         app.UseMiddleware<ExceptionHandlingMiddleware>();
 
         if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
@@ -200,11 +204,21 @@ public static class Startup
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
     }
 
-    private static void AddInfrastructureServices(IServiceCollection services)
+    private static void AddInfrastructureServices(IServiceCollection services, IConfiguration configuration)
     {
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
         services.AddScoped<IFileStorageService, CloudinaryFileStorageService>();
+        services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
+        services.AddScoped<IEmailSender, SmtpEmailSender>();
+    }
+
+    private static void WarnIfEmailNotConfigured(WebApplication app)
+    {
+        var emailOptions = app.Services.GetRequiredService<IOptions<EmailOptions>>().Value;
+        if (!emailOptions.IsConfigured)
+            app.Logger.LogWarning(
+                "Envoi de mails non configuré (Email__Smtp__Host vide) : les mails resteront en attente.");
     }
 
     private static void AddHealthChecks(IServiceCollection services)
