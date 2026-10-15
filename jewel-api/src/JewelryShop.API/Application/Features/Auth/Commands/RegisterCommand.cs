@@ -13,7 +13,7 @@ public record RegisterCommand(
     string Surname,
     string Email,
     string Password,
-    DateOnly? Birthday) : IRequest<AuthResponse>;
+    DateOnly? Birthday) : IRequest<AuthResult>;
 
 public class RegisterCommandValidator : AbstractValidator<RegisterCommand>
 {
@@ -36,23 +36,26 @@ public class RegisterCommandValidator : AbstractValidator<RegisterCommand>
     }
 }
 
-public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthResponse>
+public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthResult>
 {
     private readonly IUserRepository _users;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtService _jwtService;
+    private readonly IRefreshTokenService _refreshTokens;
 
     public RegisterCommandHandler(
         IUserRepository users,
         IPasswordHasher passwordHasher,
-        IJwtService jwtService)
+        IJwtService jwtService,
+        IRefreshTokenService refreshTokens)
     {
         _users = users;
         _passwordHasher = passwordHasher;
         _jwtService = jwtService;
+        _refreshTokens = refreshTokens;
     }
 
-    public async Task<AuthResponse> Handle(RegisterCommand request, CancellationToken cancellationToken)
+    public async Task<AuthResult> Handle(RegisterCommand request, CancellationToken cancellationToken)
     {
         var email = request.Email.Trim().ToLowerInvariant();
 
@@ -70,9 +73,10 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthRespo
         };
 
         await _users.AddAsync(user, cancellationToken);
+        var refreshToken = _refreshTokens.Issue(user);
         await _users.SaveChangesAsync(cancellationToken);
 
         var token = _jwtService.GenerateToken(user);
-        return new AuthResponse(token, user.Id, user.Role.ToString());
+        return new AuthResult(new AuthResponse(token, user.Id, user.Role.ToString()), refreshToken);
     }
 }

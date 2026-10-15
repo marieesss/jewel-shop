@@ -27,7 +27,7 @@ public interface IRefreshTokenService
 
 public class RefreshTokenService : IRefreshTokenService
 {
-    private const string SessionExpiredMessage = "Votre session a expiré. Veuillez vous reconnecter.";
+    public const string SessionExpiredMessage = "Votre session a expiré. Veuillez vous reconnecter.";
 
     private readonly IRefreshTokenRepository _repository;
     private readonly ISecureTokenGenerator _tokenGenerator;

@@ -78,14 +78,18 @@ sequenceDiagram
 
 ### Authentification et autorisation
 
-- `POST /api/auth/register` et `POST /api/auth/login` renvoient un **JWT** (HS256, valable `Jwt__ExpiresInDays` jours, 7 aujourd'hui) avec l'identifiant (`sub`) et le rôle.
+- `POST /api/auth/register` et `POST /api/auth/login` renvoient un **JWT** (HS256, valable `Jwt__ExpiresInDays` jours, 7 aujourd'hui) avec l'identifiant (`sub`) et le rôle, et posent le refresh token en cookie (voir ci-dessous).
 - Mots de passe hachés avec BCrypt. Rôles : `User` et `Admin` (`UserRole`).
 - Les endpoints admin portent `[Authorize(Roles = "Admin")]`. `AdminController` regroupe les routes `api/admin/...`.
 - L'inscription est **publique** aujourd'hui.
 
 ### Refresh tokens
 
-Le service existe, sans endpoint pour l'instant (refresh et logout : #30).
+- **Cookie** `refresh_token` (`RefreshTokenCookie`) : `HttpOnly`, `Secure`, `SameSite=Strict`, `Path=/api/auth`, `Max-Age` de 30 jours. Le refresh token n'apparaît jamais dans un corps de réponse : les handlers renvoient un `AuthResult` interne et le controller pose le cookie. `localhost` et `127.0.0.1` étant des contextes sécurisés, le cookie `Secure` fonctionne aussi en local en HTTP. La politique CORS autorise les credentials, pour que le front appelle l'API en dev sur un autre port.
+- **Endpoints** (anonymes, sans corps) :
+  - `POST /api/auth/refresh` : 200 avec un nouvel `AuthResponse` et un nouveau cookie (rotation). 401 « Votre session a expiré. Veuillez vous reconnecter. » si le cookie est absent, inconnu, expiré, révoqué ou réutilisé : le cookie est alors supprimé ;
+  - `POST /api/auth/logout` : 204. Révoque le token s'il est actif et supprime le cookie dans tous les cas.
+- Le front ne les utilise pas encore (#31).
 
 - **Tokens opaques** : `ISecureTokenGenerator` (`SecureTokenGenerator`, singleton) génère 32 octets aléatoires en base64url (43 caractères) et les hache en SHA-256 hexadécimal. Seul le hash est stocké dans `refresh_tokens.token_hash`. Le token en clair n'est ni enregistré ni journalisé. Le même générateur servira à la réinitialisation du mot de passe (#33) et aux invitations (#35).
 - **`IRefreshTokenService`** (`Features/Auth/`) :

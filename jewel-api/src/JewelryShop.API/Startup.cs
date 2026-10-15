@@ -116,7 +116,9 @@ public static class Startup
                               && (uri.Host == "localhost" || uri.Host == "127.0.0.1");
                       })
                       .AllowAnyHeader()
-                      .AllowAnyMethod());
+                      .AllowAnyMethod()
+                      // Le cookie du refresh token doit accompagner les appels du front (5173) à l'API (5030) en dev.
+                      .AllowCredentials());
         });
     }
 
