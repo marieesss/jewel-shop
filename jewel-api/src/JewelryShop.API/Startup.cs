@@ -4,6 +4,7 @@ using JewelryShop.Application.Common;
 using JewelryShop.Application.Common.Behaviors;
 using JewelryShop.Application.Common.Interfaces;
 using JewelryShop.Application.Common.Persistence;
+using JewelryShop.Application.Features.Auth;
 using JewelryShop.Application.Features.Chains;
 using JewelryShop.Application.Features.Charms;
 using JewelryShop.Application.Features.Creations;
@@ -196,6 +197,7 @@ public static class Startup
         services.AddScoped<ICreationRepository, CreationRepository>();
         services.AddScoped<IOptionRepository, OptionRepository>();
         services.AddScoped<IEmailOutboxRepository, EmailOutboxRepository>();
+        services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
     }
 
     private static void AddApplication(IServiceCollection services)
