@@ -214,6 +214,8 @@ public static class Startup
         services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
         services.AddScoped<IEmailSender, SmtpEmailSender>();
         services.AddSingleton<IEmailTemplateRenderer, ScribanEmailTemplateRenderer>();
+        services.AddSingleton(TimeProvider.System);
+        services.AddScoped<IEmailQueue, EmailQueue>();
     }
 
     private static void WarnIfEmailNotConfigured(WebApplication app)
