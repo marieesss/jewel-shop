@@ -49,7 +49,7 @@ src/JewelryShop.API/
     ├── Middlewares/               # ExceptionHandlingMiddleware
     ├── Email/                     # EmailOptions, SmtpEmailSender (MailKit), ScribanEmailTemplateRenderer, EmailQueue, Templates/
     ├── Persistence/               # AppDbContext, Configurations/ (mapping EF)
-    └── Services/                  # JwtService, BcryptPasswordHasher, CloudinaryFileStorageService
+    └── Services/                  # JwtService, BcryptPasswordHasher, SecureTokenGenerator, CloudinaryFileStorageService
 ```
 
 Fonctionnalités existantes : `Auth`, `Admin`, `Users`, `Chains`, `Charms`, `Favorites`, `Creations`, `Options`, `Emails` (outbox, sans endpoint).
@@ -83,12 +83,26 @@ sequenceDiagram
 - Les endpoints admin portent `[Authorize(Roles = "Admin")]`. `AdminController` regroupe les routes `api/admin/...`.
 - L'inscription est **publique** aujourd'hui.
 
+### Refresh tokens
+
+Le service existe, sans endpoint pour l'instant (refresh et logout : #30).
+
+- **Tokens opaques** : `ISecureTokenGenerator` (`SecureTokenGenerator`, singleton) génère 32 octets aléatoires en base64url (43 caractères) et les hache en SHA-256 hexadécimal. Seul le hash est stocké dans `refresh_tokens.token_hash`. Le token en clair n'est ni enregistré ni journalisé. Le même générateur servira à la réinitialisation du mot de passe (#33) et aux invitations (#35).
+- **`IRefreshTokenService`** (`Features/Auth/`) :
+  - `Issue(user)` ajoute un token valable 30 jours (`RefreshTokenDefaults.Lifetime`), **sans sauvegarder** : il est enregistré par le `SaveChangesAsync` de l'appelant ;
+  - `RotateAsync(token)` marque le token comme tourné (`rotated_at`), en émet un nouveau valable 30 jours à partir de maintenant (expiration glissante), puis sauvegarde ;
+  - `RevokeAsync(token)` révoque un token actif et sauvegarde ;
+  - `RevokeAllForUserAsync(userId)` révoque tous les tokens actifs de l'utilisateur, sans sauvegarder.
+- **Détection de réutilisation** : présenter un token déjà tourné révoque toutes les sessions de l'utilisateur, sur tous ses appareils, et journalise un warning avec son id. Un token inconnu, expiré, révoqué ou réutilisé lève une `UnauthorizedException` (401) « Votre session a expiré. Veuillez vous reconnecter. ».
+- Un token est **actif** s'il n'est ni tourné, ni révoqué, ni expiré. Les tokens tournés ou révoqués restent en base jusqu'à leur expiration, pour que la réutilisation reste détectable.
+
 ### Données
 
 ```mermaid
 erDiagram
     users ||--o{ favorites : ""
     users ||--o{ creations : ""
+    users ||--o{ refresh_tokens : ""
     chains ||--o{ favorites : ""
     charms ||--o{ favorites : ""
     chains ||--o{ creations : ""
@@ -106,6 +120,7 @@ erDiagram
 | `favorites` | favori d'un utilisateur : exactement une chaîne **ou** une breloque (contrainte `CHECK`) |
 | `creations`, `creation_items` | création d'un utilisateur : une chaîne, une option, des breloques positionnées |
 | `email_outbox` | mails à envoyer : destinataire, sujet, corps HTML et texte, statut, tentatives, prochaine tentative, dernière erreur |
+| `refresh_tokens` | refresh token d'un utilisateur : hash SHA-256 (unique), création, expiration, rotation, révocation. Supprimé avec l'utilisateur |
 
 - Le schéma est créé par des **migrations SQL Evolve** (`jewel-api/db/migrations/V<n>__*.sql`). EF Core ne sert que d'ORM. Son mapping (`Infrastructure/Persistence/Configurations/`) reprend le schéma en snake_case.
 - `IsEraseDisabled = true` empêche Evolve d'effacer la base. `EnableClusterMode` pose un verrou Postgres pour que deux instances ne migrent pas en même temps.
@@ -144,7 +159,7 @@ stateDiagram-v2
 
 - `PeriodicJobsService` (`BackgroundService`) se réveille toutes les 10 s et exécute chaque `IPeriodicJob` dont l'intervalle (`Interval`) est écoulé, chacune dans son propre scope DI.
 - L'exception d'une tâche est journalisée en `Error` : elle n'arrête ni la boucle ni les autres tâches.
-- Une nouvelle tâche s'enregistre avec `services.AddScoped<IPeriodicJob, MaTache>()`. Tâches actuelles : `EmailOutboxDispatchJob` et `EmailOutboxPurgeJob`. La purge des refresh tokens (#29), des tokens de réinitialisation (#33) et l'expiration des invitations (#35) s'y ajouteront.
+- Une nouvelle tâche s'enregistre avec `services.AddScoped<IPeriodicJob, MaTache>()`. Tâches actuelles : `EmailOutboxDispatchJob`, `EmailOutboxPurgeJob` et `RefreshTokenPurgeJob` (toutes les heures, supprime les refresh tokens expirés). La purge des tokens de réinitialisation (#33) et l'expiration des invitations (#35) s'y ajouteront.
 - Les tâches tournent dans chaque instance de l'API : une tâche doit supporter d'être exécutée en parallèle par deux pods (verrou de ligne, requête idempotente).
 - Le mode `--migrate` ne démarre pas le serveur, donc pas les tâches.
 
