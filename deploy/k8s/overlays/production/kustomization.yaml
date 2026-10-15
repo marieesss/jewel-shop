@@ -18,3 +18,14 @@ images:
     newTag: latest
   - name: ghcr.io/marieesss/jewel-front
     newTag: latest
+
+# Modifications ciblées de ressources de la base (format JSON Patch : opération + chemin).
+patches:
+  # URL publique du front, pour construire les liens des mails.
+  - target:
+      kind: ConfigMap
+      name: api-config
+    patch: |-
+      - op: add
+        path: /data/App__FrontendBaseUrl
+        value: https://mycharmly.eu

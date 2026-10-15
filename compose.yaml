@@ -45,6 +45,8 @@ services:
       Email__Smtp__UseSsl: "false"
       Email__FromAddress: no-reply@mycharmly.eu
       Email__FromName: mycharmly
+      # URL publique du front (passerelle Nginx), pour construire les liens des mails.
+      App__FrontendBaseUrl: http://127.0.0.1:8090
       # Lit X-Forwarded-For / X-Forwarded-Proto envoyés par la passerelle :
       # l'API voit la vraie IP du visiteur et sait que la requête d'origine était en HTTPS.
       ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"

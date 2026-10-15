@@ -16,3 +16,12 @@ data:
   ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
   # Les migrations sont jouées par le Job api-migrate, pas au démarrage de l'API.
   Database__MigrateOnStartup: "false"
+  # Mails via le relais SMTP de Brevo (port 587 + STARTTLS). L'API n'a pas de NetworkPolicy
+  # de sortie : le flux est autorisé sans règle. Les identifiants et Email__Enabled sont
+  # dans le Secret api-secrets : sans identifiants, l'envoi reste désactivé.
+  Email__Smtp__Host: smtp-relay.brevo.com
+  Email__Smtp__Port: "587"
+  Email__Smtp__UseSsl: "true"
+  Email__FromAddress: no-reply@mycharmly.eu
+  Email__FromName: mycharmly
+  # App__FrontendBaseUrl (liens dans les mails) dépend de l'environnement : défini par les overlays.
