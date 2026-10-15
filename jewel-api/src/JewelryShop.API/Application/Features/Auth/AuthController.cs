@@ -1,3 +1,4 @@
+using JewelryShop.Application.Common.Exceptions;
 using JewelryShop.Application.Features.Auth.Commands;
 using Microsoft.AspNetCore.Mvc;
 
@@ -29,6 +30,27 @@ public class AuthController : ApiControllerBase
         var result = await Sender.Send(command, ct);
         RefreshTokenCookie.Append(Response, result.RefreshToken);
         return Ok(result.Response);
+    }
+
+    /// <summary>Échange le refresh token du cookie contre un nouveau JWT et un nouveau cookie.</summary>
+    [HttpPost("refresh")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Refresh(CancellationToken ct)
+    {
+        try
+        {
+            var result = await Sender.Send(new RefreshSessionCommand(RefreshTokenCookie.Read(Request)), ct);
+            RefreshTokenCookie.Append(Response, result.RefreshToken);
+            return Ok(result.Response);
+        }
+        catch (UnauthorizedException)
+        {
+            // Le middleware écrit le 401 sans vider les en-têtes : la suppression du cookie
+            // part avec la réponse d'erreur.
+            RefreshTokenCookie.Delete(Response);
+            throw;
+        }
     }
 }
 
