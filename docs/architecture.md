@@ -22,7 +22,7 @@ flowchart LR
 | Composant | Rôle | Technologies |
 |---|---|---|
 | `jewel-front` | Interface client et admin, fichiers statiques servis par Nginx | React 18, TypeScript, Vite, MobX, Tailwind, axios, react-router 6 |
-| `jewel-api` | API REST, logique métier, authentification | .NET 8, ASP.NET Core, MediatR, FluentValidation, EF Core (Npgsql), Evolve, BCrypt, JWT |
+| `jewel-api` | API REST, logique métier, authentification | .NET 8, ASP.NET Core, MediatR, FluentValidation, EF Core (Npgsql), Evolve, BCrypt, JWT, MailKit, Scriban |
 | PostgreSQL | Données de l'application | PostgreSQL 16 |
 | Cloudinary | Stockage et diffusion des images produit | service externe |
 
@@ -46,7 +46,7 @@ src/JewelryShop.API/
 │   └── Features/<Fonctionnalité>/ # entité, repository, controller, Commands/, Queries/, DTOs/
 └── Infrastructure/
     ├── Middlewares/               # ExceptionHandlingMiddleware
-    ├── Email/                     # EmailOptions, SmtpEmailSender (MailKit)
+    ├── Email/                     # EmailOptions, SmtpEmailSender (MailKit), ScribanEmailTemplateRenderer, Templates/
     ├── Persistence/               # AppDbContext, Configurations/ (mapping EF)
     └── Services/                  # JwtService, BcryptPasswordHasher, CloudinaryFileStorageService
 ```
@@ -115,6 +115,15 @@ erDiagram
 - Une seule implémentation, `SmtpEmailSender` (MailKit) : Mailpit en local, relais SMTP du fournisseur en staging et en production. Une connexion par envoi, STARTTLS si `Email__Smtp__UseSsl`, authentification seulement si `Email__Smtp__Username` est renseigné.
 - Configuration `Email__*` facultative : sans `Email__Smtp__Host`, l'API démarre et journalise un warning.
 - Aucune fonctionnalité n'envoie encore de mail : l'outbox et l'envoi asynchrone arrivent avec #25.
+
+### Templates de mail
+
+- `IEmailTemplateRenderer` (`Application/Common/Interfaces`) produit un `RenderedEmail` (sujet, HTML, texte) à partir d'un nom de template et d'un modèle. Implémentation : `ScribanEmailTemplateRenderer` (Scriban), enregistrée en singleton.
+- **Trois fichiers par mail**, dans `Infrastructure/Email/Templates/`, embarqués dans l'assembly (`<EmbeddedResource>` du `.csproj`) : `<Nom>.subject.sbn`, `<Nom>.html.sbn`, `<Nom>.txt.sbn`. Le nom est une constante de `EmailTemplates` (`EmailTemplates.Test` sert seulement aux tests), jamais une chaîne en dur.
+- Les propriétés du modèle sont exposées en snake_case : `FirstName` devient `{{ first_name }}`.
+- **Échappement** : dans un `.html.sbn`, chaque variable est échappée avec `| html.escape` (`{{ first_name | html.escape }}`). Le sujet et le texte ne sont pas échappés.
+- Le sujet rendu est ramené sur une seule ligne, sans espaces autour (c'est un en-tête SMTP).
+- Chaque template est parsé une seule fois puis gardé en cache. Un template introuvable, une erreur de syntaxe ou une variable absente du modèle lèvent une `InvalidOperationException` qui nomme le template.
 
 ### Santé
 
@@ -191,7 +200,7 @@ Le retour arrière remet l'ancienne version du code, **pas l'ancien schéma** : 
 
 | Sujet | Impact sur l'architecture |
 |---|---|
-| Service d'email | Fait : interface `IEmailSender` et envoi SMTP `SmtpEmailSender` (Mailpit en dev ; relais SMTP du fournisseur en prod, configuré par #26). À venir : Table **outbox** et `BackgroundService` d'envoi : premier traitement asynchrone de l'API. Templates côté back. Nouveau flux sortant vers le fournisseur de mail (NetworkPolicy à prévoir). |
+| Service d'email | Fait : interface `IEmailSender` et envoi SMTP `SmtpEmailSender` (Mailpit en dev ; relais SMTP du fournisseur en prod, configuré par #26). Templates Scriban côté back (`IEmailTemplateRenderer`). À venir : Table **outbox** et `BackgroundService` d'envoi : premier traitement asynchrone de l'API. Nouveau flux sortant vers le fournisseur de mail (NetworkPolicy à prévoir). |
 | Politique de mot de passe | Fait côté back : la règle FluentValidation réutilisable `PasswordPolicy()` (`Features/Auth/Validation/PasswordPolicyRules.cs`) est appliquée à l'inscription, et le sera à la réinitialisation. La connexion ne l'applique pas, pour ne pas bloquer les comptes existants. Le front reprend les mêmes règles et messages (`lib/passwordPolicy.ts`) et les affiche cochées en direct à l'inscription (`features/auth/PasswordRules`). |
 | Refresh token | Access token JWT de 15 min (au lieu de 7 jours). Nouvelle table de refresh tokens hachés, cookie `httpOnly` `Secure` `SameSite=Strict`, rotation et détection de réutilisation. Front : intercepteur axios (401 → refresh → rejeu, file d'attente). Le stockage du token d'accès dans `localStorage` est à revoir. |
 | Protection des routes front | Fait : les guards `ProtectedRoute` / `AdminRoute` redirigent vers `/login?returnUrl=…`, et `AuthPage` renvoie sur la page demandée après connexion si le chemin est interne et autorisé pour le rôle. |

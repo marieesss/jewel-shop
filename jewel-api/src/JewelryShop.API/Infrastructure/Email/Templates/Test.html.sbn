@@ -1,0 +1,1 @@
+<p>Bonjour {{ first_name | html.escape }},</p>
