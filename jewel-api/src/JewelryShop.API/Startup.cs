@@ -211,6 +211,7 @@ public static class Startup
         services.AddScoped<IFileStorageService, CloudinaryFileStorageService>();
         services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
         services.AddScoped<IEmailSender, SmtpEmailSender>();
+        services.AddSingleton<IEmailTemplateRenderer, ScribanEmailTemplateRenderer>();
     }
 
     private static void WarnIfEmailNotConfigured(WebApplication app)
