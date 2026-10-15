@@ -16,6 +16,7 @@ public class AppDbContext : DbContext
     public DbSet<Creation> Creations => Set<Creation>();
     public DbSet<CreationItem> CreationItems => Set<CreationItem>();
     public DbSet<EmailOutboxMessage> EmailOutboxMessages => Set<EmailOutboxMessage>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

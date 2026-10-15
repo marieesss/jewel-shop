@@ -1,5 +1,6 @@
 global using JewelryShop.Application.Common;
 global using JewelryShop.Application.Common.Enums;
+global using JewelryShop.Application.Features.Auth;
 global using JewelryShop.Application.Features.Chains;
 global using JewelryShop.Application.Features.Charms;
 global using JewelryShop.Application.Features.Creations;
