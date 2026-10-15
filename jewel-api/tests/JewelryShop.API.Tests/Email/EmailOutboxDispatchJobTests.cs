@@ -16,11 +16,11 @@ public class EmailOutboxDispatchJobTests
     private readonly FakeEmailOutboxRepository _repository = new();
     private readonly ListLogger<EmailOutboxDispatchJob> _logger = new();
 
-    private EmailOutboxDispatchJob BuildJob(FakeEmailSender sender, string smtpHost = "mailpit")
+    private EmailOutboxDispatchJob BuildJob(FakeEmailSender sender, string smtpHost = "mailpit", bool enabled = true)
         => new(
             _repository,
             sender,
-            Options.Create(new EmailOptions { Smtp = { Host = smtpHost } }),
+            Options.Create(new EmailOptions { Enabled = enabled, Smtp = { Host = smtpHost } }),
             new FakeTimeProvider(_now),
             _logger);
 
@@ -137,6 +137,20 @@ public class EmailOutboxDispatchJobTests
         var sender = new FakeEmailSender();
 
         await BuildJob(sender, smtpHost: string.Empty).RunAsync(CancellationToken.None);
+
+        Assert.Empty(sender.Sent);
+        Assert.Equal(EmailOutboxStatus.Pending, message.Status);
+        Assert.Equal(0, message.Attempts);
+        Assert.Equal(0, _repository.TransactionCount);
+    }
+
+    [Fact]
+    public async Task Ne_fait_rien_quand_l_envoi_est_desactive()
+    {
+        var message = SeedPendingMessage();
+        var sender = new FakeEmailSender();
+
+        await BuildJob(sender, enabled: false).RunAsync(CancellationToken.None);
 
         Assert.Empty(sender.Sent);
         Assert.Equal(EmailOutboxStatus.Pending, message.Status);

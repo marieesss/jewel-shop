@@ -23,7 +23,7 @@ public class SmtpEmailSender : IEmailSender
     public async Task SendAsync(EmailMessage message, CancellationToken ct)
     {
         if (!_options.IsConfigured)
-            throw new InvalidOperationException("Envoi de mails non configuré (Email__Smtp__Host vide).");
+            throw new InvalidOperationException("Envoi de mails désactivé ou non configuré (Email__Enabled à false ou Email__Smtp__Host vide).");
 
         var mimeMessage = BuildMimeMessage(message);
 

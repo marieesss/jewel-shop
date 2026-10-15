@@ -32,7 +32,7 @@ public class EmailOutboxDispatchJob : IPeriodicJob
 
     public async Task RunAsync(CancellationToken ct)
     {
-        // Sans SMTP, les mails restent en attente sans consommer de tentative :
+        // Envoi désactivé ou sans SMTP : les mails restent en attente sans consommer de tentative :
         // ils partiront dès que l'envoi sera configuré.
         if (!_emailOptions.IsConfigured)
             return;

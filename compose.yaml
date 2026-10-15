@@ -39,6 +39,7 @@ services:
       Cloudinary__ApiKey: ${CLOUDINARY_API_KEY:?CLOUDINARY_API_KEY manquant dans .env}
       Cloudinary__ApiSecret: ${CLOUDINARY_API_SECRET:?CLOUDINARY_API_SECRET manquant dans .env}
       # Mails envoyés à Mailpit : rien ne part vers l'extérieur, tout se consulte sur http://127.0.0.1:8025.
+      Email__Enabled: "true"
       Email__Smtp__Host: mailpit
       Email__Smtp__Port: "1025"
       Email__Smtp__UseSsl: "false"

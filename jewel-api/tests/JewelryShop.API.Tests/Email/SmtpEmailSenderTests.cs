@@ -16,7 +16,7 @@ public class SmtpEmailSenderTests
 
     private static EmailOptions BuildOptions(Action<SmtpOptions>? configureSmtp = null)
     {
-        var options = new EmailOptions { Smtp = { Host = "mailpit", Port = 1025 } };
+        var options = new EmailOptions { Enabled = true, Smtp = { Host = "mailpit", Port = 1025 } };
         configureSmtp?.Invoke(options.Smtp);
         return options;
     }
@@ -118,6 +118,18 @@ public class SmtpEmailSenderTests
     {
         var client = new FakeSmtpClient();
         var sender = new TestableSmtpEmailSender(BuildOptions(smtp => smtp.Host = string.Empty), client);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => sender.SendAsync(_message, CancellationToken.None));
+        Assert.Equal(0, client.ConnectCount);
+    }
+
+    [Fact]
+    public async Task Refuse_d_envoyer_quand_l_envoi_est_desactive()
+    {
+        var client = new FakeSmtpClient();
+        var options = BuildOptions();
+        options.Enabled = false;
+        var sender = new TestableSmtpEmailSender(options, client);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => sender.SendAsync(_message, CancellationToken.None));
         Assert.Equal(0, client.ConnectCount);
