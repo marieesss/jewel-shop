@@ -112,12 +112,16 @@ docker compose up -d --build
 
 - Application (passerelle Nginx) : http://127.0.0.1:8090
 - pgAdmin : http://127.0.0.1:8092
+- Mailpit (mails envoyés par l'API, rien ne part vers l'extérieur) : http://127.0.0.1:8025
 
 ### Hors Docker (développement)
 
 ```bash
 # Base PostgreSQL seule, sur le port 5433 (et pgAdmin sur http://localhost:5050)
 cd jewel-api && docker compose up -d postgres
+
+# Mailpit : SMTP sur localhost:1025, mails consultables sur http://localhost:8025
+cd jewel-api && docker compose up -d mailpit
 
 # API : http://localhost:5030, Swagger sur /api/swagger. Migrations jouées au démarrage.
 cd jewel-api && cp .env.example .env && dotnet run --project src/JewelryShop.API --launch-profile http

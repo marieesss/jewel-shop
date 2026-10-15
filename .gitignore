@@ -11,3 +11,5 @@ deploy/etat-des-lieux*.txt
 
 # Clés publiques copiées temporairement pour les envoyer au serveur
 *.pub
+
+graphify-out
