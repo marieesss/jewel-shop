@@ -133,8 +133,9 @@ erDiagram
 ### Envoi de mails
 
 - `IEmailSender` (`Application/Common/Interfaces`) envoie un `EmailMessage` (destinataire, sujet, corps HTML et texte) et lève une exception si l'envoi échoue.
-- Une seule implémentation, `SmtpEmailSender` (MailKit) : Mailpit en local, relais SMTP du fournisseur en staging et en production. Une connexion par envoi, STARTTLS si `Email__Smtp__UseSsl`, authentification seulement si `Email__Smtp__Username` est renseigné.
-- Configuration `Email__*` facultative : sans `Email__Smtp__Host`, l'API démarre et journalise un warning.
+- Une seule implémentation, `SmtpEmailSender` (MailKit) : Mailpit en local, relais SMTP de Brevo en staging et en production. Une connexion par envoi, STARTTLS si `Email__Smtp__UseSsl`, authentification seulement si `Email__Smtp__Username` est renseigné.
+- Configuration `Email__*` facultative. L'envoi n'est configuré que si `Email__Enabled` vaut `true` (`false` par défaut) **et** si `Email__Smtp__Host` est renseigné. Sinon, l'API démarre et journalise un warning, et aucun envoi n'est tenté. En local, `compose.yaml` et `jewel-api/.env.example` posent `Email__Enabled=true` pour Mailpit.
+- `App__FrontendBaseUrl` : URL publique du front, pour construire les liens des mails (lue par le code à partir de #33).
 - Les fonctionnalités n'appellent pas `IEmailSender` directement : elles passent par l'outbox (ci-dessous).
 
 ### Outbox et envoi asynchrone
@@ -155,7 +156,7 @@ stateDiagram-v2
     Sent --> [*] : purge après 30 jours
 ```
 
-- Sans `Email__Smtp__Host`, la tâche d'envoi ne fait rien : les mails restent `Pending` avec `attempts = 0` et partent dès que l'envoi est configuré.
+- Envoi désactivé ou sans `Email__Smtp__Host`, la tâche d'envoi ne fait rien : les mails restent `Pending` avec `attempts = 0` et partent dès que l'envoi est configuré.
 - **Au moins une fois** : les envois ont lieu avant la validation de la transaction. Si la validation échoue après un envoi réussi (ou si la stratégie de reprise d'EF rejoue le bloc), le mail repart au tour suivant. Un doublon est possible, une perte non.
 - **Dates** : les colonnes sont en `timestamp` sans fuseau et contiennent de l'UTC. L'application écrit `DateTime.UtcNow` (via `TimeProvider`) et les requêtes comparent avec `NOW()` : la session Postgres doit être en UTC (valeur par défaut de l'image officielle).
 
@@ -222,7 +223,31 @@ src/
   - `overlays/production` (namespace `jewel-prod`, https://mycharmly.eu) : en plus, pgAdmin et la sauvegarde Postgres en CronJob ;
   - `platform/` : namespaces, StorageClass `Retain`, cert-manager, compte de service de déploiement GitHub.
 - **NetworkPolicies** : tout flux entrant est refusé par défaut. Seuls sont autorisés Traefik vers le front, l'API et le solveur ACME, et les clients déclarés vers Postgres. Postgres n'a aucun flux sortant.
-- Configuration : non secrète dans le ConfigMap `api-config`, secrète dans les Secrets alimentés depuis les environnements GitHub (`apply-secrets.sh`).
+- Configuration : non secrète dans le ConfigMap `api-config`, secrète dans les Secrets alimentés depuis les environnements GitHub (`apply-secrets.sh`). Les valeurs propres à un environnement (`App__FrontendBaseUrl`) sont posées par un patch du ConfigMap dans chaque overlay.
+
+### Mails en staging et en production (Brevo)
+
+Les mails partent par le relais SMTP de Brevo (`smtp-relay.brevo.com:587`, STARTTLS), avec l'expéditeur « mycharmly <no-reply@mycharmly.eu> ». Le staging envoie de vrais mails.
+
+| Variable | Où | Valeur |
+|---|---|---|
+| `Email__Smtp__Host`, `Email__Smtp__Port`, `Email__Smtp__UseSsl`, `Email__FromAddress`, `Email__FromName` | ConfigMap `api-config` (base) | `smtp-relay.brevo.com`, `587`, `true`, `no-reply@mycharmly.eu`, `mycharmly` |
+| `App__FrontendBaseUrl` | ConfigMap `api-config` (patch d'overlay) | `https://staging.mycharmly.eu` / `https://mycharmly.eu` |
+| `Email__Smtp__Username`, `Email__Smtp__Password` | Secret `api-secrets` | secrets GitHub `EMAIL_SMTP_USERNAME`, `EMAIL_SMTP_PASSWORD` |
+| `Email__Enabled` | Secret `api-secrets` | `true` si les deux secrets SMTP sont renseignés, sinon `false` |
+
+Les secrets SMTP sont facultatifs : s'il en manque un, `apply-secrets.sh` affiche un warning, pose `Email__Enabled=false` et le déploiement continue. Les mails restent alors `Pending` et partiront au premier déploiement avec les secrets. `Email__Enabled` est dans le Secret, et non dans le ConfigMap, parce que sa valeur dépend de la présence des secrets.
+
+Mise en place (une fois) :
+
+1. Créer le compte Brevo, puis dans « Expéditeurs, domaines et IP dédiées » > « Domaines », ajouter et authentifier `mycharmly.eu`.
+2. Chez OVH (zone DNS de `mycharmly.eu`), ajouter les enregistrements fournis par Brevo : le TXT de vérification du domaine, SPF (TXT) et DKIM. Attendre la propagation, puis lancer la vérification dans Brevo : SPF et DKIM doivent être validés.
+3. Dans « SMTP & API » > « SMTP », relever l'identifiant (Login) et générer une clé SMTP.
+4. Dans GitHub (Settings > Environments), renseigner `EMAIL_SMTP_USERNAME` (identifiant) et `EMAIL_SMTP_PASSWORD` (clé SMTP) dans `staging` et `production`, puis redéployer.
+
+Vérification : `kubectl exec deploy/api -n jewel-staging -- env | grep -E 'Email__|App__'` liste les variables (mot de passe compris : ne pas copier la sortie). Au démarrage, l'API ne doit pas journaliser le warning « Envoi de mails désactivé ou non configuré ». L'API n'a aucune NetworkPolicy de sortie : le port 587 vers Brevo est joignable sans règle supplémentaire.
+
+Clé SMTP compromise : la révoquer dans Brevo, en générer une nouvelle, mettre à jour `EMAIL_SMTP_PASSWORD` et redéployer.
 
 ### CI/CD
 
@@ -251,7 +276,7 @@ Le retour arrière remet l'ancienne version du code, **pas l'ancien schéma** : 
 
 | Sujet | Impact sur l'architecture |
 |---|---|
-| Service d'email | Fait : interface `IEmailSender` et envoi SMTP `SmtpEmailSender` (Mailpit en dev ; relais SMTP du fournisseur en prod, configuré par #26). Templates Scriban côté back (`IEmailTemplateRenderer`). Table **outbox** et `PeriodicJobsService` d'envoi : premier traitement asynchrone de l'API. À venir : nouveau flux sortant vers le fournisseur de mail (NetworkPolicy à prévoir, #26). |
+| Service d'email | Fait : interface `IEmailSender` et envoi SMTP `SmtpEmailSender` (Mailpit en dev ; relais SMTP de Brevo en staging et en production, activé par `Email__Enabled`). Templates Scriban côté back (`IEmailTemplateRenderer`). Table **outbox** et `PeriodicJobsService` d'envoi : premier traitement asynchrone de l'API. Flux sortant vers Brevo (port 587) : l'API n'a pas de NetworkPolicy de sortie, aucune règle n'est nécessaire. |
 | Politique de mot de passe | Fait côté back : la règle FluentValidation réutilisable `PasswordPolicy()` (`Features/Auth/Validation/PasswordPolicyRules.cs`) est appliquée à l'inscription, et le sera à la réinitialisation. La connexion ne l'applique pas, pour ne pas bloquer les comptes existants. Le front reprend les mêmes règles et messages (`lib/passwordPolicy.ts`) et les affiche cochées en direct à l'inscription (`features/auth/PasswordRules`). |
 | Refresh token | Access token JWT de 15 min (au lieu de 7 jours). Nouvelle table de refresh tokens hachés, cookie `httpOnly` `Secure` `SameSite=Strict`, rotation et détection de réutilisation. Front : intercepteur axios (401 → refresh → rejeu, file d'attente). Le stockage du token d'accès dans `localStorage` est à revoir. |
 | Protection des routes front | Fait : les guards `ProtectedRoute` / `AdminRoute` redirigent vers `/login?returnUrl=…`, et `AuthPage` renvoie sur la page demandée après connexion si le chemin est interne et autorisé pour le rôle. |
