@@ -15,6 +15,7 @@ public class AppDbContext : DbContext
     public DbSet<Favorite> Favorites => Set<Favorite>();
     public DbSet<Creation> Creations => Set<Creation>();
     public DbSet<CreationItem> CreationItems => Set<CreationItem>();
+    public DbSet<EmailOutboxMessage> EmailOutboxMessages => Set<EmailOutboxMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

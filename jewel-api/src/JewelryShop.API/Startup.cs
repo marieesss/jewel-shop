@@ -7,9 +7,12 @@ using JewelryShop.Application.Common.Persistence;
 using JewelryShop.Application.Features.Chains;
 using JewelryShop.Application.Features.Charms;
 using JewelryShop.Application.Features.Creations;
+using JewelryShop.Application.Features.Emails;
+using JewelryShop.Application.Features.Emails.Jobs;
 using JewelryShop.Application.Features.Favorites;
 using JewelryShop.Application.Features.Options;
 using JewelryShop.Application.Features.Users;
+using JewelryShop.Infrastructure.BackgroundJobs;
 using JewelryShop.Infrastructure.Email;
 using JewelryShop.Infrastructure.Middlewares;
 using JewelryShop.Infrastructure.Persistence;
@@ -192,6 +195,7 @@ public static class Startup
         services.AddScoped<IFavoriteRepository, FavoriteRepository>();
         services.AddScoped<ICreationRepository, CreationRepository>();
         services.AddScoped<IOptionRepository, OptionRepository>();
+        services.AddScoped<IEmailOutboxRepository, EmailOutboxRepository>();
     }
 
     private static void AddApplication(IServiceCollection services)
@@ -212,6 +216,11 @@ public static class Startup
         services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
         services.AddScoped<IEmailSender, SmtpEmailSender>();
         services.AddSingleton<IEmailTemplateRenderer, ScribanEmailTemplateRenderer>();
+        services.AddSingleton(TimeProvider.System);
+        services.AddScoped<IEmailQueue, EmailQueue>();
+        services.AddHostedService<PeriodicJobsService>();
+        services.AddScoped<IPeriodicJob, EmailOutboxDispatchJob>();
+        services.AddScoped<IPeriodicJob, EmailOutboxPurgeJob>();
     }
 
     private static void WarnIfEmailNotConfigured(WebApplication app)

@@ -45,13 +45,14 @@ src/JewelryShop.API/
 │   │                              # ValidationBehavior, Repository<T>, interfaces de services
 │   └── Features/<Fonctionnalité>/ # entité, repository, controller, Commands/, Queries/, DTOs/
 └── Infrastructure/
+    ├── BackgroundJobs/            # PeriodicJobsService (planificateur des IPeriodicJob)
     ├── Middlewares/               # ExceptionHandlingMiddleware
-    ├── Email/                     # EmailOptions, SmtpEmailSender (MailKit), ScribanEmailTemplateRenderer, Templates/
+    ├── Email/                     # EmailOptions, SmtpEmailSender (MailKit), ScribanEmailTemplateRenderer, EmailQueue, Templates/
     ├── Persistence/               # AppDbContext, Configurations/ (mapping EF)
     └── Services/                  # JwtService, BcryptPasswordHasher, CloudinaryFileStorageService
 ```
 
-Fonctionnalités existantes : `Auth`, `Admin`, `Users`, `Chains`, `Charms`, `Favorites`, `Creations`, `Options`.
+Fonctionnalités existantes : `Auth`, `Admin`, `Users`, `Chains`, `Charms`, `Favorites`, `Creations`, `Options`, `Emails` (outbox, sans endpoint).
 
 ### Traitement d'une requête
 
@@ -104,6 +105,7 @@ erDiagram
 | `options` | longueurs proposées (nom, longueur `numeric(6,2)`) |
 | `favorites` | favori d'un utilisateur : exactement une chaîne **ou** une breloque (contrainte `CHECK`) |
 | `creations`, `creation_items` | création d'un utilisateur : une chaîne, une option, des breloques positionnées |
+| `email_outbox` | mails à envoyer : destinataire, sujet, corps HTML et texte, statut, tentatives, prochaine tentative, dernière erreur |
 
 - Le schéma est créé par des **migrations SQL Evolve** (`jewel-api/db/migrations/V<n>__*.sql`). EF Core ne sert que d'ORM. Son mapping (`Infrastructure/Persistence/Configurations/`) reprend le schéma en snake_case.
 - `IsEraseDisabled = true` empêche Evolve d'effacer la base. `EnableClusterMode` pose un verrou Postgres pour que deux instances ne migrent pas en même temps.
@@ -114,7 +116,37 @@ erDiagram
 - `IEmailSender` (`Application/Common/Interfaces`) envoie un `EmailMessage` (destinataire, sujet, corps HTML et texte) et lève une exception si l'envoi échoue.
 - Une seule implémentation, `SmtpEmailSender` (MailKit) : Mailpit en local, relais SMTP du fournisseur en staging et en production. Une connexion par envoi, STARTTLS si `Email__Smtp__UseSsl`, authentification seulement si `Email__Smtp__Username` est renseigné.
 - Configuration `Email__*` facultative : sans `Email__Smtp__Host`, l'API démarre et journalise un warning.
-- Aucune fonctionnalité n'envoie encore de mail : l'outbox et l'envoi asynchrone arrivent avec #25.
+- Les fonctionnalités n'appellent pas `IEmailSender` directement : elles passent par l'outbox (ci-dessous).
+
+### Outbox et envoi asynchrone
+
+Une action métier ne doit jamais échouer parce que le serveur de mail est indisponible. Le mail est donc écrit en base avec l'action, puis envoyé en arrière-plan.
+
+1. **Mise en file** : `IEmailQueue.Enqueue(to, templateName, model)` rend le template et ajoute une ligne `Pending` à `email_outbox`, **sans sauvegarder**. Le mail est enregistré par le `SaveChangesAsync` de l'action, dans la même transaction : si l'action échoue, aucun mail n'est mis en file.
+2. **Envoi** (`EmailOutboxDispatchJob`, toutes les 10 s) : dans une transaction, verrouille jusqu'à 20 mails `Pending` dont `next_attempt_at` est passé (`FOR UPDATE SKIP LOCKED`, pour que deux instances de l'API, par exemple pendant un déploiement, ne prennent pas les mêmes lignes), les envoie un par un puis enregistre leur nouvel état.
+3. **Nouvelles tentatives** (`EmailOutboxRetryPolicy`) : un envoi initial, puis 5 nouvelles tentatives après 1, 5, 15, 60 et 240 minutes. Chaque échec incrémente `attempts` et garde le message d'erreur (2 000 caractères au plus) dans `last_error`. Après le 6ᵉ échec, le mail passe à `Failed` (warning journalisé avec son id, sans son contenu) et n'est plus retenté.
+4. **Purge** (`EmailOutboxPurgeJob`, toutes les heures) : supprime les mails `Sent` depuis plus de 30 jours. Les mails `Failed` sont conservés pour analyse.
+
+```mermaid
+stateDiagram-v2
+    [*] --> Pending : Enqueue + SaveChanges de l'action
+    Pending --> Sent : envoi réussi
+    Pending --> Pending : échec, nouvelle tentative programmée
+    Pending --> Failed : 6e échec
+    Sent --> [*] : purge après 30 jours
+```
+
+- Sans `Email__Smtp__Host`, la tâche d'envoi ne fait rien : les mails restent `Pending` avec `attempts = 0` et partent dès que l'envoi est configuré.
+- **Au moins une fois** : les envois ont lieu avant la validation de la transaction. Si la validation échoue après un envoi réussi (ou si la stratégie de reprise d'EF rejoue le bloc), le mail repart au tour suivant. Un doublon est possible, une perte non.
+- **Dates** : les colonnes sont en `timestamp` sans fuseau et contiennent de l'UTC. L'application écrit `DateTime.UtcNow` (via `TimeProvider`) et les requêtes comparent avec `NOW()` : la session Postgres doit être en UTC (valeur par défaut de l'image officielle).
+
+### Tâches périodiques
+
+- `PeriodicJobsService` (`BackgroundService`) se réveille toutes les 10 s et exécute chaque `IPeriodicJob` dont l'intervalle (`Interval`) est écoulé, chacune dans son propre scope DI.
+- L'exception d'une tâche est journalisée en `Error` : elle n'arrête ni la boucle ni les autres tâches.
+- Une nouvelle tâche s'enregistre avec `services.AddScoped<IPeriodicJob, MaTache>()`. Tâches actuelles : `EmailOutboxDispatchJob` et `EmailOutboxPurgeJob`. La purge des refresh tokens (#29), des tokens de réinitialisation (#33) et l'expiration des invitations (#35) s'y ajouteront.
+- Les tâches tournent dans chaque instance de l'API : une tâche doit supporter d'être exécutée en parallèle par deux pods (verrou de ligne, requête idempotente).
+- Le mode `--migrate` ne démarre pas le serveur, donc pas les tâches.
 
 ### Templates de mail
 
@@ -200,7 +232,7 @@ Le retour arrière remet l'ancienne version du code, **pas l'ancien schéma** : 
 
 | Sujet | Impact sur l'architecture |
 |---|---|
-| Service d'email | Fait : interface `IEmailSender` et envoi SMTP `SmtpEmailSender` (Mailpit en dev ; relais SMTP du fournisseur en prod, configuré par #26). Templates Scriban côté back (`IEmailTemplateRenderer`). À venir : Table **outbox** et `BackgroundService` d'envoi : premier traitement asynchrone de l'API. Nouveau flux sortant vers le fournisseur de mail (NetworkPolicy à prévoir). |
+| Service d'email | Fait : interface `IEmailSender` et envoi SMTP `SmtpEmailSender` (Mailpit en dev ; relais SMTP du fournisseur en prod, configuré par #26). Templates Scriban côté back (`IEmailTemplateRenderer`). Table **outbox** et `PeriodicJobsService` d'envoi : premier traitement asynchrone de l'API. À venir : nouveau flux sortant vers le fournisseur de mail (NetworkPolicy à prévoir, #26). |
 | Politique de mot de passe | Fait côté back : la règle FluentValidation réutilisable `PasswordPolicy()` (`Features/Auth/Validation/PasswordPolicyRules.cs`) est appliquée à l'inscription, et le sera à la réinitialisation. La connexion ne l'applique pas, pour ne pas bloquer les comptes existants. Le front reprend les mêmes règles et messages (`lib/passwordPolicy.ts`) et les affiche cochées en direct à l'inscription (`features/auth/PasswordRules`). |
 | Refresh token | Access token JWT de 15 min (au lieu de 7 jours). Nouvelle table de refresh tokens hachés, cookie `httpOnly` `Secure` `SameSite=Strict`, rotation et détection de réutilisation. Front : intercepteur axios (401 → refresh → rejeu, file d'attente). Le stockage du token d'accès dans `localStorage` est à revoir. |
 | Protection des routes front | Fait : les guards `ProtectedRoute` / `AdminRoute` redirigent vers `/login?returnUrl=…`, et `AuthPage` renvoie sur la page demandée après connexion si le chemin est interne et autorisé pour le rôle. |

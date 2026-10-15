@@ -3,6 +3,7 @@ global using JewelryShop.Application.Common.Enums;
 global using JewelryShop.Application.Features.Chains;
 global using JewelryShop.Application.Features.Charms;
 global using JewelryShop.Application.Features.Creations;
+global using JewelryShop.Application.Features.Emails;
 global using JewelryShop.Application.Features.Favorites;
 global using JewelryShop.Application.Features.Options;
 global using JewelryShop.Application.Features.Users;
