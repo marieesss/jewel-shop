@@ -5,6 +5,7 @@ using JewelryShop.Application.Common.Behaviors;
 using JewelryShop.Application.Common.Interfaces;
 using JewelryShop.Application.Common.Persistence;
 using JewelryShop.Application.Features.Auth;
+using JewelryShop.Application.Features.Auth.Jobs;
 using JewelryShop.Application.Features.Chains;
 using JewelryShop.Application.Features.Charms;
 using JewelryShop.Application.Features.Creations;
@@ -225,6 +226,7 @@ public static class Startup
         services.AddHostedService<PeriodicJobsService>();
         services.AddScoped<IPeriodicJob, EmailOutboxDispatchJob>();
         services.AddScoped<IPeriodicJob, EmailOutboxPurgeJob>();
+        services.AddScoped<IPeriodicJob, RefreshTokenPurgeJob>();
     }
 
     private static void WarnIfEmailNotConfigured(WebApplication app)
