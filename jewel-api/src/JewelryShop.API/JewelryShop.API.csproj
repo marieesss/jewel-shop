@@ -16,6 +16,15 @@
 		</Content>
 	</ItemGroup>
 
+	<ItemGroup>
+		<!-- Nom logique fixe : le renderer retrouve un template par son nom, sans dépendre du namespace racine. -->
+		<EmbeddedResource Include="Infrastructure\Email\Templates\*.sbn" LogicalName="EmailTemplates.%(Filename)%(Extension)" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="JewelryShop.API.Tests" />
+	</ItemGroup>
+
 
 	<ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
@@ -31,6 +40,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="8.0.10" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.10" />
+    <PackageReference Include="Scriban" Version="7.5.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.0.2" />
 	  <PackageReference Include="Evolve" Version="3.2.0" />
