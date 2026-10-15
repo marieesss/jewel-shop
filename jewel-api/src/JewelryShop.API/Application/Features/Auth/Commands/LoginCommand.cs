@@ -7,7 +7,7 @@ using MediatR;
 
 namespace JewelryShop.Application.Features.Auth.Commands;
 
-public record LoginCommand(string Email, string Password) : IRequest<AuthResponse>;
+public record LoginCommand(string Email, string Password) : IRequest<AuthResult>;
 
 public class LoginCommandValidator : AbstractValidator<LoginCommand>
 {
@@ -21,23 +21,26 @@ public class LoginCommandValidator : AbstractValidator<LoginCommand>
     }
 }
 
-public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResponse>
+public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResult>
 {
     private readonly IUserRepository _users;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtService _jwtService;
+    private readonly IRefreshTokenService _refreshTokens;
 
     public LoginCommandHandler(
         IUserRepository users,
         IPasswordHasher passwordHasher,
-        IJwtService jwtService)
+        IJwtService jwtService,
+        IRefreshTokenService refreshTokens)
     {
         _users = users;
         _passwordHasher = passwordHasher;
         _jwtService = jwtService;
+        _refreshTokens = refreshTokens;
     }
 
-    public async Task<AuthResponse> Handle(LoginCommand request, CancellationToken cancellationToken)
+    public async Task<AuthResult> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
         var email = request.Email.Trim().ToLowerInvariant();
 
@@ -45,7 +48,10 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResponse>
         if (user is null || !_passwordHasher.Verify(request.Password, user.PasswordHash))
             throw new UnauthorizedException("Email ou mot de passe incorrect.");
 
+        var refreshToken = _refreshTokens.Issue(user);
+        await _users.SaveChangesAsync(cancellationToken);
+
         var token = _jwtService.GenerateToken(user);
-        return new AuthResponse(token, user.Id, user.Role.ToString());
+        return new AuthResult(new AuthResponse(token, user.Id, user.Role.ToString()), refreshToken);
     }
 }
