@@ -52,6 +52,16 @@ public class AuthController : ApiControllerBase
             throw;
         }
     }
+
+    /// <summary>Révoque le refresh token du cookie, s'il existe, et supprime le cookie.</summary>
+    [HttpPost("logout")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> Logout(CancellationToken ct)
+    {
+        await Sender.Send(new LogoutCommand(RefreshTokenCookie.Read(Request)), ct);
+        RefreshTokenCookie.Delete(Response);
+        return NoContent();
+    }
 }
 
 // ── Request DTOs ─────────────────────────────────────────────────────────────
