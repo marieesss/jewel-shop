@@ -99,7 +99,7 @@ sequenceDiagram
   - `POST /api/auth/logout` : 204. Révoque le token s'il est actif et supprime le cookie dans tous les cas.
 - Le front les utilise pour garder la session ouverte (voir « Stockage du token » dans la partie Front).
 
-- **Tokens opaques** : `ISecureTokenGenerator` (`SecureTokenGenerator`, singleton) génère 32 octets aléatoires en base64url (43 caractères) et les hache en SHA-256 hexadécimal. Seul le hash est stocké dans `refresh_tokens.token_hash`. Le token en clair n'est ni enregistré ni journalisé. Le même générateur sert à la réinitialisation du mot de passe (`password_reset_tokens`) et servira aux invitations (#35).
+- **Tokens opaques** : `ISecureTokenGenerator` (`SecureTokenGenerator`, singleton) génère 32 octets aléatoires en base64url (43 caractères) et les hache en SHA-256 hexadécimal. Seul le hash est stocké dans `refresh_tokens.token_hash`. Le token en clair n'est ni enregistré ni journalisé. Le même générateur sert à la réinitialisation du mot de passe (`password_reset_tokens`) et aux invitations (`invitations`).
 - **`IRefreshTokenService`** (`Infrastructure/Services/`) :
   - `Issue(user)` ajoute un token valable 30 jours (`RefreshTokenDefaults.Lifetime`), **sans sauvegarder** : il est enregistré par le `SaveChangesAsync` de l'appelant ;
   - `RotateAsync(token)` marque le token comme tourné (`rotated_at`), en émet un nouveau valable 30 jours à partir de maintenant (expiration glissante), puis sauvegarde ;
@@ -182,8 +182,7 @@ stateDiagram-v2
   | `EmailOutboxPurgeJob` (mails envoyés depuis plus de 30 jours) | au démarrage, puis à chaque heure pile |
   | `RefreshTokenPurgeJob` (refresh tokens expirés) | au démarrage, puis à chaque heure pile |
   | `PasswordResetTokenPurgeJob` (tokens de réinitialisation expirés ou utilisés) | au démarrage, puis à chaque heure pile |
-
-  L'expiration des invitations (#35) s'y ajoutera.
+  | `InvitationExpirationJob` (invitations en attente dont l'échéance est passée → `Expired`) | au démarrage, puis à chaque heure pile |
 - L'exception d'une tâche est journalisée en `Error` (`OnError`) : elle n'arrête ni le planificateur ni les autres tâches.
 - Les tâches tournent dans chaque instance de l'API : une tâche doit supporter d'être exécutée en parallèle par deux pods (verrou de ligne, requête idempotente).
 - Le mode `--migrate` ne démarre pas le serveur, donc pas les tâches.
@@ -310,7 +309,7 @@ Le retour arrière remet l'ancienne version du code, **pas l'ancien schéma** : 
 | Planification des tâches | Fait : les tâches périodiques sont planifiées par Coravel (invocables et planification déclarative au démarrage), à la place du planificateur maison. |
 | Mot de passe oublié | Fait côté back : table `password_reset_tokens` (tokens hachés, à usage unique, valables 1 heure), endpoints `forgot-password` et `reset-password`, mail `PasswordReset`, révocation des refresh tokens et purge planifiée. |
 | Inscription sur invitation | Table `Invitation`. `POST /api/auth/register` devient conditionné par une invitation valide. C'est un **changement de comportement** de l'endpoint public existant. |
-| Gestion des utilisateurs | `GET /api/admin/users` existe. Ajout des invitations et d'une page admin « Utilisateurs ». |
+| Gestion des utilisateurs | `GET /api/admin/users` existe. Fait côté back : table `invitations` (tokens hachés, valables 7 jours, statuts `Pending`, `Accepted`, `Expired`, `Revoked`), endpoint `POST /api/admin/invitations` (409 si un compte ou une invitation en attente existe déjà pour l'email), mail `Invitation` via l'outbox et expiration planifiée. Reste la page admin « Utilisateurs ». |
 
 ### v0.2 : création de collier et commandes
 
