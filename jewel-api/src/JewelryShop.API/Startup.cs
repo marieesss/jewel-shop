@@ -53,6 +53,7 @@ public static class Startup
     public static void ConfigurePipeline(this WebApplication app)
     {
         WarnIfEmailNotConfigured(app);
+        WarnIfFrontendBaseUrlMissing(app);
         SchedulePeriodicJobs(app);
 
         app.UseMiddleware<ExceptionHandlingMiddleware>();
@@ -222,6 +223,7 @@ public static class Startup
         services.AddSingleton<ISecureTokenGenerator, SecureTokenGenerator>();
         services.AddScoped<IRefreshTokenService, RefreshTokenService>();
         services.AddScoped<IFileStorageService, CloudinaryFileStorageService>();
+        services.Configure<AppOptions>(configuration.GetSection(AppOptions.SectionName));
         services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
         services.AddScoped<IEmailSender, SmtpEmailSender>();
         services.AddSingleton<IEmailTemplateRenderer, ScribanEmailTemplateRenderer>();
@@ -254,6 +256,15 @@ public static class Startup
         if (!emailOptions.IsConfigured)
             app.Logger.LogWarning(
                 "Envoi de mails désactivé ou non configuré (Email__Enabled à false ou Email__Smtp__Host vide) : les mails resteront en attente.");
+    }
+
+    private static void WarnIfFrontendBaseUrlMissing(WebApplication app)
+    {
+        var configured = app.Configuration[$"{AppOptions.SectionName}:{nameof(AppOptions.FrontendBaseUrl)}"];
+        if (!app.Environment.IsDevelopment() && string.IsNullOrWhiteSpace(configured))
+            app.Logger.LogWarning(
+                "App__FrontendBaseUrl absent : les liens des mails pointeront vers {FrontendBaseUrl}.",
+                AppOptions.DefaultFrontendBaseUrl);
     }
 
     private static void AddHealthChecks(IServiceCollection services)
