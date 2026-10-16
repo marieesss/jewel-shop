@@ -60,4 +60,30 @@ public class AuthController : ApiControllerBase
         RefreshTokenCookie.Delete(Response);
         return NoContent();
     }
+
+    /// <summary>
+    /// Envoie un lien de réinitialisation du mot de passe si un compte existe pour cet email.
+    /// Répond 202 dans tous les cas, pour ne pas révéler les emails inscrits.
+    /// </summary>
+    [HttpPost("forgot-password")]
+    [ProducesResponseType(StatusCodes.Status202Accepted)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordCommand command, CancellationToken ct)
+    {
+        await Sender.Send(command, ct);
+        return Accepted();
+    }
+
+    /// <summary>
+    /// Remplace le mot de passe avec le token reçu par mail, puis ferme toutes les sessions ouvertes.
+    /// Répond 400 si le token est invalide, déjà utilisé ou expiré.
+    /// </summary>
+    [HttpPost("reset-password")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordCommand command, CancellationToken ct)
+    {
+        await Sender.Send(command, ct);
+        return NoContent();
+    }
 }
