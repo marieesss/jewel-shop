@@ -1,6 +1,6 @@
-using JewelryShop.Application.Common.Persistence;
+using JewelryShop.Common.Persistence;
 
-namespace JewelryShop.Application.Features.Charms;
+namespace JewelryShop.Features.Charms.Repositories;
 
 public interface ICharmRepository : IRepository<Charm>
 {

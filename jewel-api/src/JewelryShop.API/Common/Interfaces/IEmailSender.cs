@@ -1,6 +1,6 @@
-using JewelryShop.Application.Common.Models;
+using JewelryShop.Common.Models;
 
-namespace JewelryShop.Application.Common.Interfaces;
+namespace JewelryShop.Common.Interfaces;
 
 public interface IEmailSender
 {

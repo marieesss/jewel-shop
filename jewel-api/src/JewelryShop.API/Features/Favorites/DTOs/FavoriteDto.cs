@@ -1,7 +1,7 @@
-using JewelryShop.Application.Features.Chains.DTOs;
-using JewelryShop.Application.Features.Charms.DTOs;
+using JewelryShop.Features.Chains.DTOs;
+using JewelryShop.Features.Charms.DTOs;
 
-namespace JewelryShop.Application.Features.Favorites.DTOs;
+namespace JewelryShop.Features.Favorites.DTOs;
 
 public record FavoriteDto(
     long Id,

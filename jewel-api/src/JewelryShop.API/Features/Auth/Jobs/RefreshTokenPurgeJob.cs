@@ -1,6 +1,6 @@
-using JewelryShop.Application.Common.Interfaces;
+using JewelryShop.Common.Interfaces;
 
-namespace JewelryShop.Application.Features.Auth.Jobs;
+namespace JewelryShop.Features.Auth.Jobs;
 
 /// <summary>
 /// Supprime les refresh tokens expirés. Les tokens tournés ou révoqués sont gardés jusqu'à leur

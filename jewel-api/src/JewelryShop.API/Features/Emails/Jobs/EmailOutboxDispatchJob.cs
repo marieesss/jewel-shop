@@ -1,8 +1,8 @@
-using JewelryShop.Application.Common.Interfaces;
+using JewelryShop.Common.Interfaces;
 using JewelryShop.Infrastructure.Email;
 using Microsoft.Extensions.Options;
 
-namespace JewelryShop.Application.Features.Emails.Jobs;
+namespace JewelryShop.Features.Emails.Jobs;
 
 public class EmailOutboxDispatchJob : IPeriodicJob
 {

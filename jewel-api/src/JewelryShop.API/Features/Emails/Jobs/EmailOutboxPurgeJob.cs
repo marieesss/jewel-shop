@@ -1,6 +1,6 @@
-using JewelryShop.Application.Common.Interfaces;
+using JewelryShop.Common.Interfaces;
 
-namespace JewelryShop.Application.Features.Emails.Jobs;
+namespace JewelryShop.Features.Emails.Jobs;
 
 /// <summary>
 /// Supprime les mails envoyés depuis plus de 30 jours. Les mails en échec définitif sont conservés.

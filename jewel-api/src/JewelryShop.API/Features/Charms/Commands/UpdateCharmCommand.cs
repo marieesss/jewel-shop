@@ -1,9 +1,9 @@
 using FluentValidation;
-using JewelryShop.Application.Common.Exceptions;
-using JewelryShop.Application.Features.Charms.DTOs;
+using JewelryShop.Common.Exceptions;
+using JewelryShop.Features.Charms.DTOs;
 using MediatR;
 
-namespace JewelryShop.Application.Features.Charms.Commands;
+namespace JewelryShop.Features.Charms.Commands;
 
 public record UpdateCharmCommand(
     long Id,

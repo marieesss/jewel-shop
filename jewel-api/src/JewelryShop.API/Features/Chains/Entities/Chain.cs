@@ -1,4 +1,4 @@
-namespace JewelryShop.Application.Features.Chains;
+namespace JewelryShop.Features.Chains.Entities;
 
 public class Chain : BaseEntity
 {

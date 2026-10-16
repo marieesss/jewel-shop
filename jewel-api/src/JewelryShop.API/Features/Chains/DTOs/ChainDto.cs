@@ -1,4 +1,4 @@
-namespace JewelryShop.Application.Features.Chains.DTOs;
+namespace JewelryShop.Features.Chains.DTOs;
 
 public record ChainDto(
     long Id,

@@ -1,4 +1,4 @@
-namespace JewelryShop.Application.Common.Exceptions;
+namespace JewelryShop.Common.Exceptions;
 
 public class UnauthorizedException : Exception
 {

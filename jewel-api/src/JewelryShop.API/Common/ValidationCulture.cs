@@ -1,7 +1,7 @@
 using System.Globalization;
 using FluentValidation;
 
-namespace JewelryShop.Application.Common;
+namespace JewelryShop.Common;
 
 public static class ValidationCulture
 {

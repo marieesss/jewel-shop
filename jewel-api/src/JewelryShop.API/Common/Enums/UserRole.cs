@@ -1,4 +1,4 @@
-namespace JewelryShop.Application.Common.Enums;
+namespace JewelryShop.Common.Enums;
 
 public enum UserRole
 {

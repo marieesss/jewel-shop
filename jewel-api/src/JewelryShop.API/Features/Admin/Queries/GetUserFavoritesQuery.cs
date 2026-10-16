@@ -1,12 +1,12 @@
-using JewelryShop.Application.Common;
-using JewelryShop.Application.Common.Exceptions;
-using JewelryShop.Application.Common.Models;
-using JewelryShop.Application.Features.Favorites;
-using JewelryShop.Application.Features.Favorites.DTOs;
-using JewelryShop.Application.Features.Users;
+using JewelryShop.Common;
+using JewelryShop.Common.Exceptions;
+using JewelryShop.Common.Models;
+using JewelryShop.Features.Favorites;
+using JewelryShop.Features.Favorites.DTOs;
+using JewelryShop.Features.Users;
 using MediatR;
 
-namespace JewelryShop.Application.Features.Admin.Queries;
+namespace JewelryShop.Features.Admin.Queries;
 
 public record GetUserFavoritesQuery(long UserId, int Page = 1, int PageSize = 20)
     : IRequest<PagedResult<FavoriteDto>>;

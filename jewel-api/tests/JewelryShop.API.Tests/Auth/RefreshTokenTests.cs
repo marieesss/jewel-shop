@@ -1,5 +1,5 @@
-using JewelryShop.Application.Features.Auth;
-using JewelryShop.Application.Features.Users;
+using JewelryShop.Features.Auth.Entities;
+using JewelryShop.Features.Users.Entities;
 
 namespace JewelryShop.API.Tests.Auth;
 

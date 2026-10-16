@@ -1,4 +1,4 @@
-namespace JewelryShop.Application.Common.Interfaces;
+namespace JewelryShop.Common.Interfaces;
 
 /// <summary>
 /// Tâche exécutée en arrière-plan par PeriodicJobsService, dans un scope DI dédié.

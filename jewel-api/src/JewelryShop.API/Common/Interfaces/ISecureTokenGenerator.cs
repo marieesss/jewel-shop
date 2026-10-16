@@ -1,4 +1,4 @@
-namespace JewelryShop.Application.Common.Interfaces;
+namespace JewelryShop.Common.Interfaces;
 
 /// <summary>
 /// Tokens opaques (refresh, réinitialisation, invitation). Seul le hash est stocké :

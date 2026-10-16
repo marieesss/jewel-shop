@@ -1,8 +1,8 @@
-using JewelryShop.Application.Common.Persistence;
+using JewelryShop.Common.Persistence;
 using JewelryShop.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace JewelryShop.Application.Features.Auth;
+namespace JewelryShop.Features.Auth.Repositories;
 
 public class RefreshTokenRepository : Repository<RefreshToken>, IRefreshTokenRepository
 {

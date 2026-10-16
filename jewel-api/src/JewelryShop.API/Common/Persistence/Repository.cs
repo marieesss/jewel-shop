@@ -1,7 +1,7 @@
 using JewelryShop.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace JewelryShop.Application.Common.Persistence;
+namespace JewelryShop.Common.Persistence;
 
 public interface IRepository<T> where T : BaseEntity
 {

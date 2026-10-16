@@ -1,9 +1,9 @@
-using JewelryShop.Application.Features.Creations.Commands;
-using JewelryShop.Application.Features.Creations.Queries;
+using JewelryShop.Features.Creations.Commands;
+using JewelryShop.Features.Creations.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace JewelryShop.Application.Features.Creations;
+namespace JewelryShop.Features.Creations.Controllers;
 
 [Route("api/creations")]
 [Authorize]

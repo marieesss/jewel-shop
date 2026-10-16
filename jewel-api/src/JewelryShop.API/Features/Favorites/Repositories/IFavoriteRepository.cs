@@ -1,6 +1,6 @@
-using JewelryShop.Application.Common.Persistence;
+using JewelryShop.Common.Persistence;
 
-namespace JewelryShop.Application.Features.Favorites;
+namespace JewelryShop.Features.Favorites.Repositories;
 
 public interface IFavoriteRepository : IRepository<Favorite>
 {

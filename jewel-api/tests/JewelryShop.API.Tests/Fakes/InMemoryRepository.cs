@@ -1,5 +1,5 @@
-using JewelryShop.Application.Common;
-using JewelryShop.Application.Common.Persistence;
+using JewelryShop.Common;
+using JewelryShop.Common.Persistence;
 
 namespace JewelryShop.API.Tests.Fakes;
 

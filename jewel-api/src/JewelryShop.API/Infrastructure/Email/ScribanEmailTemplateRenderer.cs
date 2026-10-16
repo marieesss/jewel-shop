@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using System.Reflection;
-using JewelryShop.Application.Common.Interfaces;
-using JewelryShop.Application.Common.Models;
+using JewelryShop.Common.Interfaces;
+using JewelryShop.Common.Models;
 using Scriban;
 using Scriban.Runtime;
 using Scriban.Syntax;

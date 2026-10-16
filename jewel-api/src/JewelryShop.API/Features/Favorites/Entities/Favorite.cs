@@ -1,4 +1,4 @@
-namespace JewelryShop.Application.Features.Favorites;
+namespace JewelryShop.Features.Favorites.Entities;
 
 public class Favorite : BaseEntity
 {

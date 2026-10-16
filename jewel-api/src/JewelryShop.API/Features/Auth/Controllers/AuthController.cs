@@ -1,8 +1,8 @@
-using JewelryShop.Application.Common.Exceptions;
-using JewelryShop.Application.Features.Auth.Commands;
+using JewelryShop.Common.Exceptions;
+using JewelryShop.Features.Auth.Commands;
 using Microsoft.AspNetCore.Mvc;
 
-namespace JewelryShop.Application.Features.Auth;
+namespace JewelryShop.Features.Auth.Controllers;
 
 [Route("api/auth")]
 public class AuthController : ApiControllerBase

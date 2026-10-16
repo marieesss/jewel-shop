@@ -1,9 +1,9 @@
-using JewelryShop.Application.Features.Chains.Commands;
-using JewelryShop.Application.Features.Chains.Queries;
+using JewelryShop.Features.Chains.Commands;
+using JewelryShop.Features.Chains.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace JewelryShop.Application.Features.Chains;
+namespace JewelryShop.Features.Chains.Controllers;
 
 [Route("api/chains")]
 public class ChainsController : ApiControllerBase

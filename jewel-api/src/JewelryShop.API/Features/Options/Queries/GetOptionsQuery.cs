@@ -1,7 +1,7 @@
-using JewelryShop.Application.Features.Options.DTOs;
+using JewelryShop.Features.Options.DTOs;
 using MediatR;
 
-namespace JewelryShop.Application.Features.Options.Queries;
+namespace JewelryShop.Features.Options.Queries;
 
 public record GetOptionsQuery : IRequest<IEnumerable<OptionDto>>;
 

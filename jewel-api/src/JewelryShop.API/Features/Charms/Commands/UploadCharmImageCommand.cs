@@ -1,8 +1,8 @@
-using JewelryShop.Application.Common.Exceptions;
-using JewelryShop.Application.Common.Interfaces;
+using JewelryShop.Common.Exceptions;
+using JewelryShop.Common.Interfaces;
 using MediatR;
 
-namespace JewelryShop.Application.Features.Charms.Commands;
+namespace JewelryShop.Features.Charms.Commands;
 
 public record UploadCharmImageCommand(
     long CharmId,

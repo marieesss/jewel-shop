@@ -1,4 +1,4 @@
-namespace JewelryShop.Application.Common.Models;
+namespace JewelryShop.Common.Models;
 
 /// <summary>
 /// Normalise les paramètres de pagination (bornes de sécurité).

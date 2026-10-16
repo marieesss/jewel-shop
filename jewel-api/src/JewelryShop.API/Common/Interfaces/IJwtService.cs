@@ -1,5 +1,5 @@
 
-namespace JewelryShop.Application.Common.Interfaces;
+namespace JewelryShop.Common.Interfaces;
 
 public interface IJwtService
 {

@@ -1,7 +1,7 @@
 using JewelryShop.API.Tests.Fakes;
-using JewelryShop.Application.Common.Exceptions;
-using JewelryShop.Application.Features.Creations;
-using JewelryShop.Application.Features.Creations.Commands;
+using JewelryShop.Common.Exceptions;
+using JewelryShop.Features.Creations.Commands;
+using JewelryShop.Features.Creations.Entities;
 
 namespace JewelryShop.API.Tests.Creations;
 

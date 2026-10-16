@@ -1,8 +1,8 @@
 using FluentValidation;
-using JewelryShop.Application.Features.Charms.DTOs;
+using JewelryShop.Features.Charms.DTOs;
 using MediatR;
 
-namespace JewelryShop.Application.Features.Charms.Commands;
+namespace JewelryShop.Features.Charms.Commands;
 
 public record CreateCharmCommand(
     string Name,

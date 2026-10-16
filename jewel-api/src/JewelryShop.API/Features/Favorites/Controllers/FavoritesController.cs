@@ -1,9 +1,9 @@
-using JewelryShop.Application.Features.Favorites.Commands;
-using JewelryShop.Application.Features.Favorites.Queries;
+using JewelryShop.Features.Favorites.Commands;
+using JewelryShop.Features.Favorites.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace JewelryShop.Application.Features.Favorites;
+namespace JewelryShop.Features.Favorites.Controllers;
 
 [Route("api/favorites")]
 [Authorize]

@@ -1,4 +1,4 @@
-namespace JewelryShop.Application.Features.Auth;
+namespace JewelryShop.Features.Auth;
 
 /// <summary>
 /// Cookie qui transporte le refresh token. HttpOnly : inaccessible au JavaScript du front.

@@ -1,5 +1,5 @@
 
-namespace JewelryShop.Application.Features.Users.DTOs;
+namespace JewelryShop.Features.Users.DTOs;
 
 public record UserDto(
     long Id,

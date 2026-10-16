@@ -1,5 +1,5 @@
-using JewelryShop.Application.Common.Interfaces;
-using JewelryShop.Application.Common.Models;
+using JewelryShop.Common.Interfaces;
+using JewelryShop.Common.Models;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Options;

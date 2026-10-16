@@ -1,4 +1,4 @@
-namespace JewelryShop.Application.Features.Auth;
+namespace JewelryShop.Features.Auth.Entities;
 
 /// <summary>
 /// Refresh token opaque, stocké haché. Un token tourné ou révoqué est gardé jusqu'à son expiration

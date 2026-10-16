@@ -1,10 +1,10 @@
-using JewelryShop.Application.Common;
-using JewelryShop.Application.Common.Models;
-using JewelryShop.Application.Features.Users;
-using JewelryShop.Application.Features.Users.DTOs;
+using JewelryShop.Common;
+using JewelryShop.Common.Models;
+using JewelryShop.Features.Users;
+using JewelryShop.Features.Users.DTOs;
 using MediatR;
 
-namespace JewelryShop.Application.Features.Admin.Queries;
+namespace JewelryShop.Features.Admin.Queries;
 
 public record GetUsersQuery(int Page = 1, int PageSize = 20) : IRequest<PagedResult<UserDto>>;
 

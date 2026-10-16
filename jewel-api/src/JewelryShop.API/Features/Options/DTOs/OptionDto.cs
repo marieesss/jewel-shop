@@ -1,5 +1,5 @@
 
-namespace JewelryShop.Application.Features.Options.DTOs;
+namespace JewelryShop.Features.Options.DTOs;
 
 public record OptionDto(long Id, string Name, decimal Length);
 

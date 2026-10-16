@@ -1,5 +1,5 @@
 using JewelryShop.API.Tests.Fakes;
-using JewelryShop.Application.Features.Auth.Jobs;
+using JewelryShop.Features.Auth.Jobs;
 
 namespace JewelryShop.API.Tests.Auth;
 

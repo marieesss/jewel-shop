@@ -1,8 +1,8 @@
-using JewelryShop.Application.Common.Exceptions;
-using JewelryShop.Application.Features.Charms.DTOs;
+using JewelryShop.Common.Exceptions;
+using JewelryShop.Features.Charms.DTOs;
 using MediatR;
 
-namespace JewelryShop.Application.Features.Charms.Queries;
+namespace JewelryShop.Features.Charms.Queries;
 
 public record GetCharmByIdQuery(long Id) : IRequest<CharmDto>;
 

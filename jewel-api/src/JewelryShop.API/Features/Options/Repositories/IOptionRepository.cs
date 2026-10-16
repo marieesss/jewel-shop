@@ -1,6 +1,6 @@
-using JewelryShop.Application.Common.Persistence;
+using JewelryShop.Common.Persistence;
 
-namespace JewelryShop.Application.Features.Options;
+namespace JewelryShop.Features.Options.Repositories;
 
 public interface IOptionRepository : IRepository<Option>
 {

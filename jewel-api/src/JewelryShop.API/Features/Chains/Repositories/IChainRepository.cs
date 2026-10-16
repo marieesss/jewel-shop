@@ -1,6 +1,6 @@
-using JewelryShop.Application.Common.Persistence;
+using JewelryShop.Common.Persistence;
 
-namespace JewelryShop.Application.Features.Chains;
+namespace JewelryShop.Features.Chains.Repositories;
 
 public interface IChainRepository : IRepository<Chain>
 {

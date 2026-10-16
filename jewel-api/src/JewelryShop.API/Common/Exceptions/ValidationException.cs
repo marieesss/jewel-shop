@@ -1,6 +1,6 @@
 using FluentValidation.Results;
 
-namespace JewelryShop.Application.Common.Exceptions;
+namespace JewelryShop.Common.Exceptions;
 
 public class ValidationException : Exception
 {

@@ -1,7 +1,8 @@
 using JewelryShop.API.Tests.Fakes;
-using JewelryShop.Application.Common.Exceptions;
-using JewelryShop.Application.Features.Auth;
-using JewelryShop.Application.Features.Users;
+using JewelryShop.Common.Exceptions;
+using JewelryShop.Features.Auth;
+using JewelryShop.Features.Auth.Entities;
+using JewelryShop.Features.Users.Entities;
 using JewelryShop.Infrastructure.Services;
 using Microsoft.Extensions.Logging;
 

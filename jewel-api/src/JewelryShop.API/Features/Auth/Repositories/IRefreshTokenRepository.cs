@@ -1,6 +1,6 @@
-using JewelryShop.Application.Common.Persistence;
+using JewelryShop.Common.Persistence;
 
-namespace JewelryShop.Application.Features.Auth;
+namespace JewelryShop.Features.Auth.Repositories;
 
 public interface IRefreshTokenRepository : IRepository<RefreshToken>
 {

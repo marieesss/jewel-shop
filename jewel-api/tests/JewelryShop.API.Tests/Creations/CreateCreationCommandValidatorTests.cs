@@ -1,4 +1,4 @@
-using JewelryShop.Application.Features.Creations.Commands;
+using JewelryShop.Features.Creations.Commands;
 
 namespace JewelryShop.API.Tests.Creations;
 

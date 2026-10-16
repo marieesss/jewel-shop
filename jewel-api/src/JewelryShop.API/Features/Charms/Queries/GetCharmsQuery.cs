@@ -1,9 +1,9 @@
-using JewelryShop.Application.Common;
-using JewelryShop.Application.Common.Models;
-using JewelryShop.Application.Features.Charms.DTOs;
+using JewelryShop.Common;
+using JewelryShop.Common.Models;
+using JewelryShop.Features.Charms.DTOs;
 using MediatR;
 
-namespace JewelryShop.Application.Features.Charms.Queries;
+namespace JewelryShop.Features.Charms.Queries;
 
 public record GetCharmsQuery(
     ProductColor? Color,

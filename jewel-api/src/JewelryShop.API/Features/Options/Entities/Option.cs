@@ -1,4 +1,4 @@
-namespace JewelryShop.Application.Features.Options;
+namespace JewelryShop.Features.Options.Entities;
 
 public class Option : BaseEntity
 {

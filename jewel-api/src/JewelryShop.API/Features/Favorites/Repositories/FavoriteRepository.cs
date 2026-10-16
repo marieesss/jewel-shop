@@ -1,8 +1,8 @@
-using JewelryShop.Application.Common.Persistence;
+using JewelryShop.Common.Persistence;
 using JewelryShop.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace JewelryShop.Application.Features.Favorites;
+namespace JewelryShop.Features.Favorites.Repositories;
 
 public class FavoriteRepository : Repository<Favorite>, IFavoriteRepository
 {

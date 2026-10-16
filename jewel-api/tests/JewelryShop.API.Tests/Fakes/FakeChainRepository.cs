@@ -1,5 +1,6 @@
-using JewelryShop.Application.Common.Enums;
-using JewelryShop.Application.Features.Chains;
+using JewelryShop.Common.Enums;
+using JewelryShop.Features.Chains.Entities;
+using JewelryShop.Features.Chains.Repositories;
 
 namespace JewelryShop.API.Tests.Fakes;
 

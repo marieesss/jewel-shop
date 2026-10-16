@@ -1,8 +1,8 @@
 using FluentValidation;
 using MediatR;
-using ValidationException = JewelryShop.Application.Common.Exceptions.ValidationException;
+using ValidationException = JewelryShop.Common.Exceptions.ValidationException;
 
-namespace JewelryShop.Application.Common.Behaviors;
+namespace JewelryShop.Common.Behaviors;
 
 /// <summary>
 /// Pipeline MediatR : exécute tous les IValidator&lt;TRequest&gt; enregistrés

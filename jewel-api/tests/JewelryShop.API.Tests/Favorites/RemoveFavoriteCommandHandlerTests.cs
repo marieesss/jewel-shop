@@ -1,7 +1,7 @@
 using JewelryShop.API.Tests.Fakes;
-using JewelryShop.Application.Common.Exceptions;
-using JewelryShop.Application.Features.Favorites;
-using JewelryShop.Application.Features.Favorites.Commands;
+using JewelryShop.Common.Exceptions;
+using JewelryShop.Features.Favorites.Commands;
+using JewelryShop.Features.Favorites.Entities;
 
 namespace JewelryShop.API.Tests.Favorites;
 

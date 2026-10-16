@@ -1,9 +1,9 @@
-using JewelryShop.Application.Common;
-using JewelryShop.Application.Common.Models;
-using JewelryShop.Application.Features.Favorites.DTOs;
+using JewelryShop.Common;
+using JewelryShop.Common.Models;
+using JewelryShop.Features.Favorites.DTOs;
 using MediatR;
 
-namespace JewelryShop.Application.Features.Favorites.Queries;
+namespace JewelryShop.Features.Favorites.Queries;
 
 public record GetMyFavoritesQuery(long UserId, int Page = 1, int PageSize = 20)
     : IRequest<PagedResult<FavoriteDto>>;

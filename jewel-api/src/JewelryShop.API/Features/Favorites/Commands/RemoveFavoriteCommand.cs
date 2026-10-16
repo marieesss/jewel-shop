@@ -1,7 +1,7 @@
-using JewelryShop.Application.Common.Exceptions;
+using JewelryShop.Common.Exceptions;
 using MediatR;
 
-namespace JewelryShop.Application.Features.Favorites.Commands;
+namespace JewelryShop.Features.Favorites.Commands;
 
 public record RemoveFavoriteCommand(long UserId, long FavoriteId) : IRequest<bool>;
 

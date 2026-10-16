@@ -1,7 +1,7 @@
 using FluentValidation;
 using MediatR;
 
-namespace JewelryShop.Application.Features.Auth.Commands;
+namespace JewelryShop.Features.Auth.Commands;
 
 public record LogoutCommand(string? RefreshToken) : IRequest;
 

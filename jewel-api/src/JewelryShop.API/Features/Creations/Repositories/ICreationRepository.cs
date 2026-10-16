@@ -1,6 +1,6 @@
-using JewelryShop.Application.Common.Persistence;
+using JewelryShop.Common.Persistence;
 
-namespace JewelryShop.Application.Features.Creations;
+namespace JewelryShop.Features.Creations.Repositories;
 
 public interface ICreationRepository : IRepository<Creation>
 {

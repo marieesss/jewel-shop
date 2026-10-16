@@ -1,6 +1,6 @@
-using JewelryShop.Application.Common.Persistence;
+using JewelryShop.Common.Persistence;
 
-namespace JewelryShop.Application.Features.Emails;
+namespace JewelryShop.Features.Emails.Repositories;
 
 public interface IEmailOutboxRepository : IRepository<EmailOutboxMessage>
 {

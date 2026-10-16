@@ -1,4 +1,4 @@
-namespace JewelryShop.Application.Features.Emails;
+namespace JewelryShop.Features.Emails;
 
 public static class EmailOutboxRetryPolicy
 {

@@ -1,9 +1,9 @@
-using JewelryShop.Application.Common;
-using JewelryShop.Application.Common.Models;
-using JewelryShop.Application.Features.Creations.DTOs;
+using JewelryShop.Common;
+using JewelryShop.Common.Models;
+using JewelryShop.Features.Creations.DTOs;
 using MediatR;
 
-namespace JewelryShop.Application.Features.Creations.Queries;
+namespace JewelryShop.Features.Creations.Queries;
 
 public record GetMyCreationsQuery(long UserId, int Page = 1, int PageSize = 20)
     : IRequest<PagedResult<CreationDto>>;

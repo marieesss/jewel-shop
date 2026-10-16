@@ -1,11 +1,11 @@
 using FluentValidation;
-using JewelryShop.Application.Common.Exceptions;
-using JewelryShop.Application.Common.Interfaces;
-using JewelryShop.Application.Features.Auth.DTOs;
-using JewelryShop.Application.Features.Users;
+using JewelryShop.Common.Exceptions;
+using JewelryShop.Common.Interfaces;
+using JewelryShop.Features.Auth.DTOs;
+using JewelryShop.Features.Users;
 using MediatR;
 
-namespace JewelryShop.Application.Features.Auth.Commands;
+namespace JewelryShop.Features.Auth.Commands;
 
 public record LoginCommand(string Email, string Password) : IRequest<AuthResult>;
 

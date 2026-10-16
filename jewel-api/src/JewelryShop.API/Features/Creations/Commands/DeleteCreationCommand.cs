@@ -1,7 +1,7 @@
-using JewelryShop.Application.Common.Exceptions;
+using JewelryShop.Common.Exceptions;
 using MediatR;
 
-namespace JewelryShop.Application.Features.Creations.Commands;
+namespace JewelryShop.Features.Creations.Commands;
 
 public record DeleteCreationCommand(long UserId, long CreationId) : IRequest<bool>;
 

@@ -1,8 +1,8 @@
-using JewelryShop.Application.Common.Persistence;
+using JewelryShop.Common.Persistence;
 using JewelryShop.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace JewelryShop.Application.Features.Chains;
+namespace JewelryShop.Features.Chains.Repositories;
 
 public class ChainRepository : Repository<Chain>, IChainRepository
 {

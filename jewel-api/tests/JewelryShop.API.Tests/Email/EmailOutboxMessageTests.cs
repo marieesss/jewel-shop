@@ -1,5 +1,5 @@
-using JewelryShop.Application.Common.Models;
-using JewelryShop.Application.Features.Emails;
+using JewelryShop.Common.Models;
+using JewelryShop.Features.Emails.Entities;
 
 namespace JewelryShop.API.Tests.Email;
 

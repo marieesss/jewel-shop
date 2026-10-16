@@ -1,8 +1,8 @@
-using JewelryShop.Application.Common.Exceptions;
-using JewelryShop.Application.Features.Chains.DTOs;
+using JewelryShop.Common.Exceptions;
+using JewelryShop.Features.Chains.DTOs;
 using MediatR;
 
-namespace JewelryShop.Application.Features.Chains.Queries;
+namespace JewelryShop.Features.Chains.Queries;
 
 public record GetChainByIdQuery(long Id) : IRequest<ChainDto>;
 

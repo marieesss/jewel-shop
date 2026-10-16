@@ -1,8 +1,8 @@
-using JewelryShop.Application.Common.Persistence;
+using JewelryShop.Common.Persistence;
 using JewelryShop.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace JewelryShop.Application.Features.Creations;
+namespace JewelryShop.Features.Creations.Repositories;
 
 public class CreationRepository : Repository<Creation>, ICreationRepository
 {

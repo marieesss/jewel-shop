@@ -1,9 +1,9 @@
-using JewelryShop.Application.Features.Charms.Commands;
-using JewelryShop.Application.Features.Charms.Queries;
+using JewelryShop.Features.Charms.Commands;
+using JewelryShop.Features.Charms.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace JewelryShop.Application.Features.Charms;
+namespace JewelryShop.Features.Charms.Controllers;
 
 [Route("api/charms")]
 public class CharmsController : ApiControllerBase

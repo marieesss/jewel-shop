@@ -1,12 +1,12 @@
 using FluentValidation;
-using JewelryShop.Application.Common.Exceptions;
-using JewelryShop.Application.Features.Chains;
-using JewelryShop.Application.Features.Charms;
-using JewelryShop.Application.Features.Creations.DTOs;
-using JewelryShop.Application.Features.Options;
+using JewelryShop.Common.Exceptions;
+using JewelryShop.Features.Chains;
+using JewelryShop.Features.Charms;
+using JewelryShop.Features.Creations.DTOs;
+using JewelryShop.Features.Options;
 using MediatR;
 
-namespace JewelryShop.Application.Features.Creations.Commands;
+namespace JewelryShop.Features.Creations.Commands;
 
 public record CreateCreationItemInput(long CharmId, int Position);
 

@@ -1,8 +1,8 @@
-using JewelryShop.Application.Features.Chains.DTOs;
-using JewelryShop.Application.Features.Charms.DTOs;
-using JewelryShop.Application.Features.Options.DTOs;
+using JewelryShop.Features.Chains.DTOs;
+using JewelryShop.Features.Charms.DTOs;
+using JewelryShop.Features.Options.DTOs;
 
-namespace JewelryShop.Application.Features.Creations.DTOs;
+namespace JewelryShop.Features.Creations.DTOs;
 
 public record CreationItemDto(long Id, long CharmId, int Position, CharmDto? Charm);
 

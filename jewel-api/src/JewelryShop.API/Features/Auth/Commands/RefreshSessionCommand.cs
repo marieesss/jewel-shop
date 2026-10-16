@@ -1,10 +1,10 @@
 using FluentValidation;
-using JewelryShop.Application.Common.Exceptions;
-using JewelryShop.Application.Common.Interfaces;
-using JewelryShop.Application.Features.Auth.DTOs;
+using JewelryShop.Common.Exceptions;
+using JewelryShop.Common.Interfaces;
+using JewelryShop.Features.Auth.DTOs;
 using MediatR;
 
-namespace JewelryShop.Application.Features.Auth.Commands;
+namespace JewelryShop.Features.Auth.Commands;
 
 public record RefreshSessionCommand(string? RefreshToken) : IRequest<AuthResult>;
 

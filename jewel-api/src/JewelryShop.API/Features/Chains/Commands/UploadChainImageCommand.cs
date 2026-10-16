@@ -1,8 +1,8 @@
-using JewelryShop.Application.Common.Exceptions;
-using JewelryShop.Application.Common.Interfaces;
+using JewelryShop.Common.Exceptions;
+using JewelryShop.Common.Interfaces;
 using MediatR;
 
-namespace JewelryShop.Application.Features.Chains.Commands;
+namespace JewelryShop.Features.Chains.Commands;
 
 public record UploadChainImageCommand(
     long ChainId,

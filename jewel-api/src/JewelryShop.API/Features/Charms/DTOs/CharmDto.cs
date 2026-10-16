@@ -1,4 +1,4 @@
-namespace JewelryShop.Application.Features.Charms.DTOs;
+namespace JewelryShop.Features.Charms.DTOs;
 
 public record CharmDto(
     long Id,

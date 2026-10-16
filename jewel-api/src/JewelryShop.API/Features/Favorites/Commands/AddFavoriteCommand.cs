@@ -1,11 +1,11 @@
 using FluentValidation;
-using JewelryShop.Application.Common.Exceptions;
-using JewelryShop.Application.Features.Chains;
-using JewelryShop.Application.Features.Charms;
-using JewelryShop.Application.Features.Favorites.DTOs;
+using JewelryShop.Common.Exceptions;
+using JewelryShop.Features.Chains;
+using JewelryShop.Features.Charms;
+using JewelryShop.Features.Favorites.DTOs;
 using MediatR;
 
-namespace JewelryShop.Application.Features.Favorites.Commands;
+namespace JewelryShop.Features.Favorites.Commands;
 
 public record AddFavoriteCommand(long UserId, long? ChainId, long? CharmId) : IRequest<FavoriteDto>;
 

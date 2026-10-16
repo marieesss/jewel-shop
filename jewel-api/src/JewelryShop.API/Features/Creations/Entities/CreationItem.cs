@@ -1,4 +1,4 @@
-namespace JewelryShop.Application.Features.Creations;
+namespace JewelryShop.Features.Creations.Entities;
 
 public class CreationItem : BaseEntity
 {

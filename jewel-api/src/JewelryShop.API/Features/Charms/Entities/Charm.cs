@@ -1,4 +1,4 @@
-namespace JewelryShop.Application.Features.Charms;
+namespace JewelryShop.Features.Charms.Entities;
 
 public class Charm : BaseEntity
 {

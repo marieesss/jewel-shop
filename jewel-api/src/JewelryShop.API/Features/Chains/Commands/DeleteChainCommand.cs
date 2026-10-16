@@ -1,7 +1,7 @@
-using JewelryShop.Application.Common.Exceptions;
+using JewelryShop.Common.Exceptions;
 using MediatR;
 
-namespace JewelryShop.Application.Features.Chains.Commands;
+namespace JewelryShop.Features.Chains.Commands;
 
 public record DeleteChainCommand(long Id) : IRequest<bool>;
 

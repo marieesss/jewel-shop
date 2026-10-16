@@ -1,8 +1,8 @@
-using JewelryShop.Application.Common.Persistence;
+using JewelryShop.Common.Persistence;
 using JewelryShop.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace JewelryShop.Application.Features.Emails;
+namespace JewelryShop.Features.Emails.Repositories;
 
 public class EmailOutboxRepository : Repository<EmailOutboxMessage>, IEmailOutboxRepository
 {

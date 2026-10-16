@@ -1,6 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
-using JewelryShop.Application.Common.Interfaces;
+using JewelryShop.Common.Interfaces;
 using Microsoft.AspNetCore.WebUtilities;
 
 namespace JewelryShop.Infrastructure.Services;

@@ -1,4 +1,4 @@
-namespace JewelryShop.Application.Features.Users;
+namespace JewelryShop.Features.Users.Entities;
 
 public class User : BaseEntity
 {

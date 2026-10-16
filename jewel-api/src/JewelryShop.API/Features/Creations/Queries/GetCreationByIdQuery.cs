@@ -1,8 +1,8 @@
-using JewelryShop.Application.Common.Exceptions;
-using JewelryShop.Application.Features.Creations.DTOs;
+using JewelryShop.Common.Exceptions;
+using JewelryShop.Features.Creations.DTOs;
 using MediatR;
 
-namespace JewelryShop.Application.Features.Creations.Queries;
+namespace JewelryShop.Features.Creations.Queries;
 
 public record GetCreationByIdQuery(long UserId, long CreationId) : IRequest<CreationDto>;
 

@@ -1,6 +1,6 @@
-using JewelryShop.Application.Common.Models;
+using JewelryShop.Common.Models;
 
-namespace JewelryShop.Application.Features.Emails;
+namespace JewelryShop.Features.Emails.Entities;
 
 public class EmailOutboxMessage : BaseEntity
 {

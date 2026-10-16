@@ -1,7 +1,7 @@
-using JewelryShop.Application.Common.Exceptions;
+using JewelryShop.Common.Exceptions;
 using MediatR;
 
-namespace JewelryShop.Application.Features.Charms.Commands;
+namespace JewelryShop.Features.Charms.Commands;
 
 public record DeleteCharmCommand(long Id) : IRequest<bool>;
 

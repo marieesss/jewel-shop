@@ -1,8 +1,8 @@
 using FluentValidation;
-using JewelryShop.Application.Features.Chains.DTOs;
+using JewelryShop.Features.Chains.DTOs;
 using MediatR;
 
-namespace JewelryShop.Application.Features.Chains.Commands;
+namespace JewelryShop.Features.Chains.Commands;
 
 public record CreateChainCommand(
     string Name,

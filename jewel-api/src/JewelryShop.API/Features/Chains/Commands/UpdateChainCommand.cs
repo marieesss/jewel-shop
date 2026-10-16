@@ -1,9 +1,9 @@
 using FluentValidation;
-using JewelryShop.Application.Common.Exceptions;
-using JewelryShop.Application.Features.Chains.DTOs;
+using JewelryShop.Common.Exceptions;
+using JewelryShop.Features.Chains.DTOs;
 using MediatR;
 
-namespace JewelryShop.Application.Features.Chains.Commands;
+namespace JewelryShop.Features.Chains.Commands;
 
 public record UpdateChainCommand(
     long Id,

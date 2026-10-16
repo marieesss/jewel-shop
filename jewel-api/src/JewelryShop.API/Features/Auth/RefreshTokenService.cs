@@ -1,7 +1,7 @@
-using JewelryShop.Application.Common.Exceptions;
-using JewelryShop.Application.Common.Interfaces;
+using JewelryShop.Common.Exceptions;
+using JewelryShop.Common.Interfaces;
 
-namespace JewelryShop.Application.Features.Auth;
+namespace JewelryShop.Features.Auth;
 
 public interface IRefreshTokenService
 {

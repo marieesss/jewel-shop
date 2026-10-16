@@ -1,7 +1,7 @@
-using JewelryShop.Application.Common.Persistence;
+using JewelryShop.Common.Persistence;
 using JewelryShop.Infrastructure.Persistence;
 
-namespace JewelryShop.Application.Features.Options;
+namespace JewelryShop.Features.Options.Repositories;
 
 public class OptionRepository : Repository<Option>, IOptionRepository
 {

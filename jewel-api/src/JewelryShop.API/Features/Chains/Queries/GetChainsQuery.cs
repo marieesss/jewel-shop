@@ -1,9 +1,9 @@
-using JewelryShop.Application.Common;
-using JewelryShop.Application.Common.Models;
-using JewelryShop.Application.Features.Chains.DTOs;
+using JewelryShop.Common;
+using JewelryShop.Common.Models;
+using JewelryShop.Features.Chains.DTOs;
 using MediatR;
 
-namespace JewelryShop.Application.Features.Chains.Queries;
+namespace JewelryShop.Features.Chains.Queries;
 
 public record GetChainsQuery(
     ProductColor? Color,

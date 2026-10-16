@@ -1,4 +1,4 @@
-namespace JewelryShop.Application.Common;
+namespace JewelryShop.Common;
 
 public class PagedResult<T>
 {
