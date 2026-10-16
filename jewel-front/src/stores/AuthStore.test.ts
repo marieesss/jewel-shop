@@ -83,6 +83,36 @@ describe('AuthStore', () => {
 
     expect(store.isAuthenticated).toBe(false);
     expect(store.userId).toBeNull();
+    expect(store.sessionExpired).toBe(true);
+  });
+
+  it("n'annonce pas d'expiration quand le refresh échoue au chargement", async () => {
+    vi.mocked(refresh).mockRejectedValue(new Error('401'));
+    const store = new AuthStore();
+
+    await store.restoreSession();
+
+    expect(store.sessionExpired).toBe(false);
+  });
+
+  it("n'annonce plus l'expiration après une nouvelle connexion", async () => {
+    vi.mocked(login).mockResolvedValue(session);
+    const store = connectedStore();
+    store.expireSession();
+
+    await store.login({ email: 'a@b.fr', password: 'secret' });
+
+    expect(store.sessionExpired).toBe(false);
+  });
+
+  it("n'annonce pas d'expiration après une déconnexion volontaire", async () => {
+    vi.mocked(logout).mockResolvedValue();
+    const store = connectedStore();
+    store.expireSession();
+
+    await store.logout();
+
+    expect(store.sessionExpired).toBe(false);
   });
 
   it('applique la session renvoyée par la connexion', async () => {

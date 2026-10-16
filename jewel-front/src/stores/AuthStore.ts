@@ -26,6 +26,9 @@ export class AuthStore {
   /** Vrai tant que la session n'a pas été restaurée (ou écartée) au chargement de la page. */
   initializing = true;
 
+  /** Vrai quand la session a été fermée par l'échec d'un refresh, pour l'annoncer à la connexion. */
+  sessionExpired = false;
+
   loading = false;
   error: string | null = null;
 
@@ -79,12 +82,16 @@ export class AuthStore {
   /** Ferme la session après l'échec d'un refresh ; les guards redirigent alors vers la connexion. */
   expireSession(): void {
     this.clearSession();
+    this.sessionExpired = true;
   }
 
   async logout(): Promise<void> {
     // Une erreur réseau ne doit pas empêcher de fermer la session côté front.
     await apiLogout().catch(() => undefined);
-    runInAction(() => this.clearSession());
+    runInAction(() => {
+      this.clearSession();
+      this.sessionExpired = false;
+    });
   }
 
   clearError(): void {
@@ -95,6 +102,7 @@ export class AuthStore {
     this.token = session.token;
     this.userId = session.userId;
     this.role = session.role;
+    this.sessionExpired = false;
   }
 
   private clearSession(): void {
