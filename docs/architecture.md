@@ -89,7 +89,7 @@ sequenceDiagram
 - **Endpoints** (anonymes, sans corps) :
   - `POST /api/auth/refresh` : 200 avec un nouvel `AuthResponse` et un nouveau cookie (rotation). 401 « Votre session a expiré. Veuillez vous reconnecter. » si le cookie est absent, inconnu, expiré, révoqué ou réutilisé : le cookie est alors supprimé ;
   - `POST /api/auth/logout` : 204. Révoque le token s'il est actif et supprime le cookie dans tous les cas.
-- Le front ne les utilise pas encore (#31).
+- Le front les utilise pour garder la session ouverte (voir « Stockage du token » dans la partie Front).
 
 - **Tokens opaques** : `ISecureTokenGenerator` (`SecureTokenGenerator`, singleton) génère 32 octets aléatoires en base64url (43 caractères) et les hache en SHA-256 hexadécimal. Seul le hash est stocké dans `refresh_tokens.token_hash`. Le token en clair n'est ni enregistré ni journalisé. Le même générateur servira à la réinitialisation du mot de passe (#33) et aux invitations (#35).
 - **`IRefreshTokenService`** (`Features/Auth/`) :
@@ -188,19 +188,24 @@ stateDiagram-v2
 
 ```
 src/
-├── api/          # client axios (Bearer token injecté), une fonction par endpoint, types des DTO
+├── api/          # client axios, intercepteurs d'auth (Bearer, refresh sur 401), une fonction par endpoint, types des DTO
 ├── stores/       # MobX : AuthStore, ProductAdminStore, FavoritesStore, RootStore + hooks d'accès
 ├── routes/       # guards.tsx : ProtectedRoute, AdminRoute
 ├── pages/        # pages routées : AuthPage, user/, admin/
 ├── features/     # composants métier : admin/, auth/, products/, favorites/, user/
 ├── components/ui # composants génériques (Button, TextField, Pagination…)
 ├── hooks/        # useAsync
-└── lib/          # cn, format, jwt (décodage des claims côté client), returnUrl (redirection après connexion),
+└── lib/          # cn, format, returnUrl (redirection après connexion), sessionExpired (message à la connexion),
                   # passwordPolicy (règles du mot de passe, identiques au back)
 ```
 
 - Routage déclaré dans `App.tsx`. `/login` est public. L'espace client (`/charms`, `/chains`, `/favorites`) exige une session. `/admin/...` exige le rôle `Admin`.
-- Le JWT est stocké dans `localStorage` et restauré au chargement (`AuthStore.hydrate`). Un token expiré est supprimé.
+- **Stockage du token** : l'access token (JWT), l'identifiant et le rôle sont gardés **en mémoire** dans `AuthStore`, jamais dans `localStorage` ni `sessionStorage`. Le refresh token reste dans son cookie `httpOnly`, illisible par le JavaScript. L'ancien token `jewelryshop_token` est retiré de `localStorage` au démarrage.
+  - **Au chargement**, `AuthStore.restoreSession()` appelle `POST /api/auth/refresh`. Tant que la restauration n'est pas finie (`initializing`), `ProtectedRoute` et `AdminRoute` affichent un `Spinner` au lieu de rediriger. Un échec laisse le visiteur déconnecté, sans message.
+  - **Sur un 401** (hors `login`, `register`, `refresh` et `logout`), l'intercepteur de `api/authInterceptors.ts` rafraîchit la session puis rejoue la requête une seule fois. Une requête partie avec un token déjà renouvelé est rejouée sans nouveau refresh.
+  - **Un seul refresh à la fois** (`api/singleFlightRefresh.ts`) : les 401 simultanés d'un onglet attendent la même promesse, et les onglets sont sérialisés par le verrou Web Locks `jewelryshop-refresh`. Le cookie étant partagé, l'onglet qui passe en second présente le cookie déjà renouvelé et n'est pas pris pour une réutilisation. Sans Web Locks API, le refresh s'exécute sans verrou.
+  - **Échec du refresh** : `AuthStore.expireSession()` vide la session et pose `sessionExpired` ; les guards redirigent vers `/login?returnUrl=…` avec l'état de navigation `{ sessionExpired: true }`, et la page de connexion affiche « Votre session a expiré. Veuillez vous reconnecter. ».
+  - **Déconnexion** : `AuthStore.logout()` appelle `POST /api/auth/logout` (erreur ignorée), puis vide la session.
 - `VITE_API_URL` est figée **au build**. Vide en production : URL relatives.
 - Les validations de formulaire reprennent celles du back (`features/products/productForm.ts`, `lib/passwordPolicy.ts`).
 
@@ -278,7 +283,7 @@ Le retour arrière remet l'ancienne version du code, **pas l'ancien schéma** : 
 |---|---|
 | Service d'email | Fait : interface `IEmailSender` et envoi SMTP `SmtpEmailSender` (Mailpit en dev ; relais SMTP de Brevo en staging et en production, activé par `Email__Enabled`). Templates Scriban côté back (`IEmailTemplateRenderer`). Table **outbox** et `PeriodicJobsService` d'envoi : premier traitement asynchrone de l'API. Flux sortant vers Brevo (port 587) : l'API n'a pas de NetworkPolicy de sortie, aucune règle n'est nécessaire. |
 | Politique de mot de passe | Fait côté back : la règle FluentValidation réutilisable `PasswordPolicy()` (`Features/Auth/Validation/PasswordPolicyRules.cs`) est appliquée à l'inscription, et le sera à la réinitialisation. La connexion ne l'applique pas, pour ne pas bloquer les comptes existants. Le front reprend les mêmes règles et messages (`lib/passwordPolicy.ts`) et les affiche cochées en direct à l'inscription (`features/auth/PasswordRules`). |
-| Refresh token | Access token JWT de 15 min (au lieu de 7 jours). Nouvelle table de refresh tokens hachés, cookie `httpOnly` `Secure` `SameSite=Strict`, rotation et détection de réutilisation. Front : intercepteur axios (401 → refresh → rejeu, file d'attente). Le stockage du token d'accès dans `localStorage` est à revoir. |
+| Refresh token | Access token JWT de 15 min (au lieu de 7 jours). Nouvelle table de refresh tokens hachés, cookie `httpOnly` `Secure` `SameSite=Strict`, rotation et détection de réutilisation. Fait côté front : access token en mémoire, intercepteur axios (401 → refresh → rejeu, un seul refresh à la fois, verrou Web Locks entre onglets), restauration de la session au chargement. Reste la réduction à 15 min (#32). |
 | Protection des routes front | Fait : les guards `ProtectedRoute` / `AdminRoute` redirigent vers `/login?returnUrl=…`, et `AuthPage` renvoie sur la page demandée après connexion si le chemin est interne et autorisé pour le rôle. |
 | Mot de passe oublié | Table de tokens de réinitialisation hachés, à usage unique. Révocation des refresh tokens. |
 | Inscription sur invitation | Table `Invitation`. `POST /api/auth/register` devient conditionné par une invitation valide. C'est un **changement de comportement** de l'endpoint public existant. |
