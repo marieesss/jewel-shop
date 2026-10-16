@@ -18,7 +18,7 @@ export const UserLayout = observer(function UserLayout() {
 
   const handleLogout = () => {
     favorites.reset();
-    auth.logout();
+    void auth.logout();
   };
 
   return (

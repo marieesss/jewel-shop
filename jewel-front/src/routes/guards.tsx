@@ -2,12 +2,16 @@ import { observer } from 'mobx-react-lite';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../stores/context';
 import { loginPathFor } from '../lib/returnUrl';
+import { Spinner } from '../components/ui/Spinner';
 
 /** Exige une session authentifiée ; sinon redirige vers /login avec la page demandée en returnUrl. */
 export const ProtectedRoute = observer(function ProtectedRoute() {
   const auth = useAuthStore();
   const location = useLocation();
 
+  if (auth.initializing) {
+    return <Spinner className="h-screen" label="Chargement…" />;
+  }
   if (!auth.isAuthenticated) {
     return <Navigate to={loginPathFor(location)} replace />;
   }
@@ -19,6 +23,9 @@ export const AdminRoute = observer(function AdminRoute() {
   const auth = useAuthStore();
   const location = useLocation();
 
+  if (auth.initializing) {
+    return <Spinner className="h-screen" label="Chargement…" />;
+  }
   if (!auth.isAuthenticated) {
     return <Navigate to={loginPathFor(location)} replace />;
   }

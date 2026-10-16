@@ -1,27 +1,44 @@
 import { makeAutoObservable, runInAction } from 'mobx';
 import {
   login as apiLogin,
+  logout as apiLogout,
+  refresh as apiRefresh,
   register as apiRegister,
+  type AuthResponse,
   type LoginPayload,
   type RegisterPayload,
 } from '../api/auth';
-import { TOKEN_KEY } from '../api/client';
+import { installAuthInterceptors } from '../api/authInterceptors';
+import { api } from '../api/client';
 import { extractApiError } from '../api/errors';
-import { decodeJwt, isTokenValid } from '../lib/jwt';
+import { createSingleFlightRefresh } from '../api/singleFlightRefresh';
 
 const ADMIN_ROLE = 'Admin';
+
+// Emplacement de l'access token avant son passage en mémoire : nettoyé pour ne pas le laisser dans le navigateur.
+const LEGACY_TOKEN_KEY = 'jewelryshop_token';
 
 export class AuthStore {
   token: string | null = null;
   userId: number | null = null;
   role: string | null = null;
 
+  /** Vrai tant que la session n'a pas été restaurée (ou écartée) au chargement de la page. */
+  initializing = true;
+
   loading = false;
   error: string | null = null;
 
+  private readonly refreshOnce = createSingleFlightRefresh(apiRefresh);
+
   constructor() {
-    makeAutoObservable(this);
-    this.hydrate();
+    makeAutoObservable<AuthStore, 'refreshOnce'>(this, { refreshOnce: false });
+    localStorage.removeItem(LEGACY_TOKEN_KEY);
+    installAuthInterceptors(api, {
+      getAccessToken: () => this.token,
+      refreshAccessToken: () => this.refreshSession(),
+      onRefreshFailed: () => this.expireSession(),
+    });
   }
 
   get isAuthenticated(): boolean {
@@ -40,48 +57,60 @@ export class AuthStore {
     return this.run(() => apiRegister(payload));
   }
 
-  logout(): void {
-    this.token = null;
-    this.userId = null;
-    this.role = null;
-    this.error = null;
-    localStorage.removeItem(TOKEN_KEY);
+  /** Restaure la session à partir du cookie de refresh ; un échec laisse simplement l'utilisateur déconnecté. */
+  async restoreSession(): Promise<void> {
+    try {
+      await this.refreshSession();
+    } catch {
+      runInAction(() => this.clearSession());
+    } finally {
+      runInAction(() => {
+        this.initializing = false;
+      });
+    }
+  }
+
+  /** Renouvelle l'access token avec le cookie de refresh ; rejette si la session a expiré. */
+  async refreshSession(): Promise<void> {
+    const session = await this.refreshOnce();
+    runInAction(() => this.applySession(session));
+  }
+
+  /** Ferme la session après l'échec d'un refresh ; les guards redirigent alors vers la connexion. */
+  expireSession(): void {
+    this.clearSession();
+  }
+
+  async logout(): Promise<void> {
+    // Une erreur réseau ne doit pas empêcher de fermer la session côté front.
+    await apiLogout().catch(() => undefined);
+    runInAction(() => this.clearSession());
   }
 
   clearError(): void {
     this.error = null;
   }
 
-  /** Restaure la session depuis le token persisté (rôle/identité, expiration). */
-  private hydrate(): void {
-    const stored = localStorage.getItem(TOKEN_KEY);
-    if (!stored) return;
+  private applySession(session: AuthResponse): void {
+    this.token = session.token;
+    this.userId = session.userId;
+    this.role = session.role;
+  }
 
-    if (!isTokenValid(stored)) {
-      localStorage.removeItem(TOKEN_KEY);
-      return;
-    }
-
-    const claims = decodeJwt(stored);
-    this.token = stored;
-    this.userId = claims?.userId ?? null;
-    this.role = claims?.role ?? null;
+  private clearSession(): void {
+    this.token = null;
+    this.userId = null;
+    this.role = null;
+    this.error = null;
   }
 
   /** Exécute une requête d'auth et applique la réponse, en gérant loading/error. */
-  private async run(
-    request: () => Promise<{ token: string; userId: number; role: string }>
-  ): Promise<boolean> {
+  private async run(request: () => Promise<AuthResponse>): Promise<boolean> {
     this.loading = true;
     this.error = null;
     try {
-      const res = await request();
-      runInAction(() => {
-        this.token = res.token;
-        this.userId = res.userId;
-        this.role = res.role;
-        localStorage.setItem(TOKEN_KEY, res.token);
-      });
+      const session = await request();
+      runInAction(() => this.applySession(session));
       return true;
     } catch (err) {
       runInAction(() => {
