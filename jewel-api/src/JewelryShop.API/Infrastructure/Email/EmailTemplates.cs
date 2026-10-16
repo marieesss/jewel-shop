@@ -11,4 +11,10 @@ public static class EmailTemplates
 
     /// <summary>Lien de réinitialisation du mot de passe. Modèle : FirstName, ResetUrl.</summary>
     public const string PasswordReset = "PasswordReset";
+
+    /// <summary>
+    /// Lien d'inscription envoyé par un admin. Modèle : InviterName (null si l'admin n'a pas de nom),
+    /// RegisterUrl, ExpiresAt (date déjà formatée en dd/MM/yyyy).
+    /// </summary>
+    public const string Invitation = "Invitation";
 }
