@@ -40,10 +40,9 @@ Un seul projet, `JewelryShop.API`, organisé **par fonctionnalité** :
 src/JewelryShop.API/
 ├── Program.cs                     # chargement du .env, migrations, démarrage
 ├── Startup.cs                     # injection de dépendances et pipeline HTTP
-├── Application/
-│   ├── Common/                    # ApiControllerBase, BaseEntity, PagedResult, exceptions,
-│   │                              # ValidationBehavior, Repository<T>, interfaces de services
-│   └── Features/<Fonctionnalité>/ # entité, repository, controller, Commands/, Queries/, DTOs/
+├── Common/                        # ApiControllerBase, BaseEntity, PagedResult, exceptions,
+│                                  # ValidationBehavior, Repository<T>, interfaces de services
+├── Features/<Fonctionnalité>/     # Entities/, Repositories/, Controllers/, Commands/, Queries/, DTOs/
 └── Infrastructure/
     ├── BackgroundJobs/            # PeriodicJobsService (planificateur des IPeriodicJob)
     ├── Middlewares/               # ExceptionHandlingMiddleware
@@ -132,7 +131,7 @@ erDiagram
 
 ### Envoi de mails
 
-- `IEmailSender` (`Application/Common/Interfaces`) envoie un `EmailMessage` (destinataire, sujet, corps HTML et texte) et lève une exception si l'envoi échoue.
+- `IEmailSender` (`Common/Interfaces`) envoie un `EmailMessage` (destinataire, sujet, corps HTML et texte) et lève une exception si l'envoi échoue.
 - Une seule implémentation, `SmtpEmailSender` (MailKit) : Mailpit en local, relais SMTP de Brevo en staging et en production. Une connexion par envoi, STARTTLS si `Email__Smtp__UseSsl`, authentification seulement si `Email__Smtp__Username` est renseigné.
 - Configuration `Email__*` facultative. L'envoi n'est configuré que si `Email__Enabled` vaut `true` (`false` par défaut) **et** si `Email__Smtp__Host` est renseigné. Sinon, l'API démarre et journalise un warning, et aucun envoi n'est tenté. En local, `compose.yaml` et `jewel-api/.env.example` posent `Email__Enabled=true` pour Mailpit.
 - `App__FrontendBaseUrl` : URL publique du front, pour construire les liens des mails (lue par le code à partir de #33).
@@ -170,7 +169,7 @@ stateDiagram-v2
 
 ### Templates de mail
 
-- `IEmailTemplateRenderer` (`Application/Common/Interfaces`) produit un `RenderedEmail` (sujet, HTML, texte) à partir d'un nom de template et d'un modèle. Implémentation : `ScribanEmailTemplateRenderer` (Scriban), enregistrée en singleton.
+- `IEmailTemplateRenderer` (`Common/Interfaces`) produit un `RenderedEmail` (sujet, HTML, texte) à partir d'un nom de template et d'un modèle. Implémentation : `ScribanEmailTemplateRenderer` (Scriban), enregistrée en singleton.
 - **Trois fichiers par mail**, dans `Infrastructure/Email/Templates/`, embarqués dans l'assembly (`<EmbeddedResource>` du `.csproj`) : `<Nom>.subject.sbn`, `<Nom>.html.sbn`, `<Nom>.txt.sbn`. Le nom est une constante de `EmailTemplates` (`EmailTemplates.Test` sert seulement aux tests), jamais une chaîne en dur.
 - Les propriétés du modèle sont exposées en snake_case : `FirstName` devient `{{ first_name }}`.
 - **Échappement** : dans un `.html.sbn`, chaque variable est échappée avec `| html.escape` (`{{ first_name | html.escape }}`). Le sujet et le texte ne sont pas échappés.
