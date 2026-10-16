@@ -11,6 +11,7 @@ using JewelryShop.Features.Charms;
 using JewelryShop.Features.Creations;
 using JewelryShop.Features.Emails.Jobs;
 using JewelryShop.Features.Favorites;
+using JewelryShop.Features.Invitations.Jobs;
 using JewelryShop.Features.Options;
 using JewelryShop.Features.Users;
 using JewelryShop.Infrastructure.Email;
@@ -235,6 +236,7 @@ public static class Startup
         services.AddTransient<EmailOutboxPurgeJob>();
         services.AddTransient<RefreshTokenPurgeJob>();
         services.AddTransient<PasswordResetTokenPurgeJob>();
+        services.AddTransient<InvitationExpirationJob>();
     }
 
     // Appelé depuis le pipeline, que le mode --migrate n'exécute pas : aucune tâche n'y tourne.
@@ -249,6 +251,7 @@ public static class Startup
             scheduler.Schedule<EmailOutboxPurgeJob>().Hourly().RunOnceAtStart();
             scheduler.Schedule<RefreshTokenPurgeJob>().Hourly().RunOnceAtStart();
             scheduler.Schedule<PasswordResetTokenPurgeJob>().Hourly().RunOnceAtStart();
+            scheduler.Schedule<InvitationExpirationJob>().Hourly().RunOnceAtStart();
         })
         .OnError(ex => app.Logger.LogError(ex, "La tâche périodique a échoué."));
     }
