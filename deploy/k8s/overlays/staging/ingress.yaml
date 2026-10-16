@@ -1,5 +1,12 @@
-# Routage du STAGING : staging.mycharmly.eu, entièrement protégé par mot de passe
+# Routage du STAGING : staging.mycharmly.eu, protégé par mot de passe
 # (une version en cours de validation n'a pas à être publique).
+#
+# Deux Ingress, car l'authentification basique et le JWT de l'API utilisent tous deux
+# l'en-tête Authorization : une requête du front portant "Bearer <jwt>" échouerait à
+# l'authentification basique et le navigateur redemanderait le mot de passe en boucle.
+#   - jewel-app     : le front et Swagger (/api/swagger), derrière l'authentification basique ;
+#   - jewel-app-api : le reste de /api, sans authentification basique (le JWT protège les
+#                     routes privées).
 
 # Basic auth : Secret "staging-basic-auth" (clé "users" au format htpasswd),
 # créé par le pipeline à partir des secrets GitHub de l'environnement staging.
@@ -43,7 +50,9 @@ spec:
     - host: staging.mycharmly.eu
       http:
         paths:
-          - path: /api
+          # Swagger reste derrière l'authentification basique : le préfixe le plus long l'emporte
+          # sur le /api de l'Ingress jewel-app-api.
+          - path: /api/swagger
             pathType: Prefix
             backend:
               service:
@@ -55,5 +64,32 @@ spec:
             backend:
               service:
                 name: front
+                port:
+                  name: http
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jewel-app-api
+  labels:
+    app.kubernetes.io/part-of: jewel-app
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: jewel-staging-redirect-https@kubernetescrd,jewel-staging-noindex@kubernetescrd
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - staging.mycharmly.eu
+      # Même certificat que jewel-app, qui le fait émettre par cert-manager.
+      secretName: jewel-app-tls
+  rules:
+    - host: staging.mycharmly.eu
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: api
                 port:
                   name: http
