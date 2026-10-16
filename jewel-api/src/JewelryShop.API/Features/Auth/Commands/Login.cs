@@ -5,7 +5,7 @@ using MediatR;
 
 namespace JewelryShop.Features.Auth.Commands;
 
-public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResult>
+public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResult>
 {
     private readonly IUserRepository _users;
     private readonly IPasswordHasher _passwordHasher;
@@ -24,7 +24,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResult>
         _refreshTokens = refreshTokens;
     }
 
-    public async Task<AuthResult> Handle(LoginCommand request, CancellationToken cancellationToken)
+    public async Task<LoginResult> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
         var email = request.Email.Trim().ToLowerInvariant();
 
@@ -36,6 +36,6 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResult>
         await _users.SaveChangesAsync(cancellationToken);
 
         var token = _jwtService.GenerateToken(user);
-        return new AuthResult(new AuthResponse(token, user.Id, user.Role.ToString()), refreshToken);
+        return new LoginResult(new AuthResponse(token, user.Id, user.Role.ToString()), refreshToken);
     }
 }

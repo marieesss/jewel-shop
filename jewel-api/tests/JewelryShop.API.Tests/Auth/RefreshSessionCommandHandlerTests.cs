@@ -25,7 +25,7 @@ public class RefreshSessionCommandHandlerTests
         _handler = new RefreshSessionCommandHandler(_refreshTokens, new FakeJwtService());
     }
 
-    private Task<AuthResult> RefreshAsync(string? token)
+    private Task<RefreshSessionResult> RefreshAsync(string? token)
         => _handler.Handle(new RefreshSessionCommand(token), CancellationToken.None);
 
     [Fact]

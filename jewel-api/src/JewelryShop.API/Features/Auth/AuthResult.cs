@@ -6,4 +6,4 @@ namespace JewelryShop.Features.Auth;
 /// Résultat interne d'une authentification. Le controller pose <see cref="RefreshToken"/> en cookie
 /// et ne renvoie que <see cref="Response"/> : le refresh token n'apparaît jamais dans un corps de réponse.
 /// </summary>
-public record AuthResult(AuthResponse Response, string RefreshToken);
+public abstract record AuthResult(AuthResponse Response, string RefreshToken);

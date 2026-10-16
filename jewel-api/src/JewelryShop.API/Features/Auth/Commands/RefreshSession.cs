@@ -5,7 +5,7 @@ using MediatR;
 
 namespace JewelryShop.Features.Auth.Commands;
 
-public class RefreshSessionCommandHandler : IRequestHandler<RefreshSessionCommand, AuthResult>
+public class RefreshSessionCommandHandler : IRequestHandler<RefreshSessionCommand, RefreshSessionResult>
 {
     private readonly IRefreshTokenService _refreshTokens;
     private readonly IJwtService _jwtService;
@@ -16,7 +16,7 @@ public class RefreshSessionCommandHandler : IRequestHandler<RefreshSessionComman
         _jwtService = jwtService;
     }
 
-    public async Task<AuthResult> Handle(RefreshSessionCommand request, CancellationToken cancellationToken)
+    public async Task<RefreshSessionResult> Handle(RefreshSessionCommand request, CancellationToken cancellationToken)
     {
         if (string.IsNullOrEmpty(request.RefreshToken))
             throw new UnauthorizedException(RefreshTokenService.SessionExpiredMessage);
@@ -24,6 +24,6 @@ public class RefreshSessionCommandHandler : IRequestHandler<RefreshSessionComman
         var (user, newRefreshToken) = await _refreshTokens.RotateAsync(request.RefreshToken, cancellationToken);
 
         var token = _jwtService.GenerateToken(user);
-        return new AuthResult(new AuthResponse(token, user.Id, user.Role.ToString()), newRefreshToken);
+        return new RefreshSessionResult(new AuthResponse(token, user.Id, user.Role.ToString()), newRefreshToken);
     }
 }
