@@ -1,6 +1,7 @@
 using JewelryShop.Common.Exceptions;
 using JewelryShop.Common.Interfaces;
 using JewelryShop.Features.Auth.DTOs;
+using JewelryShop.Infrastructure.Services;
 using MediatR;
 
 namespace JewelryShop.Features.Auth.Commands;

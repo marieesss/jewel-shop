@@ -1,3 +1,4 @@
+using JewelryShop.Infrastructure.Services;
 using MediatR;
 
 namespace JewelryShop.Features.Auth.Commands;
