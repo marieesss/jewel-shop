@@ -22,7 +22,7 @@ flowchart LR
 | Composant | Rôle | Technologies |
 |---|---|---|
 | `jewel-front` | Interface client et admin, fichiers statiques servis par Nginx | React 18, TypeScript, Vite, MobX, Tailwind, axios, react-router 6 |
-| `jewel-api` | API REST, logique métier, authentification | .NET 8, ASP.NET Core, MediatR, FluentValidation, EF Core (Npgsql), Evolve, BCrypt, JWT, MailKit, Scriban |
+| `jewel-api` | API REST, logique métier, authentification | .NET 8, ASP.NET Core, MediatR, FluentValidation, EF Core (Npgsql), Evolve, BCrypt, JWT, MailKit, Scriban, Coravel |
 | PostgreSQL | Données de l'application | PostgreSQL 16 |
 | Cloudinary | Stockage et diffusion des images produit | service externe |
 
@@ -45,7 +45,6 @@ src/JewelryShop.API/
 ├── Features/<Fonctionnalité>/     # Entities/, Repositories/, Controllers/, Commands/, Queries/,
 │                                  # Validators/, DTOs/, Common/ (code partagé de la fonctionnalité)
 └── Infrastructure/
-    ├── BackgroundJobs/            # PeriodicJobsService (planificateur des IPeriodicJob)
     ├── Middlewares/               # ExceptionHandlingMiddleware
     ├── Email/                     # EmailOptions, SmtpEmailSender (MailKit), ScribanEmailTemplateRenderer, EmailQueue, Templates/
     ├── Persistence/               # AppDbContext, Configurations/ (mapping EF)
@@ -163,9 +162,18 @@ stateDiagram-v2
 
 ### Tâches périodiques
 
-- `PeriodicJobsService` (`BackgroundService`) se réveille toutes les 10 s et exécute chaque `IPeriodicJob` dont l'intervalle (`Interval`) est écoulé, chacune dans son propre scope DI.
-- L'exception d'une tâche est journalisée en `Error` : elle n'arrête ni la boucle ni les autres tâches.
-- Une nouvelle tâche s'enregistre avec `services.AddScoped<IPeriodicJob, MaTache>()`. Tâches actuelles : `EmailOutboxDispatchJob`, `EmailOutboxPurgeJob` et `RefreshTokenPurgeJob` (toutes les heures, supprime les refresh tokens expirés). La purge des tokens de réinitialisation (#33) et l'expiration des invitations (#35) s'y ajouteront.
+- Les tâches sont planifiées par **Coravel**, intégré à l'hôte .NET (ni base ni service externe). Chaque tâche est un invocable (`IInvocable` et `ICancellableInvocable`) rangé dans `Features/<Fonctionnalité>/Jobs/`, résolu dans son propre scope DI à chaque exécution.
+- Une nouvelle tâche s'enregistre avec `services.AddTransient<MaTache>()` dans `Startup.AddInfrastructureServices`, et sa fréquence se déclare dans `Startup.SchedulePeriodicJobs` (`UseScheduler`).
+- Tâches actuelles :
+
+  | Tâche | Planification |
+  |---|---|
+  | `EmailOutboxDispatchJob` (envoi des mails en attente) | toutes les 10 s, sans chevauchement (`PreventOverlapping`) : un envoi qui dure plus de 10 s ne démarre pas de seconde exécution dans la même instance |
+  | `EmailOutboxPurgeJob` (mails envoyés depuis plus de 30 jours) | au démarrage, puis à chaque heure pile |
+  | `RefreshTokenPurgeJob` (refresh tokens expirés) | au démarrage, puis à chaque heure pile |
+
+  La purge des tokens de réinitialisation (#33) et l'expiration des invitations (#35) s'y ajouteront.
+- L'exception d'une tâche est journalisée en `Error` (`OnError`) : elle n'arrête ni le planificateur ni les autres tâches.
 - Les tâches tournent dans chaque instance de l'API : une tâche doit supporter d'être exécutée en parallèle par deux pods (verrou de ligne, requête idempotente).
 - Le mode `--migrate` ne démarre pas le serveur, donc pas les tâches.
 
@@ -282,10 +290,11 @@ Le retour arrière remet l'ancienne version du code, **pas l'ancien schéma** : 
 
 | Sujet | Impact sur l'architecture |
 |---|---|
-| Service d'email | Fait : interface `IEmailSender` et envoi SMTP `SmtpEmailSender` (Mailpit en dev ; relais SMTP de Brevo en staging et en production, activé par `Email__Enabled`). Templates Scriban côté back (`IEmailTemplateRenderer`). Table **outbox** et `PeriodicJobsService` d'envoi : premier traitement asynchrone de l'API. Flux sortant vers Brevo (port 587) : l'API n'a pas de NetworkPolicy de sortie, aucune règle n'est nécessaire. |
+| Service d'email | Fait : interface `IEmailSender` et envoi SMTP `SmtpEmailSender` (Mailpit en dev ; relais SMTP de Brevo en staging et en production, activé par `Email__Enabled`). Templates Scriban côté back (`IEmailTemplateRenderer`). Table **outbox** et tâche d'envoi planifiée par Coravel : premier traitement asynchrone de l'API. Flux sortant vers Brevo (port 587) : l'API n'a pas de NetworkPolicy de sortie, aucune règle n'est nécessaire. |
 | Politique de mot de passe | Fait côté back : la règle FluentValidation réutilisable `PasswordPolicy()` (`Features/Auth/Validators/PasswordPolicyRules.cs`) est appliquée à l'inscription, et le sera à la réinitialisation. La connexion ne l'applique pas, pour ne pas bloquer les comptes existants. Le front reprend les mêmes règles et messages (`lib/passwordPolicy.ts`) et les affiche cochées en direct à l'inscription (`features/auth/PasswordRules`). |
 | Refresh token | Fait : access token JWT de 15 min (au lieu de 7 jours). Nouvelle table de refresh tokens hachés, cookie `httpOnly` `Secure` `SameSite=Strict`, rotation et détection de réutilisation. Fait côté front : access token en mémoire, intercepteur axios (401 → refresh → rejeu, un seul refresh à la fois, verrou Web Locks entre onglets), restauration de la session au chargement. |
 | Protection des routes front | Fait : les guards `ProtectedRoute` / `AdminRoute` redirigent vers `/login?returnUrl=…`, et `AuthPage` renvoie sur la page demandée après connexion si le chemin est interne et autorisé pour le rôle. |
+| Planification des tâches | Fait : les tâches périodiques sont planifiées par Coravel (invocables et planification déclarative au démarrage), à la place du planificateur maison. |
 | Mot de passe oublié | Table de tokens de réinitialisation hachés, à usage unique. Révocation des refresh tokens. |
 | Inscription sur invitation | Table `Invitation`. `POST /api/auth/register` devient conditionné par une invitation valide. C'est un **changement de comportement** de l'endpoint public existant. |
 | Gestion des utilisateurs | `GET /api/admin/users` existe. Ajout des invitations et d'une page admin « Utilisateurs ». |

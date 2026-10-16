@@ -1,4 +1,4 @@
-using JewelryShop.Common.Interfaces;
+using Coravel.Invocable;
 
 namespace JewelryShop.Features.Auth.Jobs;
 
@@ -6,7 +6,7 @@ namespace JewelryShop.Features.Auth.Jobs;
 /// Supprime les refresh tokens expirés. Les tokens tournés ou révoqués sont gardés jusqu'à leur
 /// expiration pour détecter une réutilisation.
 /// </summary>
-public class RefreshTokenPurgeJob : IPeriodicJob
+public class RefreshTokenPurgeJob : IInvocable, ICancellableInvocable
 {
     private readonly IRefreshTokenRepository _repository;
 
@@ -15,7 +15,7 @@ public class RefreshTokenPurgeJob : IPeriodicJob
         _repository = repository;
     }
 
-    public TimeSpan Interval => TimeSpan.FromHours(1);
+    public CancellationToken CancellationToken { get; set; }
 
-    public Task RunAsync(CancellationToken ct) => _repository.DeleteExpiredAsync(ct);
+    public Task Invoke() => _repository.DeleteExpiredAsync(CancellationToken);
 }

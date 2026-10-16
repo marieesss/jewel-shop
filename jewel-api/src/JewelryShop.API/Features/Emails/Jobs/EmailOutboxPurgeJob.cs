@@ -1,11 +1,11 @@
-using JewelryShop.Common.Interfaces;
+using Coravel.Invocable;
 
 namespace JewelryShop.Features.Emails.Jobs;
 
 /// <summary>
 /// Supprime les mails envoyés depuis plus de 30 jours. Les mails en échec définitif sont conservés.
 /// </summary>
-public class EmailOutboxPurgeJob : IPeriodicJob
+public class EmailOutboxPurgeJob : IInvocable, ICancellableInvocable
 {
     public static readonly TimeSpan SentRetention = TimeSpan.FromDays(30);
 
@@ -16,7 +16,7 @@ public class EmailOutboxPurgeJob : IPeriodicJob
         _repository = repository;
     }
 
-    public TimeSpan Interval => TimeSpan.FromHours(1);
+    public CancellationToken CancellationToken { get; set; }
 
-    public Task RunAsync(CancellationToken ct) => _repository.DeleteSentOlderThanAsync(SentRetention, ct);
+    public Task Invoke() => _repository.DeleteSentOlderThanAsync(SentRetention, CancellationToken);
 }

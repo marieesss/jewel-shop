@@ -45,7 +45,7 @@ public class EmailOutboxDispatchJobTests
         var message = SeedPendingMessage();
         var sender = new FakeEmailSender();
 
-        await BuildJob(sender).RunAsync(CancellationToken.None);
+        await BuildJob(sender).Invoke();
 
         Assert.Equal(message.ToEmailMessage(), Assert.Single(sender.Sent));
         Assert.Equal(EmailOutboxStatus.Sent, message.Status);
@@ -57,7 +57,7 @@ public class EmailOutboxDispatchJobTests
     {
         SeedPendingMessage();
 
-        await BuildJob(new FakeEmailSender()).RunAsync(CancellationToken.None);
+        await BuildJob(new FakeEmailSender()).Invoke();
 
         Assert.Equal(1, _repository.TransactionCount);
         Assert.Equal(1, _repository.SaveChangesCount);
@@ -68,7 +68,7 @@ public class EmailOutboxDispatchJobTests
     {
         var message = SeedPendingMessage();
 
-        await BuildJob(UnreachableSender()).RunAsync(CancellationToken.None);
+        await BuildJob(UnreachableSender()).Invoke();
 
         Assert.Equal(EmailOutboxStatus.Pending, message.Status);
         Assert.Equal(1, message.Attempts);
@@ -82,7 +82,7 @@ public class EmailOutboxDispatchJobTests
     {
         var message = SeedPendingMessage(previousFailures: 5);
 
-        await BuildJob(UnreachableSender()).RunAsync(CancellationToken.None);
+        await BuildJob(UnreachableSender()).Invoke();
 
         Assert.Equal(EmailOutboxStatus.Failed, message.Status);
         Assert.Equal(6, message.Attempts);
@@ -94,7 +94,7 @@ public class EmailOutboxDispatchJobTests
         var message = SeedPendingMessage(previousFailures: 5);
         message.Id = 4242;
 
-        await BuildJob(UnreachableSender()).RunAsync(CancellationToken.None);
+        await BuildJob(UnreachableSender()).Invoke();
 
         var entry = Assert.Single(_logger.Entries);
         Assert.Equal(LogLevel.Warning, entry.Level);
@@ -108,7 +108,7 @@ public class EmailOutboxDispatchJobTests
     {
         SeedPendingMessage();
 
-        await BuildJob(UnreachableSender()).RunAsync(CancellationToken.None);
+        await BuildJob(UnreachableSender()).Invoke();
 
         Assert.Empty(_logger.Entries);
     }
@@ -124,7 +124,7 @@ public class EmailOutboxDispatchJobTests
             FailingCalls = 1
         };
 
-        await BuildJob(sender).RunAsync(CancellationToken.None);
+        await BuildJob(sender).Invoke();
 
         Assert.Equal(EmailOutboxStatus.Pending, failing.Status);
         Assert.Equal(EmailOutboxStatus.Sent, next.Status);
@@ -136,7 +136,7 @@ public class EmailOutboxDispatchJobTests
         var message = SeedPendingMessage();
         var sender = new FakeEmailSender();
 
-        await BuildJob(sender, smtpHost: string.Empty).RunAsync(CancellationToken.None);
+        await BuildJob(sender, smtpHost: string.Empty).Invoke();
 
         Assert.Empty(sender.Sent);
         Assert.Equal(EmailOutboxStatus.Pending, message.Status);
@@ -150,7 +150,7 @@ public class EmailOutboxDispatchJobTests
         var message = SeedPendingMessage();
         var sender = new FakeEmailSender();
 
-        await BuildJob(sender, enabled: false).RunAsync(CancellationToken.None);
+        await BuildJob(sender, enabled: false).Invoke();
 
         Assert.Empty(sender.Sent);
         Assert.Equal(EmailOutboxStatus.Pending, message.Status);

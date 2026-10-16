@@ -1,4 +1,5 @@
 using System.Text;
+using Coravel;
 using FluentValidation;
 using JewelryShop.Common;
 using JewelryShop.Common.Behaviors;
@@ -12,7 +13,6 @@ using JewelryShop.Features.Emails.Jobs;
 using JewelryShop.Features.Favorites;
 using JewelryShop.Features.Options;
 using JewelryShop.Features.Users;
-using JewelryShop.Infrastructure.BackgroundJobs;
 using JewelryShop.Infrastructure.Email;
 using JewelryShop.Infrastructure.Middlewares;
 using JewelryShop.Infrastructure.Persistence;
@@ -53,6 +53,7 @@ public static class Startup
     public static void ConfigurePipeline(this WebApplication app)
     {
         WarnIfEmailNotConfigured(app);
+        SchedulePeriodicJobs(app);
 
         app.UseMiddleware<ExceptionHandlingMiddleware>();
 
@@ -225,10 +226,25 @@ public static class Startup
         services.AddSingleton<IEmailTemplateRenderer, ScribanEmailTemplateRenderer>();
         services.AddSingleton(TimeProvider.System);
         services.AddScoped<IEmailQueue, EmailQueue>();
-        services.AddHostedService<PeriodicJobsService>();
-        services.AddScoped<IPeriodicJob, EmailOutboxDispatchJob>();
-        services.AddScoped<IPeriodicJob, EmailOutboxPurgeJob>();
-        services.AddScoped<IPeriodicJob, RefreshTokenPurgeJob>();
+        services.AddScheduler();
+        services.AddTransient<EmailOutboxDispatchJob>();
+        services.AddTransient<EmailOutboxPurgeJob>();
+        services.AddTransient<RefreshTokenPurgeJob>();
+    }
+
+    // Appelé depuis le pipeline, que le mode --migrate n'exécute pas : aucune tâche n'y tourne.
+    // Les tâches tournent dans chaque instance de l'API, sans verrou entre les pods.
+    private static void SchedulePeriodicJobs(WebApplication app)
+    {
+        app.Services.UseScheduler(scheduler =>
+        {
+            scheduler.Schedule<EmailOutboxDispatchJob>()
+                .EveryTenSeconds()
+                .PreventOverlapping(nameof(EmailOutboxDispatchJob));
+            scheduler.Schedule<EmailOutboxPurgeJob>().Hourly().RunOnceAtStart();
+            scheduler.Schedule<RefreshTokenPurgeJob>().Hourly().RunOnceAtStart();
+        })
+        .OnError(ex => app.Logger.LogError(ex, "La tâche périodique a échoué."));
     }
 
     private static void WarnIfEmailNotConfigured(WebApplication app)

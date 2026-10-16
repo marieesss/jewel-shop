@@ -1,10 +1,11 @@
+using Coravel.Invocable;
 using JewelryShop.Common.Interfaces;
 using JewelryShop.Infrastructure.Email;
 using Microsoft.Extensions.Options;
 
 namespace JewelryShop.Features.Emails.Jobs;
 
-public class EmailOutboxDispatchJob : IPeriodicJob
+public class EmailOutboxDispatchJob : IInvocable, ICancellableInvocable
 {
     public const int BatchSize = 20;
 
@@ -28,9 +29,9 @@ public class EmailOutboxDispatchJob : IPeriodicJob
         _logger = logger;
     }
 
-    public TimeSpan Interval => TimeSpan.FromSeconds(10);
+    public CancellationToken CancellationToken { get; set; }
 
-    public async Task RunAsync(CancellationToken ct)
+    public async Task Invoke()
     {
         // Envoi désactivé ou sans SMTP : les mails restent en attente sans consommer de tentative :
         // ils partiront dès que l'envoi sera configuré.
@@ -39,12 +40,12 @@ public class EmailOutboxDispatchJob : IPeriodicJob
 
         await _repository.InTransactionAsync(async () =>
         {
-            var messages = await _repository.LockDueBatchAsync(BatchSize, ct);
+            var messages = await _repository.LockDueBatchAsync(BatchSize, CancellationToken);
             foreach (var message in messages)
-                await SendAsync(message, ct);
+                await SendAsync(message, CancellationToken);
 
-            await _repository.SaveChangesAsync(ct);
-        }, ct);
+            await _repository.SaveChangesAsync(CancellationToken);
+        }, CancellationToken);
     }
 
     private async Task SendAsync(EmailOutboxMessage message, CancellationToken ct)

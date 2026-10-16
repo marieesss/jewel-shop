@@ -10,14 +10,8 @@ public class RefreshTokenPurgeJobTests
     {
         var repository = new FakeRefreshTokenRepository();
 
-        await new RefreshTokenPurgeJob(repository).RunAsync(CancellationToken.None);
+        await new RefreshTokenPurgeJob(repository).Invoke();
 
         Assert.Equal(1, repository.PurgeCount);
-    }
-
-    [Fact]
-    public void S_execute_toutes_les_heures()
-    {
-        Assert.Equal(TimeSpan.FromHours(1), new RefreshTokenPurgeJob(new FakeRefreshTokenRepository()).Interval);
     }
 }
