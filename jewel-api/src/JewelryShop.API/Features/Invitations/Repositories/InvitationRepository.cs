@@ -17,6 +17,22 @@ public class InvitationRepository : Repository<Invitation>, IInvitationRepositor
             .Where(i => i.Email == email && i.Status == InvitationStatus.Pending)
             .ToListAsync(ct);
 
+    public async Task<(IReadOnlyList<Invitation> Items, int TotalCount)> GetPagedAsync(
+        InvitationStatus status, DateTime now, int page, int pageSize, CancellationToken ct)
+    {
+        var query = DbSet.AsNoTracking().WhereEffectiveStatus(status, now);
+
+        var total = await query.CountAsync(ct);
+        var items = await query
+            .OrderByNewest()
+            .Include(i => i.InvitedBy)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(ct);
+
+        return (items, total);
+    }
+
     public Task<int> ExpirePendingAsync(CancellationToken ct)
         => Context.Database.ExecuteSqlAsync(
             $"UPDATE invitations SET status = 'Expired' WHERE status = 'Pending' AND expires_at <= NOW()", ct);

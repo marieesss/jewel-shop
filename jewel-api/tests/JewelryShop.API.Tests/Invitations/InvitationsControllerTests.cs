@@ -1,8 +1,10 @@
 using System.Reflection;
 using JewelryShop.API.Tests.Fakes;
+using JewelryShop.Common;
 using JewelryShop.Features.Invitations.Commands;
 using JewelryShop.Features.Invitations.Controllers;
 using JewelryShop.Features.Invitations.DTOs;
+using JewelryShop.Features.Invitations.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -40,6 +42,18 @@ public class InvitationsControllerTests
         var result = Assert.IsType<ObjectResult>(response);
         Assert.Equal(StatusCodes.Status201Created, result.StatusCode);
         Assert.Same(invitation, result.Value);
+    }
+
+    [Fact]
+    public async Task Liste_les_invitations_avec_le_statut_et_la_pagination_demandes()
+    {
+        var page = new PagedResult<InvitationDto>(new List<InvitationDto>(), 0, 2, 10);
+        _sender.Response = page;
+
+        var response = await _controller.GetAll("Expired", 2, 10, CancellationToken.None);
+
+        Assert.Equal(new GetInvitationsQuery("Expired", 2, 10), _sender.LastRequest);
+        Assert.Same(page, Assert.IsType<OkObjectResult>(response).Value);
     }
 
     [Fact]
