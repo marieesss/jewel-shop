@@ -36,13 +36,29 @@ require POSTGRES_PASSWORD JWT_SECRET CLOUDINARY_CLOUD_NAME CLOUDINARY_API_KEY CL
 apply_secret generic postgres-credentials \
   --from-literal=POSTGRES_PASSWORD="$POSTGRES_PASSWORD"
 
+# Identifiants SMTP (Brevo) facultatifs, hors "require" : sans eux, l'envoi est désactivé et
+# les mails restent en attente dans l'outbox, au lieu d'être tentés sans authentification
+# puis abandonnés. Email__Enabled est dans ce Secret et non dans le ConfigMap api-config,
+# car sa valeur dépend de la présence des identifiants.
+EMAIL_SMTP_USERNAME="${EMAIL_SMTP_USERNAME:-}"
+EMAIL_SMTP_PASSWORD="${EMAIL_SMTP_PASSWORD:-}"
+if [ -n "$EMAIL_SMTP_USERNAME" ] && [ -n "$EMAIL_SMTP_PASSWORD" ]; then
+  EMAIL_ENABLED=true
+else
+  EMAIL_ENABLED=false
+  echo "::warning::secrets EMAIL_SMTP_USERNAME / EMAIL_SMTP_PASSWORD absents ou incomplets ($ENVIRONMENT) : envoi de mails désactivé"
+fi
+
 CONNECTION_STRING="Host=postgres;Port=5432;Database=jewelryshop;Username=jewel;Password=$POSTGRES_PASSWORD"
 apply_secret generic api-secrets \
   --from-literal=ConnectionStrings__DefaultConnection="$CONNECTION_STRING" \
   --from-literal=Jwt__Secret="$JWT_SECRET" \
   --from-literal=Cloudinary__CloudName="$CLOUDINARY_CLOUD_NAME" \
   --from-literal=Cloudinary__ApiKey="$CLOUDINARY_API_KEY" \
-  --from-literal=Cloudinary__ApiSecret="$CLOUDINARY_API_SECRET"
+  --from-literal=Cloudinary__ApiSecret="$CLOUDINARY_API_SECRET" \
+  --from-literal=Email__Enabled="$EMAIL_ENABLED" \
+  --from-literal=Email__Smtp__Username="$EMAIL_SMTP_USERNAME" \
+  --from-literal=Email__Smtp__Password="$EMAIL_SMTP_PASSWORD"
 
 apply_secret docker-registry ghcr-pull \
   --docker-server=ghcr.io \
@@ -50,7 +66,8 @@ apply_secret docker-registry ghcr-pull \
   --docker-password="$GHCR_PULL_TOKEN"
 
 SUM_DB=$(checksum "$POSTGRES_PASSWORD")
-SUM_API=$(checksum "$CONNECTION_STRING" "$JWT_SECRET" "$CLOUDINARY_CLOUD_NAME" "$CLOUDINARY_API_KEY" "$CLOUDINARY_API_SECRET")
+SUM_API=$(checksum "$CONNECTION_STRING" "$JWT_SECRET" "$CLOUDINARY_CLOUD_NAME" "$CLOUDINARY_API_KEY" "$CLOUDINARY_API_SECRET" \
+                   "$EMAIL_ENABLED" "$EMAIL_SMTP_USERNAME" "$EMAIL_SMTP_PASSWORD")
 SUM_PGADMIN=none
 
 # ── Propre à chaque environnement ─────────────────────────────────────────────

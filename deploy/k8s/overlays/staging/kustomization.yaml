@@ -46,3 +46,11 @@ patches:
         value:
           - name: ASPNETCORE_ENVIRONMENT
             value: Staging
+  # URL publique du front, pour construire les liens des mails.
+  - target:
+      kind: ConfigMap
+      name: api-config
+    patch: |-
+      - op: add
+        path: /data/App__FrontendBaseUrl
+        value: https://staging.mycharmly.eu

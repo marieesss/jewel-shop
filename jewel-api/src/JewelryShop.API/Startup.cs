@@ -236,7 +236,7 @@ public static class Startup
         var emailOptions = app.Services.GetRequiredService<IOptions<EmailOptions>>().Value;
         if (!emailOptions.IsConfigured)
             app.Logger.LogWarning(
-                "Envoi de mails non configuré (Email__Smtp__Host vide) : les mails resteront en attente.");
+                "Envoi de mails désactivé ou non configuré (Email__Enabled à false ou Email__Smtp__Host vide) : les mails resteront en attente.");
     }
 
     private static void AddHealthChecks(IServiceCollection services)

@@ -9,15 +9,23 @@ public class EmailOptionsTests
     [InlineData("   ")]
     public void N_est_pas_configure_quand_l_hote_est_vide(string host)
     {
-        var options = new EmailOptions { Smtp = { Host = host } };
+        var options = new EmailOptions { Enabled = true, Smtp = { Host = host } };
 
         Assert.False(options.IsConfigured);
     }
 
     [Fact]
-    public void Est_configure_quand_l_hote_est_renseigne()
+    public void N_est_pas_configure_quand_l_envoi_est_desactive_meme_avec_un_hote()
     {
-        var options = new EmailOptions { Smtp = { Host = "mailpit" } };
+        var options = new EmailOptions { Enabled = false, Smtp = { Host = "mailpit" } };
+
+        Assert.False(options.IsConfigured);
+    }
+
+    [Fact]
+    public void Est_configure_quand_l_envoi_est_active_et_l_hote_renseigne()
+    {
+        var options = new EmailOptions { Enabled = true, Smtp = { Host = "mailpit" } };
 
         Assert.True(options.IsConfigured);
     }
@@ -45,6 +53,7 @@ public class EmailOptionsTests
     {
         var options = new EmailOptions();
 
+        Assert.False(options.Enabled);
         Assert.Equal(1025, options.Smtp.Port);
         Assert.False(options.Smtp.UseSsl);
         Assert.Equal("no-reply@mycharmly.eu", options.FromAddress);

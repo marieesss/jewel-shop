@@ -39,11 +39,14 @@ services:
       Cloudinary__ApiKey: ${CLOUDINARY_API_KEY:?CLOUDINARY_API_KEY manquant dans .env}
       Cloudinary__ApiSecret: ${CLOUDINARY_API_SECRET:?CLOUDINARY_API_SECRET manquant dans .env}
       # Mails envoyés à Mailpit : rien ne part vers l'extérieur, tout se consulte sur http://127.0.0.1:8025.
+      Email__Enabled: "true"
       Email__Smtp__Host: mailpit
       Email__Smtp__Port: "1025"
       Email__Smtp__UseSsl: "false"
       Email__FromAddress: no-reply@mycharmly.eu
       Email__FromName: mycharmly
+      # URL publique du front (passerelle Nginx), pour construire les liens des mails.
+      App__FrontendBaseUrl: http://127.0.0.1:8090
       # Lit X-Forwarded-For / X-Forwarded-Proto envoyés par la passerelle :
       # l'API voit la vraie IP du visiteur et sait que la requête d'origine était en HTTPS.
       ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
