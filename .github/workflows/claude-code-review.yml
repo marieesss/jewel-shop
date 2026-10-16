@@ -95,5 +95,5 @@ jobs:
             - S'il n'y a rien d'important : un seul commentaire « RAS ».
           claude_args: |
             --model claude-sonnet-5-5
-            --max-turns 8
+            --max-turns 20
             --allowedTools "Read,mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*)"
