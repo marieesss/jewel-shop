@@ -8,4 +8,7 @@ public static class EmailTemplates
 {
     /// <summary>Template utilisé seulement par les tests du renderer.</summary>
     public const string Test = "Test";
+
+    /// <summary>Lien de réinitialisation du mot de passe. Modèle : FirstName, ResetUrl.</summary>
+    public const string PasswordReset = "PasswordReset";
 }
