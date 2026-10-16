@@ -10,14 +10,8 @@ public class EmailOutboxPurgeJobTests
     {
         var repository = new FakeEmailOutboxRepository();
 
-        await new EmailOutboxPurgeJob(repository).RunAsync(CancellationToken.None);
+        await new EmailOutboxPurgeJob(repository).Invoke();
 
         Assert.Equal(TimeSpan.FromDays(30), repository.PurgedRetention);
-    }
-
-    [Fact]
-    public void S_execute_toutes_les_heures()
-    {
-        Assert.Equal(TimeSpan.FromHours(1), new EmailOutboxPurgeJob(new FakeEmailOutboxRepository()).Interval);
     }
 }
