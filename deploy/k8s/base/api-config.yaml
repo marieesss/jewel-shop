@@ -11,7 +11,7 @@ metadata:
 data:
   Jwt__Issuer: JewelryShop
   Jwt__Audience: JewelryShop
-  Jwt__ExpiresInDays: "7"
+  Jwt__AccessTokenMinutes: "15"
   # Lit X-Forwarded-For / X-Forwarded-Proto envoyés par Traefik.
   ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
   # Les migrations sont jouées par le Job api-migrate, pas au démarrage de l'API.
