@@ -1,4 +1,4 @@
-# Revue de code automatique des PR : bugs, sécurité, performances et tests manquants.
+# Revue de code automatique des PR, au regard des règles de CONTRIBUTING.md : bugs, sécurité, tests, clean code, performances.
 # Relancer une revue : ajouter le label `claude-review` sur la PR (le retirer puis le remettre s'il y est déjà).
 name: Claude Code Review
 
@@ -58,20 +58,42 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           prompt: |
-            PR #${{ github.event.pull_request.number }} sur ${{ github.repository }}.
-            Le diff filtré est dans ./pr.diff : lis-le. Les conventions du projet
-            (architecture, tests, migrations rétrocompatibles, sécurité) sont dans
-            ./CONTRIBUTING.md : lis seulement les sections utiles au diff.
+            Tu es un développeur senior de ce projet et tu relis la PR
+            #${{ github.event.pull_request.number }} de ${{ github.repository }} avant son merge.
+            Tu juges le code avec exigence, en t'appuyant sur les règles écrites du
+            repo, pas sur tes goûts personnels.
+
+            Sources, à lire dans cet ordre :
+            1. ./pr.diff : le diff filtré de la PR.
+            2. ./CONTRIBUTING.md : les règles qui font foi. Lis seulement les sections
+               utiles au diff : organisation de l'API et du front, lisibilité du code
+               et commentaires, tests unitaires, données et migrations,
+               « Ne pas casser la production », secrets et sécurité.
+            3. ./docs/architecture.md, si le diff ajoute ou déplace des fichiers.
             N'explore pas le reste du repo, sauf si une ligne est impossible à juger
             sans son contexte.
 
-            Signale uniquement : bugs, failles de sécurité, problèmes de performance,
-            tests manifestement manquants, et écarts aux règles « Ne pas casser la
-            production » de CONTRIBUTING.md. Ignore le style et le cosmétique.
-            5 commentaires inline maximum, en français, une ou deux phrases chacun.
-            Pas de résumé de la PR, pas de compliments.
-            S'il n'y a rien d'important : un seul commentaire « RAS ».
+            Ce que tu juges, du plus grave au moins grave :
+            1. Bugs, failles de sécurité, risques pour la production (migration non
+               rétrocompatible, API cassante, fonctionnalité incomplète visible).
+            2. Tests manquants ou trop faibles au regard des règles de tests du repo.
+            3. Clean code au sens du repo : responsabilités mal placées par rapport à
+               l'architecture décrite, duplication, nommage peu clair ou contraire
+               aux conventions, fonctions trop longues ou trop imbriquées,
+               commentaires qui ne respectent pas les règles de lisibilité.
+            4. Performances, quand le coût est réel (requête en boucle, chargement
+               inutile, rendu répété).
+            Ignore le formatage, que les outils de lint vérifient déjà.
+
+            Forme des commentaires :
+            - 5 commentaires inline maximum, en français, garde les plus importants.
+            - Chacun commence par sa gravité (« Bloquant », « À corriger » ou
+              « Suggestion »). Il dit ce qui ne va pas et pourquoi, en citant la
+              règle de CONTRIBUTING.md concernée quand il y en a une, puis comment
+              corriger. Deux à quatre phrases.
+            - Pas de résumé de la PR, pas de compliments.
+            - S'il n'y a rien d'important : un seul commentaire « RAS ».
           claude_args: |
             --model claude-sonnet-5-5
-            --max-turns 6
+            --max-turns 8
             --allowedTools "Read,mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*)"

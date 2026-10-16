@@ -365,7 +365,7 @@ Sur chaque PR, la CI exécute :
 
 Ces deux jobs, `API (.NET)` et `Front (React)`, sont obligatoires pour merger sur `main`.
 
-Une **revue de code automatique** (`claude-code-review.yml`) commente aussi la PR : au maximum 5 remarques sur les bugs, la sécurité, les performances, les tests manquants et les règles « Ne pas casser la production ». Elle ne bloque pas le merge.
+Une **revue de code automatique** (`claude-code-review.yml`) commente aussi la PR comme le ferait un développeur senior, en s'appuyant sur les règles de ce fichier et sur `docs/architecture.md`. Elle signale au maximum 5 points, du plus grave au moins grave : bugs, sécurité et risques pour la production, tests manquants, clean code (architecture, nommage, duplication, lisibilité), puis performances. Chaque remarque est classée « Bloquant », « À corriger » ou « Suggestion ». Elle ne bloque pas le merge.
 
 - Elle se lance à l'ouverture de la PR et quand elle sort du brouillon, pas à chaque push.
 - Pour la relancer après des corrections, ajoutez le label `claude-review` (retirez-le puis remettez-le s'il y est déjà).
