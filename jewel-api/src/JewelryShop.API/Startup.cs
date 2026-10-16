@@ -233,6 +233,7 @@ public static class Startup
         services.AddTransient<EmailOutboxDispatchJob>();
         services.AddTransient<EmailOutboxPurgeJob>();
         services.AddTransient<RefreshTokenPurgeJob>();
+        services.AddTransient<PasswordResetTokenPurgeJob>();
     }
 
     // Appelé depuis le pipeline, que le mode --migrate n'exécute pas : aucune tâche n'y tourne.
@@ -246,6 +247,7 @@ public static class Startup
                 .PreventOverlapping(nameof(EmailOutboxDispatchJob));
             scheduler.Schedule<EmailOutboxPurgeJob>().Hourly().RunOnceAtStart();
             scheduler.Schedule<RefreshTokenPurgeJob>().Hourly().RunOnceAtStart();
+            scheduler.Schedule<PasswordResetTokenPurgeJob>().Hourly().RunOnceAtStart();
         })
         .OnError(ex => app.Logger.LogError(ex, "La tâche périodique a échoué."));
     }
