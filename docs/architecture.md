@@ -211,15 +211,16 @@ src/
 ├── api/          # client axios, intercepteurs d'auth (Bearer, refresh sur 401), une fonction par endpoint, types des DTO
 ├── stores/       # MobX : AuthStore, ProductAdminStore, FavoritesStore, RootStore + hooks d'accès
 ├── routes/       # guards.tsx : ProtectedRoute, AdminRoute
-├── pages/        # pages routées : AuthPage, user/, admin/
+├── pages/        # pages routées : AuthPage, ForgotPasswordPage, ResetPasswordPage, user/, admin/
 ├── features/     # composants métier : admin/, auth/, products/, favorites/, user/
 ├── components/ui # composants génériques (Button, TextField, Pagination…)
 ├── hooks/        # useAsync
 └── lib/          # cn, format, returnUrl (redirection après connexion), sessionExpired (message à la connexion),
-                  # passwordPolicy (règles du mot de passe, identiques au back)
+                  # passwordPolicy (règles du mot de passe, identiques au back), emailValidation,
+                  # passwordReset (messages et erreur de lien), loginMessage (confirmation à la connexion)
 ```
 
-- Routage déclaré dans `App.tsx`. `/login` est public. L'espace client (`/charms`, `/chains`, `/favorites`) exige une session. `/admin/...` exige le rôle `Admin`.
+- Routage déclaré dans `App.tsx`. `/login`, `/forgot-password` et `/reset-password` sont publics. L'espace client (`/charms`, `/chains`, `/favorites`) exige une session. `/admin/...` exige le rôle `Admin`.
 - **Stockage du token** : l'access token (JWT), l'identifiant et le rôle sont gardés **en mémoire** dans `AuthStore`, jamais dans `localStorage` ni `sessionStorage`. Le refresh token reste dans son cookie `httpOnly`, illisible par le JavaScript. L'ancien token `jewelryshop_token` est retiré de `localStorage` au démarrage.
   - **Au chargement**, `AuthStore.restoreSession()` appelle `POST /api/auth/refresh`. Tant que la restauration n'est pas finie (`initializing`), `ProtectedRoute` et `AdminRoute` affichent un `Spinner` au lieu de rediriger. Un échec laisse le visiteur déconnecté, sans message.
   - **Sur un 401** (hors `login`, `register`, `refresh` et `logout`), l'intercepteur de `api/authInterceptors.ts` rafraîchit la session puis rejoue la requête une seule fois. Une requête partie avec un token déjà renouvelé est rejouée sans nouveau refresh.
@@ -227,7 +228,8 @@ src/
   - **Échec du refresh** : `AuthStore.expireSession()` vide la session et pose `sessionExpired` ; les guards redirigent vers `/login?returnUrl=…` avec l'état de navigation `{ sessionExpired: true }`, et la page de connexion affiche « Votre session a expiré. Veuillez vous reconnecter. ».
   - **Déconnexion** : `AuthStore.logout()` appelle `POST /api/auth/logout` (erreur ignorée), puis vide la session.
 - `VITE_API_URL` est figée **au build**. Vide en production : URL relatives.
-- Les validations de formulaire reprennent celles du back (`features/products/productForm.ts`, `lib/passwordPolicy.ts`).
+- **Mot de passe oublié** : « Mot de passe oublié ? » mène à `/forgot-password`, qui affiche le même message de confirmation que l'email soit inscrit ou non. Le lien du mail ouvre `/reset-password?token=…`. Sans token, ou si l'API refuse le token (400 sur la clé `Token`), la page affiche « Ce lien de réinitialisation est invalide ou a expiré. » et un lien vers `/forgot-password`. Après un 204, elle redirige vers `/login` avec l'état de navigation `{ message }`, affiché en succès au-dessus du formulaire de connexion. Ces pages restent accessibles avec une session ouverte.
+- Les validations de formulaire reprennent celles du back (`features/products/productForm.ts`, `lib/passwordPolicy.ts`, `lib/emailValidation.ts`).
 
 ---
 

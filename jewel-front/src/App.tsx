@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { StoreProvider, rootStore } from './stores/context';
 import { ProtectedRoute, AdminRoute } from './routes/guards';
 import { AuthPage } from './pages/AuthPage';
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
+import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { UserLayout } from './features/user/UserLayout';
 import { UserProductListPage } from './pages/user/UserProductListPage';
 import { UserProductDetailPage } from './pages/user/UserProductDetailPage';
@@ -20,6 +22,8 @@ export default function App() {
         <Routes>
           {/* Public */}
           <Route path="/login" element={<AuthPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
 
           {/* Espace utilisateur connecté (navbar horizontale) */}
           <Route element={<ProtectedRoute />}>
