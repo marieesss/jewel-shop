@@ -1,12 +1,14 @@
 import { useState, type FormEvent } from 'react';
 import { observer } from 'mobx-react-lite';
-import { Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../stores/context';
 import { postLoginPath } from '../lib/returnUrl';
 import { SESSION_EXPIRED_MESSAGE, isSessionExpiredState } from '../lib/sessionExpired';
+import { loginMessageOf } from '../lib/loginMessage';
 import { validatePassword } from '../lib/passwordPolicy';
 import { PasswordRules } from '../features/auth/PasswordRules';
 import { FormInput } from '../components/FormInput';
+import { Alert } from '../components/ui/Alert';
 import { AuthLayout } from '../features/auth/AuthLayout';
 import { MailIcon, LockIcon, UserIcon, CalendarIcon } from '../components/icons';
 
@@ -74,6 +76,7 @@ export const AuthPage = observer(function AuthPage() {
     ? SESSION_EXPIRED_MESSAGE
     : null;
   const errorMessage = localError ?? auth.error ?? sessionExpiredMessage;
+  const confirmationMessage = mode === 'login' ? loginMessageOf(location.state) : null;
 
   // Déjà connecté : on ne réaffiche pas le formulaire.
   if (auth.isAuthenticated) {
@@ -109,6 +112,12 @@ export const AuthPage = observer(function AuthPage() {
             : 'Commencez à créer vos bijoux uniques'}
         </p>
       </div>
+
+      {confirmationMessage && (
+        <Alert variant="success" className="mb-[18px]">
+          {confirmationMessage}
+        </Alert>
+      )}
 
       {/* Carte formulaire */}
       <form
@@ -201,12 +210,12 @@ export const AuthPage = observer(function AuthPage() {
 
         {mode === 'login' && (
           <div className="mt-2 text-right">
-            <button
-              type="button"
+            <Link
+              to="/forgot-password"
               className="font-body text-xs font-medium text-fuchsia transition-opacity hover:opacity-70"
             >
               Mot de passe oublié ?
-            </button>
+            </Link>
           </div>
         )}
 

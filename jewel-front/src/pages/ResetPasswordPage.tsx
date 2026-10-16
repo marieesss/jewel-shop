@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { resetPassword } from '../api/auth';
 import { extractApiError } from '../api/errors';
 import { validatePassword } from '../lib/passwordPolicy';
+import type { LoginMessageState } from '../lib/loginMessage';
 import {
   INVALID_RESET_TOKEN_MESSAGE,
   PASSWORD_MISMATCH_MESSAGE,
@@ -60,7 +61,8 @@ export function ResetPasswordPage() {
     setLoading(true);
     try {
       await resetPassword(token, password);
-      navigate('/login', { replace: true, state: { message: PASSWORD_RESET_SUCCESS_MESSAGE } });
+      const state: LoginMessageState = { message: PASSWORD_RESET_SUCCESS_MESSAGE };
+      navigate('/login', { replace: true, state });
     } catch (err) {
       if (isInvalidResetTokenError(err)) {
         setTokenRejected(true);
