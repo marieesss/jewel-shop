@@ -37,11 +37,9 @@ public class CreationsController : ApiControllerBase
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Create([FromBody] CreateCreationRequest request, CancellationToken ct)
+    public async Task<IActionResult> Create([FromBody] CreateCreationCommand command, CancellationToken ct)
     {
-        var items = request.Items.Select(i => new CreateCreationItemInput(i.CharmId, i.Position)).ToList();
-        var command = new CreateCreationCommand(GetUserId(), request.ChainId, request.OptionId, items);
-        var result = await Sender.Send(command, ct);
+        var result = await Sender.Send(command with { UserId = GetUserId() }, ct);
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
@@ -56,12 +54,3 @@ public class CreationsController : ApiControllerBase
         return NoContent();
     }
 }
-
-// ── Request DTOs ─────────────────────────────────────────────────────────────
-
-public record CreationItemRequest(long CharmId, int Position);
-
-public record CreateCreationRequest(
-    long ChainId,
-    long OptionId,
-    IReadOnlyList<CreationItemRequest> Items);

@@ -41,11 +41,8 @@ public class CharmsController : ApiControllerBase
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Create([FromBody] CreateCharmRequest request, CancellationToken ct)
+    public async Task<IActionResult> Create([FromBody] CreateCharmCommand command, CancellationToken ct)
     {
-        var command = new CreateCharmCommand(
-            request.Name, request.Description, request.Color,
-            request.Cost, request.Price, request.Stock, request.Url);
         var result = await Sender.Send(command, ct);
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
@@ -55,12 +52,9 @@ public class CharmsController : ApiControllerBase
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Update(long id, [FromBody] UpdateCharmRequest request, CancellationToken ct)
+    public async Task<IActionResult> Update(long id, [FromBody] UpdateCharmCommand command, CancellationToken ct)
     {
-        var command = new UpdateCharmCommand(
-            id, request.Name, request.Description, request.Color,
-            request.Cost, request.Price, request.Stock, request.Url);
-        var result = await Sender.Send(command, ct);
+        var result = await Sender.Send(command with { Id = id }, ct);
         return Ok(result);
     }
 
@@ -90,23 +84,3 @@ public class CharmsController : ApiControllerBase
         return Ok(new { imageUrl });
     }
 }
-
-// ── Request DTOs ─────────────────────────────────────────────────────────────
-
-public record CreateCharmRequest(
-    string Name,
-    string Description,
-    ProductColor Color,
-    decimal Cost,
-    decimal Price,
-    int Stock,
-    string? Url = null);
-
-public record UpdateCharmRequest(
-    string Name,
-    string Description,
-    ProductColor Color,
-    decimal Cost,
-    decimal Price,
-    int Stock,
-    string? Url = null);
