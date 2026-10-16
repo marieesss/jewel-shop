@@ -4,8 +4,10 @@ import { forgotPassword } from '../api/auth';
 import { extractApiError } from '../api/errors';
 import { validateEmail } from '../lib/emailValidation';
 import { FORGOT_PASSWORD_SENT_MESSAGE } from '../lib/passwordReset';
+import { AuthHeader } from '../features/auth/AuthHeader';
 import { AuthLayout } from '../features/auth/AuthLayout';
 import { Alert } from '../components/ui/Alert';
+import { Button } from '../components/ui/Button';
 import { FormInput } from '../components/FormInput';
 import { MailIcon } from '../components/icons';
 
@@ -19,7 +21,9 @@ export function ForgotPasswordPage() {
     e.preventDefault();
     setError(null);
 
-    const [firstEmailError] = validateEmail(email);
+    // L'API reçoit l'email nettoyé : on valide donc cette même valeur.
+    const trimmedEmail = email.trim();
+    const [firstEmailError] = validateEmail(trimmedEmail);
     if (firstEmailError) {
       setError(firstEmailError);
       return;
@@ -27,7 +31,7 @@ export function ForgotPasswordPage() {
 
     setLoading(true);
     try {
-      await forgotPassword(email);
+      await forgotPassword(trimmedEmail);
       setSent(true);
     } catch (err) {
       setError(extractApiError(err));
@@ -38,14 +42,10 @@ export function ForgotPasswordPage() {
 
   return (
     <AuthLayout>
-      <div className="mb-7">
-        <h2 className="mb-1.5 font-comfortaa text-[36px] font-light leading-[1.15] text-storm">
-          Mot de passe oublié
-        </h2>
-        <p className="font-display text-base italic text-slate">
-          Recevez un lien pour choisir un nouveau mot de passe
-        </p>
-      </div>
+      <AuthHeader
+        title="Mot de passe oublié"
+        subtitle="Recevez un lien pour choisir un nouveau mot de passe"
+      />
 
       {sent ? (
         <Alert variant="success">{FORGOT_PASSWORD_SENT_MESSAGE}</Alert>
@@ -67,13 +67,9 @@ export function ForgotPasswordPage() {
 
           {error && <Alert className="mt-[18px]">{error}</Alert>}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="relative mt-6 w-full overflow-hidden rounded-xl bg-storm py-[14px] font-body text-sm font-medium tracking-[0.04em] text-white shadow-btn transition-all duration-300 hover:-translate-y-0.5 hover:shadow-btn-hover disabled:cursor-wait disabled:opacity-75 disabled:hover:translate-y-0 disabled:hover:shadow-btn"
-          >
+          <Button type="submit" fullWidth loading={loading} className="mt-6">
             {loading ? 'Veuillez patienter…' : 'Envoyer le lien'}
-          </button>
+          </Button>
         </form>
       )}
 

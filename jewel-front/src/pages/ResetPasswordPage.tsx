@@ -10,9 +10,11 @@ import {
   PASSWORD_RESET_SUCCESS_MESSAGE,
   isInvalidResetTokenError,
 } from '../lib/passwordReset';
+import { AuthHeader } from '../features/auth/AuthHeader';
 import { AuthLayout } from '../features/auth/AuthLayout';
-import { PasswordRules } from '../features/auth/PasswordRules';
+import { PasswordField } from '../features/auth/PasswordField';
 import { Alert } from '../components/ui/Alert';
+import { Button } from '../components/ui/Button';
 import { FormInput } from '../components/FormInput';
 import { LockIcon } from '../components/icons';
 
@@ -77,14 +79,10 @@ export function ResetPasswordPage() {
 
   return (
     <AuthLayout>
-      <div className="mb-7">
-        <h2 className="mb-1.5 font-comfortaa text-[36px] font-light leading-[1.15] text-storm">
-          Nouveau mot de passe
-        </h2>
-        <p className="font-display text-base italic text-slate">
-          Choisissez le mot de passe de votre compte
-        </p>
-      </div>
+      <AuthHeader
+        title="Nouveau mot de passe"
+        subtitle="Choisissez le mot de passe de votre compte"
+      />
 
       {isLinkInvalid ? (
         <InvalidResetLink />
@@ -95,25 +93,14 @@ export function ResetPasswordPage() {
           className="rounded-[20px] border border-white/60 bg-white/70 px-6 py-7 shadow-card backdrop-blur-[20px]"
         >
           <div className="flex flex-col gap-[18px]">
-            <div>
-              <FormInput
-                label="Nouveau mot de passe"
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={setPassword}
-                placeholder="••••••••"
-                icon={<LockIcon />}
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="mt-1 py-0.5 font-body text-[11px] text-slate transition-colors hover:text-fuchsia"
-              >
-                {showPassword ? 'Masquer' : 'Afficher'}
-              </button>
-              <PasswordRules password={password} />
-            </div>
+            <PasswordField
+              label="Nouveau mot de passe"
+              value={password}
+              onChange={setPassword}
+              visible={showPassword}
+              onToggleVisible={() => setShowPassword(!showPassword)}
+              showRules
+            />
 
             <FormInput
               label="Confirmer le mot de passe"
@@ -129,13 +116,9 @@ export function ResetPasswordPage() {
 
           {error && <Alert className="mt-[18px]">{error}</Alert>}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="relative mt-6 w-full overflow-hidden rounded-xl bg-storm py-[14px] font-body text-sm font-medium tracking-[0.04em] text-white shadow-btn transition-all duration-300 hover:-translate-y-0.5 hover:shadow-btn-hover disabled:cursor-wait disabled:opacity-75 disabled:hover:translate-y-0 disabled:hover:shadow-btn"
-          >
+          <Button type="submit" fullWidth loading={loading} className="mt-6">
             {loading ? 'Veuillez patienter…' : 'Modifier le mot de passe'}
-          </button>
+          </Button>
         </form>
       )}
     </AuthLayout>

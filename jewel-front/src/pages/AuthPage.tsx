@@ -6,7 +6,8 @@ import { postLoginPath } from '../lib/returnUrl';
 import { SESSION_EXPIRED_MESSAGE, isSessionExpiredState } from '../lib/sessionExpired';
 import { loginMessageOf } from '../lib/loginMessage';
 import { validatePassword } from '../lib/passwordPolicy';
-import { PasswordRules } from '../features/auth/PasswordRules';
+import { AuthHeader } from '../features/auth/AuthHeader';
+import { PasswordField } from '../features/auth/PasswordField';
 import { FormInput } from '../components/FormInput';
 import { Alert } from '../components/ui/Alert';
 import { AuthLayout } from '../features/auth/AuthLayout';
@@ -102,16 +103,14 @@ export const AuthPage = observer(function AuthPage() {
       </div>
 
       {/* En-tête */}
-      <div className="mb-7">
-        <h2 className="mb-1.5 font-comfortaa text-[36px] font-light leading-[1.15] text-storm">
-          {mode === 'login' ? 'Bon retour' : 'Rejoignez-nous'}
-        </h2>
-        <p className="font-display text-base italic text-slate">
-          {mode === 'login'
+      <AuthHeader
+        title={mode === 'login' ? 'Bon retour' : 'Rejoignez-nous'}
+        subtitle={
+          mode === 'login'
             ? 'Retrouvez vos créations et favoris'
-            : 'Commencez à créer vos bijoux uniques'}
-        </p>
-      </div>
+            : 'Commencez à créer vos bijoux uniques'
+        }
+      />
 
       {confirmationMessage && (
         <Alert variant="success" className="mb-[18px]">
@@ -163,26 +162,15 @@ export const AuthPage = observer(function AuthPage() {
             required
           />
 
-          <div>
-            <FormInput
-              label="Mot de passe"
-              type={showPassword ? 'text' : 'password'}
-              value={password}
-              onChange={setPassword}
-              placeholder="••••••••"
-              icon={<LockIcon />}
-              delay={mode === 'register' ? 0.15 : 0.05}
-              required
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="mt-1 py-0.5 font-body text-[11px] text-slate transition-colors hover:text-fuchsia"
-            >
-              {showPassword ? 'Masquer' : 'Afficher'}
-            </button>
-            {mode === 'register' && <PasswordRules password={password} />}
-          </div>
+          <PasswordField
+            label="Mot de passe"
+            value={password}
+            onChange={setPassword}
+            visible={showPassword}
+            onToggleVisible={() => setShowPassword(!showPassword)}
+            delay={mode === 'register' ? 0.15 : 0.05}
+            showRules={mode === 'register'}
+          />
 
           {mode === 'register' && (
             <>
