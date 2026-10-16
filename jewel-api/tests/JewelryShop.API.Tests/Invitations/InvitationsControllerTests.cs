@@ -57,6 +57,15 @@ public class InvitationsControllerTests
     }
 
     [Fact]
+    public async Task Revoque_l_invitation_demandee_et_repond_204()
+    {
+        var response = await _controller.Revoke(3, CancellationToken.None);
+
+        Assert.Equal(new RevokeInvitationCommand(3), _sender.LastRequest);
+        Assert.IsType<NoContentResult>(response);
+    }
+
+    [Fact]
     public async Task Liste_les_invitations_avec_le_statut_et_la_pagination_demandes()
     {
         var page = new PagedResult<InvitationDto>(new List<InvitationDto>(), 0, 2, 10);

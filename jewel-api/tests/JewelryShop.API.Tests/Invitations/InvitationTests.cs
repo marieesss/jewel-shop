@@ -81,4 +81,16 @@ public class InvitationTests
         Assert.Null(invitation.RevokedAt);
         Assert.Equal(_now.AddDays(-20), invitation.CreatedAt);
     }
+
+    [Fact]
+    public void Revoquee_garde_sa_date_de_revocation_et_n_attend_plus_d_acceptation()
+    {
+        var invitation = CreatePending();
+
+        invitation.Revoke(_now.AddDays(1));
+
+        Assert.Equal(InvitationStatus.Revoked, invitation.Status);
+        Assert.Equal(_now.AddDays(1), invitation.RevokedAt);
+        Assert.False(invitation.IsAwaitingAcceptance(_now.AddDays(1)));
+    }
 }

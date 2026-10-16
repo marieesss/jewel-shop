@@ -57,4 +57,11 @@ public class Invitation : BaseEntity
         ExpiresAt = now + InvitationDefaults.Lifetime;
         RevokedAt = null;
     }
+
+    /// <summary>Révoque l'invitation sans la supprimer : son lien ne fonctionne plus.</summary>
+    public void Revoke(DateTime now)
+    {
+        Status = InvitationStatus.Revoked;
+        RevokedAt = now;
+    }
 }

@@ -52,4 +52,17 @@ public class InvitationsController : ApiControllerBase
         var result = await Sender.Send(new ResendInvitationCommand(id), ct);
         return Ok(result);
     }
+
+    /// <summary>Révoque une invitation en attente ou expirée, qui reste dans l'historique. [Admin]</summary>
+    [HttpPost("{id:long}/revoke")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Revoke(long id, CancellationToken ct)
+    {
+        await Sender.Send(new RevokeInvitationCommand(id), ct);
+        return NoContent();
+    }
 }
