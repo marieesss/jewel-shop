@@ -202,6 +202,7 @@ public static class Startup
         services.AddScoped<IOptionRepository, OptionRepository>();
         services.AddScoped<IEmailOutboxRepository, EmailOutboxRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+        services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
     }
 
     private static void AddApplication(IServiceCollection services)
