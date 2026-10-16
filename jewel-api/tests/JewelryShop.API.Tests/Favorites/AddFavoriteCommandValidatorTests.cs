@@ -1,4 +1,5 @@
 using JewelryShop.Features.Favorites.Commands;
+using JewelryShop.Features.Favorites.Validators;
 
 namespace JewelryShop.API.Tests.Favorites;
 

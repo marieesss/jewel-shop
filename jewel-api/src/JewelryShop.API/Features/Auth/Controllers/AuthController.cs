@@ -12,9 +12,8 @@ public class AuthController : ApiControllerBase
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken ct)
+    public async Task<IActionResult> Register([FromBody] RegisterCommand command, CancellationToken ct)
     {
-        var command = new RegisterCommand(request.Name, request.Surname, request.Email, request.Password, request.Birthday);
         var result = await Sender.Send(command, ct);
         RefreshTokenCookie.Append(Response, result.RefreshToken);
         return CreatedAtAction(nameof(Register), result.Response);
@@ -24,9 +23,8 @@ public class AuthController : ApiControllerBase
     [HttpPost("login")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken ct)
+    public async Task<IActionResult> Login([FromBody] LoginCommand command, CancellationToken ct)
     {
-        var command = new LoginCommand(request.Email, request.Password);
         var result = await Sender.Send(command, ct);
         RefreshTokenCookie.Append(Response, result.RefreshToken);
         return Ok(result.Response);
@@ -63,14 +61,3 @@ public class AuthController : ApiControllerBase
         return NoContent();
     }
 }
-
-// ── Request DTOs ─────────────────────────────────────────────────────────────
-
-public record RegisterRequest(
-    string Name,
-    string Surname,
-    string Email,
-    string Password,
-    DateOnly? Birthday);
-
-public record LoginRequest(string Email, string Password);

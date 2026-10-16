@@ -42,13 +42,15 @@ src/JewelryShop.API/
 ├── Startup.cs                     # injection de dépendances et pipeline HTTP
 ├── Common/                        # ApiControllerBase, BaseEntity, PagedResult, exceptions,
 │                                  # ValidationBehavior, Repository<T>, interfaces de services
-├── Features/<Fonctionnalité>/     # Entities/, Repositories/, Controllers/, Commands/, Queries/, DTOs/
+├── Features/<Fonctionnalité>/     # Entities/, Repositories/, Controllers/, Commands/, Queries/,
+│                                  # Validators/, DTOs/, Common/ (code partagé de la fonctionnalité)
 └── Infrastructure/
     ├── BackgroundJobs/            # PeriodicJobsService (planificateur des IPeriodicJob)
     ├── Middlewares/               # ExceptionHandlingMiddleware
     ├── Email/                     # EmailOptions, SmtpEmailSender (MailKit), ScribanEmailTemplateRenderer, EmailQueue, Templates/
     ├── Persistence/               # AppDbContext, Configurations/ (mapping EF)
-    └── Services/                  # JwtService, BcryptPasswordHasher, SecureTokenGenerator, CloudinaryFileStorageService
+    └── Services/                  # JwtService, BcryptPasswordHasher, SecureTokenGenerator, RefreshTokenService,
+                                   # CloudinaryFileStorageService
 ```
 
 Fonctionnalités existantes : `Auth`, `Admin`, `Users`, `Chains`, `Charms`, `Favorites`, `Creations`, `Options`, `Emails` (outbox, sans endpoint).
@@ -84,14 +86,14 @@ sequenceDiagram
 
 ### Refresh tokens
 
-- **Cookie** `refresh_token` (`RefreshTokenCookie`) : `HttpOnly`, `Secure`, `SameSite=Strict`, `Path=/api/auth`, `Max-Age` de 30 jours. Le refresh token n'apparaît jamais dans un corps de réponse : les handlers renvoient un `AuthResult` interne et le controller pose le cookie. `localhost` et `127.0.0.1` étant des contextes sécurisés, le cookie `Secure` fonctionne aussi en local en HTTP. La politique CORS autorise les credentials, pour que le front appelle l'API en dev sur un autre port.
+- **Cookie** `refresh_token` (`RefreshTokenCookie`) : `HttpOnly`, `Secure`, `SameSite=Strict`, `Path=/api/auth`, `Max-Age` de 30 jours. Le refresh token n'apparaît jamais dans un corps de réponse : les handlers renvoient un record interne (`RegisterResult`, `LoginResult` ou `RefreshSessionResult`, dérivés de l'`AuthResult` abstrait de `Features/Auth/Common/`), et le controller pose le cookie. `localhost` et `127.0.0.1` étant des contextes sécurisés, le cookie `Secure` fonctionne aussi en local en HTTP. La politique CORS autorise les credentials, pour que le front appelle l'API en dev sur un autre port.
 - **Endpoints** (anonymes, sans corps) :
   - `POST /api/auth/refresh` : 200 avec un nouvel `AuthResponse` et un nouveau cookie (rotation). 401 « Votre session a expiré. Veuillez vous reconnecter. » si le cookie est absent, inconnu, expiré, révoqué ou réutilisé : le cookie est alors supprimé ;
   - `POST /api/auth/logout` : 204. Révoque le token s'il est actif et supprime le cookie dans tous les cas.
 - Le front les utilise pour garder la session ouverte (voir « Stockage du token » dans la partie Front).
 
 - **Tokens opaques** : `ISecureTokenGenerator` (`SecureTokenGenerator`, singleton) génère 32 octets aléatoires en base64url (43 caractères) et les hache en SHA-256 hexadécimal. Seul le hash est stocké dans `refresh_tokens.token_hash`. Le token en clair n'est ni enregistré ni journalisé. Le même générateur servira à la réinitialisation du mot de passe (#33) et aux invitations (#35).
-- **`IRefreshTokenService`** (`Features/Auth/`) :
+- **`IRefreshTokenService`** (`Infrastructure/Services/`) :
   - `Issue(user)` ajoute un token valable 30 jours (`RefreshTokenDefaults.Lifetime`), **sans sauvegarder** : il est enregistré par le `SaveChangesAsync` de l'appelant ;
   - `RotateAsync(token)` marque le token comme tourné (`rotated_at`), en émet un nouveau valable 30 jours à partir de maintenant (expiration glissante), puis sauvegarde ;
   - `RevokeAsync(token)` révoque un token actif et sauvegarde ;
@@ -281,7 +283,7 @@ Le retour arrière remet l'ancienne version du code, **pas l'ancien schéma** : 
 | Sujet | Impact sur l'architecture |
 |---|---|
 | Service d'email | Fait : interface `IEmailSender` et envoi SMTP `SmtpEmailSender` (Mailpit en dev ; relais SMTP de Brevo en staging et en production, activé par `Email__Enabled`). Templates Scriban côté back (`IEmailTemplateRenderer`). Table **outbox** et `PeriodicJobsService` d'envoi : premier traitement asynchrone de l'API. Flux sortant vers Brevo (port 587) : l'API n'a pas de NetworkPolicy de sortie, aucune règle n'est nécessaire. |
-| Politique de mot de passe | Fait côté back : la règle FluentValidation réutilisable `PasswordPolicy()` (`Features/Auth/Validation/PasswordPolicyRules.cs`) est appliquée à l'inscription, et le sera à la réinitialisation. La connexion ne l'applique pas, pour ne pas bloquer les comptes existants. Le front reprend les mêmes règles et messages (`lib/passwordPolicy.ts`) et les affiche cochées en direct à l'inscription (`features/auth/PasswordRules`). |
+| Politique de mot de passe | Fait côté back : la règle FluentValidation réutilisable `PasswordPolicy()` (`Features/Auth/Validators/PasswordPolicyRules.cs`) est appliquée à l'inscription, et le sera à la réinitialisation. La connexion ne l'applique pas, pour ne pas bloquer les comptes existants. Le front reprend les mêmes règles et messages (`lib/passwordPolicy.ts`) et les affiche cochées en direct à l'inscription (`features/auth/PasswordRules`). |
 | Refresh token | Fait : access token JWT de 15 min (au lieu de 7 jours). Nouvelle table de refresh tokens hachés, cookie `httpOnly` `Secure` `SameSite=Strict`, rotation et détection de réutilisation. Fait côté front : access token en mémoire, intercepteur axios (401 → refresh → rejeu, un seul refresh à la fois, verrou Web Locks entre onglets), restauration de la session au chargement. |
 | Protection des routes front | Fait : les guards `ProtectedRoute` / `AdminRoute` redirigent vers `/login?returnUrl=…`, et `AuthPage` renvoie sur la page demandée après connexion si le chemin est interne et autorisé pour le rôle. |
 | Mot de passe oublié | Table de tokens de réinitialisation hachés, à usage unique. Révocation des refresh tokens. |

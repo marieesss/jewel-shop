@@ -1,7 +1,6 @@
 using JewelryShop.API.Tests.Fakes;
 using JewelryShop.Common.Enums;
 using JewelryShop.Common.Exceptions;
-using JewelryShop.Features.Auth;
 using JewelryShop.Features.Auth.Commands;
 using JewelryShop.Features.Auth.Entities;
 using JewelryShop.Features.Users.Entities;
@@ -25,7 +24,7 @@ public class RefreshSessionCommandHandlerTests
         _handler = new RefreshSessionCommandHandler(_refreshTokens, new FakeJwtService());
     }
 
-    private Task<AuthResult> RefreshAsync(string? token)
+    private Task<RefreshSessionResult> RefreshAsync(string? token)
         => _handler.Handle(new RefreshSessionCommand(token), CancellationToken.None);
 
     [Fact]

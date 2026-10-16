@@ -39,11 +39,8 @@ public class ChainsController : ApiControllerBase
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Create([FromBody] CreateChainRequest request, CancellationToken ct)
+    public async Task<IActionResult> Create([FromBody] CreateChainCommand command, CancellationToken ct)
     {
-        var command = new CreateChainCommand(
-            request.Name, request.Description, request.Color,
-            request.Cost, request.Price, request.Length, request.Url);
         var result = await Sender.Send(command, ct);
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
@@ -53,12 +50,9 @@ public class ChainsController : ApiControllerBase
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Update(long id, [FromBody] UpdateChainRequest request, CancellationToken ct)
+    public async Task<IActionResult> Update(long id, [FromBody] UpdateChainCommand command, CancellationToken ct)
     {
-        var command = new UpdateChainCommand(
-            id, request.Name, request.Description, request.Color,
-            request.Cost, request.Price, request.Length, request.Url);
-        var result = await Sender.Send(command, ct);
+        var result = await Sender.Send(command with { Id = id }, ct);
         return Ok(result);
     }
 
@@ -89,23 +83,3 @@ public class ChainsController : ApiControllerBase
         return Ok(new { imageUrl });
     }
 }
-
-// ── Request DTOs ─────────────────────────────────────────────────────────────
-
-public record CreateChainRequest(
-    string Name,
-    string Description,
-    ProductColor Color,
-    decimal Cost,
-    decimal Price,
-    decimal Length,
-    string? Url = null);
-
-public record UpdateChainRequest(
-    string Name,
-    string Description,
-    ProductColor Color,
-    decimal Cost,
-    decimal Price,
-    decimal Length,
-    string? Url = null);

@@ -1,5 +1,4 @@
 using JewelryShop.Common.Interfaces;
-using JewelryShop.Features.Emails;
 
 namespace JewelryShop.Infrastructure.Email;
 

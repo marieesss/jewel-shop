@@ -1,0 +1,14 @@
+using JewelryShop.Features.Charms.DTOs;
+using MediatR;
+
+namespace JewelryShop.Features.Charms.Commands;
+
+public record UpdateCharmCommand(
+    long Id,
+    string Name,
+    string Description,
+    ProductColor Color,
+    decimal Cost,
+    decimal Price,
+    int Stock,
+    string? Url = null) : IRequest<CharmDto>;

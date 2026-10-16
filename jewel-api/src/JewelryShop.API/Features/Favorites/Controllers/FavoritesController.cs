@@ -26,10 +26,9 @@ public class FavoritesController : ApiControllerBase
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> Add([FromBody] AddFavoriteRequest request, CancellationToken ct)
+    public async Task<IActionResult> Add([FromBody] AddFavoriteCommand command, CancellationToken ct)
     {
-        var command = new AddFavoriteCommand(GetUserId(), request.ChainId, request.CharmId);
-        var result = await Sender.Send(command, ct);
+        var result = await Sender.Send(command with { UserId = GetUserId() }, ct);
         return CreatedAtAction(nameof(GetMyFavorites), new { }, result);
     }
 
@@ -44,7 +43,3 @@ public class FavoritesController : ApiControllerBase
         return NoContent();
     }
 }
-
-// ── Request DTOs ─────────────────────────────────────────────────────────────
-
-public record AddFavoriteRequest(long? ChainId, long? CharmId);

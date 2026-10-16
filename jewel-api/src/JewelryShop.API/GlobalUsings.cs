@@ -1,6 +1,6 @@
 global using JewelryShop.Common;
 global using JewelryShop.Common.Enums;
-global using JewelryShop.Features.Auth;
+global using JewelryShop.Features.Auth.Common;
 global using JewelryShop.Features.Auth.Entities;
 global using JewelryShop.Features.Auth.Repositories;
 global using JewelryShop.Features.Chains.Entities;
@@ -9,7 +9,7 @@ global using JewelryShop.Features.Charms.Entities;
 global using JewelryShop.Features.Charms.Repositories;
 global using JewelryShop.Features.Creations.Entities;
 global using JewelryShop.Features.Creations.Repositories;
-global using JewelryShop.Features.Emails;
+global using JewelryShop.Features.Emails.Common;
 global using JewelryShop.Features.Emails.Entities;
 global using JewelryShop.Features.Emails.Repositories;
 global using JewelryShop.Features.Favorites.Entities;
