@@ -1,4 +1,4 @@
-namespace JewelryShop.Features.Auth;
+namespace JewelryShop.Features.Auth.Common;
 
 public static class RefreshTokenDefaults
 {

@@ -1,6 +1,5 @@
 using JewelryShop.API.Tests.Fakes;
 using JewelryShop.Common.Exceptions;
-using JewelryShop.Features.Auth;
 using JewelryShop.Features.Auth.Entities;
 using JewelryShop.Features.Users.Entities;
 using JewelryShop.Infrastructure.Services;

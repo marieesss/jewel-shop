@@ -1,7 +1,6 @@
 using JewelryShop.API.Tests.Fakes;
 using JewelryShop.Common.Enums;
 using JewelryShop.Common.Exceptions;
-using JewelryShop.Features.Auth;
 using JewelryShop.Features.Auth.Commands;
 using JewelryShop.Features.Auth.Entities;
 using JewelryShop.Features.Users.Entities;

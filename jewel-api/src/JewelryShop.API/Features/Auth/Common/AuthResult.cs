@@ -1,6 +1,6 @@
 using JewelryShop.Features.Auth.DTOs;
 
-namespace JewelryShop.Features.Auth;
+namespace JewelryShop.Features.Auth.Common;
 
 /// <summary>
 /// Résultat interne d'une authentification. Le controller pose <see cref="RefreshToken"/> en cookie
