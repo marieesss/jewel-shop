@@ -365,6 +365,13 @@ Sur chaque PR, la CI exécute :
 
 Ces deux jobs, `API (.NET)` et `Front (React)`, sont obligatoires pour merger sur `main`.
 
+Une **revue de code automatique** (`claude-code-review.yml`) commente aussi la PR : au maximum 5 remarques sur les bugs, la sécurité, les performances, les tests manquants et les règles « Ne pas casser la production ». Elle ne bloque pas le merge.
+
+- Elle se lance à l'ouverture de la PR et quand elle sort du brouillon, pas à chaque push.
+- Pour la relancer après des corrections, ajoutez le label `claude-review` (retirez-le puis remettez-le s'il y est déjà).
+- Elle ignore les PR de bots, la documentation, les lockfiles et les migrations générées. Au-delà de 1500 lignes de diff, elle laisse seulement un commentaire.
+- Elle utilise le secret de dépôt `CLAUDE_CODE_OAUTH_TOKEN` (Settings → Secrets and variables → Actions), qui n'est transmis ni aux PR venant de forks, ni à l'application.
+
 Après le merge sur `main` :
 
 3. publication des images sur `ghcr.io`, taguées avec le SHA du commit ;
