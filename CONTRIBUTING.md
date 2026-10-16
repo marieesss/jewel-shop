@@ -33,9 +33,16 @@ Charms/
 │   ├── ICharmRepository.cs  # interface
 │   └── CharmRepository.cs   # implémentation EF
 ├── Controllers/
-│   └── CharmsController.cs  # endpoints HTTP, délègue à MediatR (Sender) ; records de requête en bas du fichier
-├── Commands/                # une commande = record + Validator + Handler dans le même fichier
-├── Queries/                 # une requête = record + Handler
+│   └── CharmsController.cs  # endpoints HTTP, délègue à MediatR (Sender)
+├── Commands/
+│   ├── CreateCharm.Command.cs  # record de la commande (et record de retour éventuel)
+│   └── CreateCharm.cs          # handler
+├── Queries/
+│   ├── GetCharms.Query.cs      # record de la requête
+│   └── GetCharms.cs            # handler
+├── Validators/
+│   └── CreateCharmCommandValidator.cs  # un validateur par fichier
+├── Common/                  # code partagé par la fonctionnalité (optionnel)
 └── DTOs/                    # records + méthodes d'extension ToDto()
 ```
 
@@ -46,8 +53,9 @@ Nommage :
 | Dossier de fonctionnalité | PascalCase, pluriel | `Charms/`, `Favorites/` |
 | Entité | PascalCase, singulier, hérite de `BaseEntity` | `Charm` |
 | Commande / requête | verbe + nom + `Command` / `Query` | `CreateCharmCommand`, `GetCharmsQuery` |
-| Validateur / handler | `<Commande>Validator`, `<Commande>Handler` | `CreateCharmCommandValidator` |
-| Corps de requête HTTP | `<Action><Ressource>Request` | `CreateCharmRequest` |
+| Fichiers d'une commande / requête | `<Action>.Command.cs` ou `<Action>.Query.cs` pour le record, `<Action>.cs` pour le handler | `Register.Command.cs`, `Register.cs` |
+| Validateur / handler | `<Commande>Validator`, `<Commande>Handler` | `RegisterCommandValidator`, `RegisterCommandHandler` |
+| Record de retour d'une commande | `<Action>Result`, dans le fichier `.Command.cs` | `RegisterResult` |
 | DTO de réponse | `<Ressource>Dto` | `CharmDto` |
 | Repository | `I<Ressource>Repository` + `<Ressource>Repository`, un type par fichier | `ICharmRepository.cs`, `CharmRepository.cs` |
 | Namespace | `JewelryShop.` + chemin du dossier | `JewelryShop.Features.Charms.Entities`, `JewelryShop.Common.Exceptions` |
@@ -56,7 +64,8 @@ Nommage :
 
 Règles :
 
-- **Un controller ne contient pas de logique métier** : il construit une commande ou une requête et l'envoie via `Sender`.
+- **Un controller ne contient pas de logique métier** : il reçoit la commande en `[FromBody]` (ou construit la requête) et l'envoie via `Sender`. Il n'y a pas de record `Request` séparé.
+- **Les champs qui ne viennent pas du corps sont écrasés avec `with`** : l'id de la route (`command with { Id = id }`) et l'utilisateur connecté (`command with { UserId = GetUserId() }`). La valeur envoyée dans le corps est ignorée.
 - **Toute commande a un validateur FluentValidation**. Le `ValidationBehavior` l'exécute automatiquement avant le handler.
 - **Chaque règle de validation porte un message français explicite** (`.WithMessage("…")`), identique au message du front. En filet de sécurité, la culture des messages de FluentValidation est fixée au français au démarrage (`ValidationCulture.UseFrench()`, appelé dans `Startup.AddApplication`) : une règle oubliée renvoie le message par défaut en français, et non en anglais comme le ferait la culture neutre du serveur. Ce filet ne dispense pas du `WithMessage`.
 - **Les erreurs passent par les exceptions dédiées** (`NotFoundException`, `ConflictException`, `ForbiddenAccessException`, `UnauthorizedException`, `ValidationException`). `ExceptionHandlingMiddleware` les convertit en réponse JSON `{ status, title, errors }` avec le bon code HTTP. Ne renvoyez pas de `BadRequest()` à la main.
