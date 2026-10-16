@@ -1,8 +1,9 @@
 import { useState, type FormEvent } from 'react';
 import { observer } from 'mobx-react-lite';
-import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../stores/context';
 import { postLoginPath } from '../lib/returnUrl';
+import { SESSION_EXPIRED_MESSAGE, isSessionExpiredState } from '../lib/sessionExpired';
 import { validatePassword } from '../lib/passwordPolicy';
 import { PasswordRules } from '../features/auth/PasswordRules';
 import { FormInput } from '../components/FormInput';
@@ -15,6 +16,7 @@ export const AuthPage = observer(function AuthPage() {
   const auth = useAuthStore();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const destination = () => postLoginPath(searchParams.get('returnUrl'), auth.isAdmin);
 
   const [mode, setMode] = useState<Mode>('login');
@@ -68,7 +70,10 @@ export const AuthPage = observer(function AuthPage() {
     }
   };
 
-  const errorMessage = localError ?? auth.error;
+  const sessionExpiredMessage = isSessionExpiredState(location.state)
+    ? SESSION_EXPIRED_MESSAGE
+    : null;
+  const errorMessage = localError ?? auth.error ?? sessionExpiredMessage;
 
   // Déjà connecté : on ne réaffiche pas le formulaire.
   if (auth.isAuthenticated) {
