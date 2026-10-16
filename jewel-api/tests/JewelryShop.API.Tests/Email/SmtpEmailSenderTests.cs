@@ -1,6 +1,6 @@
 using System.Net.Sockets;
 using JewelryShop.API.Tests.Fakes;
-using JewelryShop.Application.Common.Models;
+using JewelryShop.Common.Models;
 using JewelryShop.Infrastructure.Email;
 using MailKit.Net.Smtp;
 using MailKit.Security;

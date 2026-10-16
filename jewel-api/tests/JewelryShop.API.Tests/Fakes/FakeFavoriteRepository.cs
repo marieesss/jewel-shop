@@ -1,4 +1,5 @@
-using JewelryShop.Application.Features.Favorites;
+using JewelryShop.Features.Favorites.Entities;
+using JewelryShop.Features.Favorites.Repositories;
 
 namespace JewelryShop.API.Tests.Fakes;
 

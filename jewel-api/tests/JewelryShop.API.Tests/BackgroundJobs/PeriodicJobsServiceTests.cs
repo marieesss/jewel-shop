@@ -1,5 +1,5 @@
 using JewelryShop.API.Tests.Fakes;
-using JewelryShop.Application.Common.Interfaces;
+using JewelryShop.Common.Interfaces;
 using JewelryShop.Infrastructure.BackgroundJobs;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

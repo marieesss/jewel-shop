@@ -1,4 +1,4 @@
-using JewelryShop.Application.Features.Auth;
+using JewelryShop.Features.Auth;
 using Microsoft.AspNetCore.Http;
 
 namespace JewelryShop.API.Tests.Auth;

@@ -1,7 +1,7 @@
 using System.Text.RegularExpressions;
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
-using JewelryShop.Application.Common.Interfaces;
+using JewelryShop.Common.Interfaces;
 
 namespace JewelryShop.Infrastructure.Services;
 

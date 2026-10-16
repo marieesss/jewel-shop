@@ -23,13 +23,17 @@ Documents liés :
 
 ### Organisation de l'API (par fonctionnalité)
 
-Chaque fonctionnalité vit dans `jewel-api/src/JewelryShop.API/Application/Features/<Fonctionnalité>/` :
+Chaque fonctionnalité vit dans `jewel-api/src/JewelryShop.API/Features/<Fonctionnalité>/`. Le code partagé (`ApiControllerBase`, `BaseEntity`, `PagedResult`, exceptions, interfaces de services) vit dans `jewel-api/src/JewelryShop.API/Common/`.
 
 ```
 Charms/
-├── Charm.cs                 # entité
-├── CharmRepository.cs       # interface + implémentation EF
-├── CharmsController.cs      # endpoints HTTP, délègue à MediatR (Sender) ; records de requête en bas du fichier
+├── Entities/
+│   └── Charm.cs             # entité
+├── Repositories/
+│   ├── ICharmRepository.cs  # interface
+│   └── CharmRepository.cs   # implémentation EF
+├── Controllers/
+│   └── CharmsController.cs  # endpoints HTTP, délègue à MediatR (Sender) ; records de requête en bas du fichier
 ├── Commands/                # une commande = record + Validator + Handler dans le même fichier
 ├── Queries/                 # une requête = record + Handler
 └── DTOs/                    # records + méthodes d'extension ToDto()
@@ -45,7 +49,8 @@ Nommage :
 | Validateur / handler | `<Commande>Validator`, `<Commande>Handler` | `CreateCharmCommandValidator` |
 | Corps de requête HTTP | `<Action><Ressource>Request` | `CreateCharmRequest` |
 | DTO de réponse | `<Ressource>Dto` | `CharmDto` |
-| Repository | `I<Ressource>Repository` + `<Ressource>Repository` | `ICharmRepository` |
+| Repository | `I<Ressource>Repository` + `<Ressource>Repository`, un type par fichier | `ICharmRepository.cs`, `CharmRepository.cs` |
+| Namespace | `JewelryShop.` + chemin du dossier | `JewelryShop.Features.Charms.Entities`, `JewelryShop.Common.Exceptions` |
 | Route | `api/<ressource-au-pluriel>`, en kebab-case | `api/charms`, `api/admin/users` |
 | Table et colonnes | snake_case, table au pluriel | `creation_items.creation_id` |
 
@@ -223,7 +228,7 @@ Pour que le code reste testable, placez les calculs métier dans des **fonctions
 
 Conventions (voir `jewel-api/tests/JewelryShop.API.Tests/`) :
 
-- Un dossier par fonctionnalité, qui reprend `Application/Features` (`Auth/`, `Charms/`, …).
+- Un dossier par fonctionnalité, qui reprend `Features/` (`Auth/`, `Charms/`, …).
 - Une classe `<ClasseTestée>Tests`.
 - Les noms de tests sont des **phrases en français** qui décrivent le comportement : `Refuse_un_mot_de_passe_de_moins_de_8_caracteres`.
 - Structure Arrange / Act / Assert, et un seul comportement par test. Utilisez `[Theory]` + `[InlineData]` pour les variantes d'un même cas.

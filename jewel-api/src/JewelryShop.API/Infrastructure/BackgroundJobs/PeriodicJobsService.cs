@@ -1,4 +1,4 @@
-using JewelryShop.Application.Common.Interfaces;
+using JewelryShop.Common.Interfaces;
 
 namespace JewelryShop.Infrastructure.BackgroundJobs;
 

@@ -1,4 +1,5 @@
-using JewelryShop.Application.Features.Emails;
+using JewelryShop.Features.Emails.Entities;
+using JewelryShop.Features.Emails.Repositories;
 
 namespace JewelryShop.API.Tests.Fakes;
 

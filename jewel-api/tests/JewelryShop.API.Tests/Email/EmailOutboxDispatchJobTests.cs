@@ -1,8 +1,8 @@
 using System.Net.Sockets;
 using JewelryShop.API.Tests.Fakes;
-using JewelryShop.Application.Common.Models;
-using JewelryShop.Application.Features.Emails;
-using JewelryShop.Application.Features.Emails.Jobs;
+using JewelryShop.Common.Models;
+using JewelryShop.Features.Emails.Entities;
+using JewelryShop.Features.Emails.Jobs;
 using JewelryShop.Infrastructure.Email;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;

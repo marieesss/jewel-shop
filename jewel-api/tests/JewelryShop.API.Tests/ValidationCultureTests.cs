@@ -1,6 +1,6 @@
 using System.Globalization;
 using FluentValidation;
-using JewelryShop.Application.Common;
+using JewelryShop.Common;
 
 namespace JewelryShop.API.Tests;
 

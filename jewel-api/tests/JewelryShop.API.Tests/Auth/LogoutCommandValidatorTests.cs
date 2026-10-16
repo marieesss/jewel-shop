@@ -1,4 +1,4 @@
-using JewelryShop.Application.Features.Auth.Commands;
+using JewelryShop.Features.Auth.Commands;
 
 namespace JewelryShop.API.Tests.Auth;
 

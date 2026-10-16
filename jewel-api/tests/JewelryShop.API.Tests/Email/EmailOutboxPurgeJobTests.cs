@@ -1,5 +1,5 @@
 using JewelryShop.API.Tests.Fakes;
-using JewelryShop.Application.Features.Emails.Jobs;
+using JewelryShop.Features.Emails.Jobs;
 
 namespace JewelryShop.API.Tests.Email;
 

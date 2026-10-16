@@ -1,5 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
-using JewelryShop.Application.Features.Users;
+using JewelryShop.Features.Users.Entities;
 using JewelryShop.Infrastructure.Services;
 using Microsoft.Extensions.Configuration;
 

@@ -1,4 +1,5 @@
-using JewelryShop.Application.Features.Users;
+using JewelryShop.Features.Users.Entities;
+using JewelryShop.Features.Users.Repositories;
 
 namespace JewelryShop.API.Tests.Fakes;
 

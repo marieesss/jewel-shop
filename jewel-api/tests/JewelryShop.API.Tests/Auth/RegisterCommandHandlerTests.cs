@@ -1,9 +1,10 @@
 using JewelryShop.API.Tests.Fakes;
-using JewelryShop.Application.Common.Enums;
-using JewelryShop.Application.Common.Exceptions;
-using JewelryShop.Application.Features.Auth;
-using JewelryShop.Application.Features.Auth.Commands;
-using JewelryShop.Application.Features.Users;
+using JewelryShop.Common.Enums;
+using JewelryShop.Common.Exceptions;
+using JewelryShop.Features.Auth;
+using JewelryShop.Features.Auth.Commands;
+using JewelryShop.Features.Auth.Entities;
+using JewelryShop.Features.Users.Entities;
 using JewelryShop.Infrastructure.Services;
 
 namespace JewelryShop.API.Tests.Auth;

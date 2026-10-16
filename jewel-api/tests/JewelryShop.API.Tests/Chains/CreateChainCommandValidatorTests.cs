@@ -1,5 +1,5 @@
-using JewelryShop.Application.Common.Enums;
-using JewelryShop.Application.Features.Chains.Commands;
+using JewelryShop.Common.Enums;
+using JewelryShop.Features.Chains.Commands;
 
 namespace JewelryShop.API.Tests.Chains;
 

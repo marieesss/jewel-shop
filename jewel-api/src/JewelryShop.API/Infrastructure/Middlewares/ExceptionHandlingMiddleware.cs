@@ -1,7 +1,7 @@
 using System.Net;
 using System.Text.Json;
-using JewelryShop.Application.Common.Exceptions;
-using ValidationException = JewelryShop.Application.Common.Exceptions.ValidationException;
+using JewelryShop.Common.Exceptions;
+using ValidationException = JewelryShop.Common.Exceptions.ValidationException;
 
 namespace JewelryShop.Infrastructure.Middlewares;
 
