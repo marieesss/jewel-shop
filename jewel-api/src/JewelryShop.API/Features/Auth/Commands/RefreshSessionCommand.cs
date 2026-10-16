@@ -1,4 +1,3 @@
-using FluentValidation;
 using JewelryShop.Common.Exceptions;
 using JewelryShop.Common.Interfaces;
 using JewelryShop.Features.Auth.DTOs;
@@ -7,14 +6,6 @@ using MediatR;
 namespace JewelryShop.Features.Auth.Commands;
 
 public record RefreshSessionCommand(string? RefreshToken) : IRequest<AuthResult>;
-
-/// <summary>
-/// N'impose rien : un token absent n'est pas une erreur de saisie mais une session expirée (401),
-/// levée par le handler.
-/// </summary>
-public class RefreshSessionCommandValidator : AbstractValidator<RefreshSessionCommand>
-{
-}
 
 public class RefreshSessionCommandHandler : IRequestHandler<RefreshSessionCommand, AuthResult>
 {

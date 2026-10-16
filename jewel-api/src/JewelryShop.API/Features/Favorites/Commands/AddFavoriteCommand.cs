@@ -1,25 +1,10 @@
-using FluentValidation;
 using JewelryShop.Common.Exceptions;
-using JewelryShop.Features.Chains;
-using JewelryShop.Features.Charms;
 using JewelryShop.Features.Favorites.DTOs;
 using MediatR;
 
 namespace JewelryShop.Features.Favorites.Commands;
 
 public record AddFavoriteCommand(long UserId, long? ChainId, long? CharmId) : IRequest<FavoriteDto>;
-
-public class AddFavoriteCommandValidator : AbstractValidator<AddFavoriteCommand>
-{
-    public AddFavoriteCommandValidator()
-    {
-        RuleFor(x => x.UserId).GreaterThan(0).WithMessage("Identifiant invalide.");
-
-        RuleFor(x => x)
-            .Must(x => x.ChainId.HasValue ^ x.CharmId.HasValue)
-            .WithMessage("Renseignez exactement un produit : chainId ou charmId, mais pas les deux.");
-    }
-}
 
 public class AddFavoriteCommandHandler : IRequestHandler<AddFavoriteCommand, FavoriteDto>
 {

@@ -1,4 +1,5 @@
 using JewelryShop.Features.Creations.Commands;
+using JewelryShop.Features.Creations.Validators;
 
 namespace JewelryShop.API.Tests.Creations;
 

@@ -1,25 +1,11 @@
-using FluentValidation;
 using JewelryShop.Common.Exceptions;
 using JewelryShop.Common.Interfaces;
 using JewelryShop.Features.Auth.DTOs;
-using JewelryShop.Features.Users;
 using MediatR;
 
 namespace JewelryShop.Features.Auth.Commands;
 
 public record LoginCommand(string Email, string Password) : IRequest<AuthResult>;
-
-public class LoginCommandValidator : AbstractValidator<LoginCommand>
-{
-    public LoginCommandValidator()
-    {
-        RuleFor(x => x.Email)
-            .NotEmpty().WithMessage("L'email est requis.")
-            .EmailAddress().WithMessage("L'email n'est pas valide.");
-        RuleFor(x => x.Password)
-            .NotEmpty().WithMessage("Le mot de passe est requis.");
-    }
-}
 
 public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResult>
 {

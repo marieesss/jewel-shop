@@ -1,14 +1,8 @@
-using FluentValidation;
 using MediatR;
 
 namespace JewelryShop.Features.Auth.Commands;
 
 public record LogoutCommand(string? RefreshToken) : IRequest;
-
-/// <summary>N'impose rien : se déconnecter sans session active reste un succès.</summary>
-public class LogoutCommandValidator : AbstractValidator<LogoutCommand>
-{
-}
 
 public class LogoutCommandHandler : IRequestHandler<LogoutCommand>
 {

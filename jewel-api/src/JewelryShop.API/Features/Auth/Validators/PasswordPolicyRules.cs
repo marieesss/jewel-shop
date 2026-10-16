@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace JewelryShop.Features.Auth.Validation;
+namespace JewelryShop.Features.Auth.Validators;
 
 public static class PasswordPolicyRules
 {

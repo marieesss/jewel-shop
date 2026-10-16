@@ -1,9 +1,6 @@
-using FluentValidation;
 using JewelryShop.Common.Exceptions;
 using JewelryShop.Common.Interfaces;
 using JewelryShop.Features.Auth.DTOs;
-using JewelryShop.Features.Auth.Validation;
-using JewelryShop.Features.Users;
 using MediatR;
 
 namespace JewelryShop.Features.Auth.Commands;
@@ -14,27 +11,6 @@ public record RegisterCommand(
     string Email,
     string Password,
     DateOnly? Birthday) : IRequest<AuthResult>;
-
-public class RegisterCommandValidator : AbstractValidator<RegisterCommand>
-{
-    public RegisterCommandValidator()
-    {
-        RuleFor(x => x.Name)
-            .NotEmpty().WithMessage("Le prénom est requis.")
-            .MaximumLength(100).WithMessage("100 caractères maximum.");
-        RuleFor(x => x.Surname)
-            .NotEmpty().WithMessage("Le nom est requis.")
-            .MaximumLength(100).WithMessage("100 caractères maximum.");
-        RuleFor(x => x.Email)
-            .NotEmpty().WithMessage("L'email est requis.")
-            .EmailAddress().WithMessage("L'email n'est pas valide.")
-            .MaximumLength(255).WithMessage("255 caractères maximum.");
-        RuleFor(x => x.Password).PasswordPolicy();
-        RuleFor(x => x.Birthday)
-            .Must(b => b is null || b.Value < DateOnly.FromDateTime(DateTime.UtcNow))
-            .WithMessage("La date de naissance doit être dans le passé.");
-    }
-}
 
 public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthResult>
 {
