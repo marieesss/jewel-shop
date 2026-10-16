@@ -12,6 +12,9 @@ public class InvitationRepository : Repository<Invitation>, IInvitationRepositor
 
     public void Add(Invitation invitation) => DbSet.Add(invitation);
 
+    public async Task<Invitation?> GetByIdWithInviterAsync(long id, CancellationToken ct)
+        => await DbSet.Include(i => i.InvitedBy).FirstOrDefaultAsync(i => i.Id == id, ct);
+
     public async Task<IReadOnlyList<Invitation>> GetPendingByEmailAsync(string email, CancellationToken ct)
         => await DbSet
             .Where(i => i.Email == email && i.Status == InvitationStatus.Pending)

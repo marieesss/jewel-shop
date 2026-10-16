@@ -14,6 +14,8 @@ public class FakeInvitationRepository : InMemoryRepository<Invitation>, IInvitat
 
     public void Add(Invitation invitation) => Entities.Add(invitation);
 
+    public Task<Invitation?> GetByIdWithInviterAsync(long id, CancellationToken ct) => GetByIdAsync(id, ct);
+
     public Task<IReadOnlyList<Invitation>> GetPendingByEmailAsync(string email, CancellationToken ct)
         => Task.FromResult<IReadOnlyList<Invitation>>(
             Entities.Where(i => i.Email == email && i.Status == InvitationStatus.Pending).ToList());

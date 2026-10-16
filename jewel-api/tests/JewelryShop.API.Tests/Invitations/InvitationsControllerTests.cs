@@ -45,6 +45,18 @@ public class InvitationsControllerTests
     }
 
     [Fact]
+    public async Task Renvoie_l_invitation_demandee_et_repond_200()
+    {
+        var invitation = new InvitationDto(3, "nouvelle@exemple.com", "Pending", DateTime.UtcNow.AddDays(7), DateTime.UtcNow, "Marie Espinosa");
+        _sender.Response = invitation;
+
+        var response = await _controller.Resend(3, CancellationToken.None);
+
+        Assert.Equal(new ResendInvitationCommand(3), _sender.LastRequest);
+        Assert.Same(invitation, Assert.IsType<OkObjectResult>(response).Value);
+    }
+
+    [Fact]
     public async Task Liste_les_invitations_avec_le_statut_et_la_pagination_demandes()
     {
         var page = new PagedResult<InvitationDto>(new List<InvitationDto>(), 0, 2, 10);

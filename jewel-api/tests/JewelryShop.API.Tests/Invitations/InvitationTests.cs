@@ -67,4 +67,18 @@ public class InvitationTests
 
         Assert.Null(invitation.InviterName);
     }
+
+    [Fact]
+    public void Renouvelee_repasse_en_attente_avec_un_nouveau_token_valable_7_jours()
+    {
+        var invitation = InvitationTestData.Create(1, "nouvelle@exemple.com", _now.AddDays(-20), InvitationStatus.Revoked, _now.AddDays(-19));
+
+        invitation.Renew(new string('b', 64), _now);
+
+        Assert.Equal(InvitationStatus.Pending, invitation.Status);
+        Assert.Equal(new string('b', 64), invitation.TokenHash);
+        Assert.Equal(_now.AddDays(7), invitation.ExpiresAt);
+        Assert.Null(invitation.RevokedAt);
+        Assert.Equal(_now.AddDays(-20), invitation.CreatedAt);
+    }
 }

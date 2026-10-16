@@ -39,4 +39,17 @@ public class InvitationsController : ApiControllerBase
         var result = await Sender.Send(command with { InvitedById = GetUserId() }, ct);
         return StatusCode(StatusCodes.Status201Created, result);
     }
+
+    /// <summary>Renvoie une invitation non acceptée : nouveau token, 7 jours de validité et nouveau mail. [Admin]</summary>
+    [HttpPost("{id:long}/resend")]
+    [ProducesResponseType(typeof(InvitationDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Resend(long id, CancellationToken ct)
+    {
+        var result = await Sender.Send(new ResendInvitationCommand(id), ct);
+        return Ok(result);
+    }
 }

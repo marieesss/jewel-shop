@@ -48,4 +48,13 @@ public class Invitation : BaseEntity
     }
 
     public void MarkExpired() => Status = InvitationStatus.Expired;
+
+    /// <summary>Remplace le token (l'ancien lien ne fonctionne plus) et relance une validité complète.</summary>
+    public void Renew(string tokenHash, DateTime now)
+    {
+        TokenHash = tokenHash;
+        Status = InvitationStatus.Pending;
+        ExpiresAt = now + InvitationDefaults.Lifetime;
+        RevokedAt = null;
+    }
 }
