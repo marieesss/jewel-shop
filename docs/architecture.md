@@ -83,6 +83,14 @@ sequenceDiagram
 - Les endpoints admin portent `[Authorize(Roles = "Admin")]`. `AdminController` regroupe les routes `api/admin/...`.
 - L'inscription est **publique** aujourd'hui.
 
+### Mot de passe oublié
+
+- **Endpoints** (anonymes) :
+  - `POST /api/auth/forgot-password` `{ email }` : 202 sans corps, que l'email soit inscrit ou non, pour ne pas révéler les comptes existants. 400 si l'email est vide ou mal formé. Pour un compte existant, supprime ses tokens non utilisés, en crée un nouveau valable 1 heure (`PasswordResetTokenDefaults.Lifetime`) et met en file le mail `PasswordReset`, avec le lien `{App__FrontendBaseUrl}/reset-password?token=…`, dans une seule sauvegarde ;
+  - `POST /api/auth/reset-password` `{ token, password }` : 204. Applique `PasswordPolicy()` au nouveau mot de passe, marque le token utilisé (`used_at`) et révoque tous les refresh tokens de l'utilisateur. 400 « Ce lien de réinitialisation est invalide ou a expiré. » (clé `Token`) si le token est vide, inconnu, déjà utilisé ou expiré.
+- Le token est opaque (`ISecureTokenGenerator`), à usage unique, et seul son hash est stocké dans `password_reset_tokens.token_hash`.
+- Ces endpoints n'ont pas de limitation de débit.
+
 ### Refresh tokens
 
 - **Cookie** `refresh_token` (`RefreshTokenCookie`) : `HttpOnly`, `Secure`, `SameSite=Strict`, `Path=/api/auth`, `Max-Age` de 30 jours. Le refresh token n'apparaît jamais dans un corps de réponse : les handlers renvoient un record interne (`RegisterResult`, `LoginResult` ou `RefreshSessionResult`, dérivés de l'`AuthResult` abstrait de `Features/Auth/Common/`), et le controller pose le cookie. `localhost` et `127.0.0.1` étant des contextes sécurisés, le cookie `Secure` fonctionne aussi en local en HTTP. La politique CORS autorise les credentials, pour que le front appelle l'API en dev sur un autre port.
@@ -91,7 +99,7 @@ sequenceDiagram
   - `POST /api/auth/logout` : 204. Révoque le token s'il est actif et supprime le cookie dans tous les cas.
 - Le front les utilise pour garder la session ouverte (voir « Stockage du token » dans la partie Front).
 
-- **Tokens opaques** : `ISecureTokenGenerator` (`SecureTokenGenerator`, singleton) génère 32 octets aléatoires en base64url (43 caractères) et les hache en SHA-256 hexadécimal. Seul le hash est stocké dans `refresh_tokens.token_hash`. Le token en clair n'est ni enregistré ni journalisé. Le même générateur servira à la réinitialisation du mot de passe (#33) et aux invitations (#35).
+- **Tokens opaques** : `ISecureTokenGenerator` (`SecureTokenGenerator`, singleton) génère 32 octets aléatoires en base64url (43 caractères) et les hache en SHA-256 hexadécimal. Seul le hash est stocké dans `refresh_tokens.token_hash`. Le token en clair n'est ni enregistré ni journalisé. Le même générateur sert à la réinitialisation du mot de passe (`password_reset_tokens`) et servira aux invitations (#35).
 - **`IRefreshTokenService`** (`Infrastructure/Services/`) :
   - `Issue(user)` ajoute un token valable 30 jours (`RefreshTokenDefaults.Lifetime`), **sans sauvegarder** : il est enregistré par le `SaveChangesAsync` de l'appelant ;
   - `RotateAsync(token)` marque le token comme tourné (`rotated_at`), en émet un nouveau valable 30 jours à partir de maintenant (expiration glissante), puis sauvegarde ;
@@ -107,6 +115,7 @@ erDiagram
     users ||--o{ favorites : ""
     users ||--o{ creations : ""
     users ||--o{ refresh_tokens : ""
+    users ||--o{ password_reset_tokens : ""
     chains ||--o{ favorites : ""
     charms ||--o{ favorites : ""
     chains ||--o{ creations : ""
@@ -125,6 +134,7 @@ erDiagram
 | `creations`, `creation_items` | création d'un utilisateur : une chaîne, une option, des breloques positionnées |
 | `email_outbox` | mails à envoyer : destinataire, sujet, corps HTML et texte, statut, tentatives, prochaine tentative, dernière erreur |
 | `refresh_tokens` | refresh token d'un utilisateur : hash SHA-256 (unique), création, expiration, rotation, révocation. Supprimé avec l'utilisateur |
+| `password_reset_tokens` | token de réinitialisation du mot de passe : hash SHA-256 (unique), création, expiration, utilisation. Supprimé avec l'utilisateur |
 
 - Le schéma est créé par des **migrations SQL Evolve** (`jewel-api/db/migrations/V<n>__*.sql`). EF Core ne sert que d'ORM. Son mapping (`Infrastructure/Persistence/Configurations/`) reprend le schéma en snake_case.
 - `IsEraseDisabled = true` empêche Evolve d'effacer la base. `EnableClusterMode` pose un verrou Postgres pour que deux instances ne migrent pas en même temps.
@@ -135,7 +145,7 @@ erDiagram
 - `IEmailSender` (`Common/Interfaces`) envoie un `EmailMessage` (destinataire, sujet, corps HTML et texte) et lève une exception si l'envoi échoue.
 - Une seule implémentation, `SmtpEmailSender` (MailKit) : Mailpit en local, relais SMTP de Brevo en staging et en production. Une connexion par envoi, STARTTLS si `Email__Smtp__UseSsl`, authentification seulement si `Email__Smtp__Username` est renseigné.
 - Configuration `Email__*` facultative. L'envoi n'est configuré que si `Email__Enabled` vaut `true` (`false` par défaut) **et** si `Email__Smtp__Host` est renseigné. Sinon, l'API démarre et journalise un warning, et aucun envoi n'est tenté. En local, `compose.yaml` et `jewel-api/.env.example` posent `Email__Enabled=true` pour Mailpit.
-- `App__FrontendBaseUrl` : URL publique du front, pour construire les liens des mails (lue par le code à partir de #33).
+- `App__FrontendBaseUrl` : URL publique du front, pour construire les liens des mails, lue par `AppOptions` (`http://localhost:5173` par défaut ; hors développement, son absence est journalisée en warning).
 - Les fonctionnalités n'appellent pas `IEmailSender` directement : elles passent par l'outbox (ci-dessous).
 
 ### Outbox et envoi asynchrone
@@ -171,8 +181,9 @@ stateDiagram-v2
   | `EmailOutboxDispatchJob` (envoi des mails en attente) | toutes les 10 s, sans chevauchement (`PreventOverlapping`) : un envoi qui dure plus de 10 s ne démarre pas de seconde exécution dans la même instance |
   | `EmailOutboxPurgeJob` (mails envoyés depuis plus de 30 jours) | au démarrage, puis à chaque heure pile |
   | `RefreshTokenPurgeJob` (refresh tokens expirés) | au démarrage, puis à chaque heure pile |
+  | `PasswordResetTokenPurgeJob` (tokens de réinitialisation expirés ou utilisés) | au démarrage, puis à chaque heure pile |
 
-  La purge des tokens de réinitialisation (#33) et l'expiration des invitations (#35) s'y ajouteront.
+  L'expiration des invitations (#35) s'y ajoutera.
 - L'exception d'une tâche est journalisée en `Error` (`OnError`) : elle n'arrête ni le planificateur ni les autres tâches.
 - Les tâches tournent dans chaque instance de l'API : une tâche doit supporter d'être exécutée en parallèle par deux pods (verrou de ligne, requête idempotente).
 - Le mode `--migrate` ne démarre pas le serveur, donc pas les tâches.
@@ -291,11 +302,11 @@ Le retour arrière remet l'ancienne version du code, **pas l'ancien schéma** : 
 | Sujet | Impact sur l'architecture |
 |---|---|
 | Service d'email | Fait : interface `IEmailSender` et envoi SMTP `SmtpEmailSender` (Mailpit en dev ; relais SMTP de Brevo en staging et en production, activé par `Email__Enabled`). Templates Scriban côté back (`IEmailTemplateRenderer`). Table **outbox** et tâche d'envoi planifiée par Coravel : premier traitement asynchrone de l'API. Flux sortant vers Brevo (port 587) : l'API n'a pas de NetworkPolicy de sortie, aucune règle n'est nécessaire. |
-| Politique de mot de passe | Fait côté back : la règle FluentValidation réutilisable `PasswordPolicy()` (`Features/Auth/Validators/PasswordPolicyRules.cs`) est appliquée à l'inscription, et le sera à la réinitialisation. La connexion ne l'applique pas, pour ne pas bloquer les comptes existants. Le front reprend les mêmes règles et messages (`lib/passwordPolicy.ts`) et les affiche cochées en direct à l'inscription (`features/auth/PasswordRules`). |
+| Politique de mot de passe | Fait côté back : la règle FluentValidation réutilisable `PasswordPolicy()` (`Features/Auth/Validators/PasswordPolicyRules.cs`) est appliquée à l'inscription et à la réinitialisation. La connexion ne l'applique pas, pour ne pas bloquer les comptes existants. Le front reprend les mêmes règles et messages (`lib/passwordPolicy.ts`) et les affiche cochées en direct à l'inscription (`features/auth/PasswordRules`). |
 | Refresh token | Fait : access token JWT de 15 min (au lieu de 7 jours). Nouvelle table de refresh tokens hachés, cookie `httpOnly` `Secure` `SameSite=Strict`, rotation et détection de réutilisation. Fait côté front : access token en mémoire, intercepteur axios (401 → refresh → rejeu, un seul refresh à la fois, verrou Web Locks entre onglets), restauration de la session au chargement. |
 | Protection des routes front | Fait : les guards `ProtectedRoute` / `AdminRoute` redirigent vers `/login?returnUrl=…`, et `AuthPage` renvoie sur la page demandée après connexion si le chemin est interne et autorisé pour le rôle. |
 | Planification des tâches | Fait : les tâches périodiques sont planifiées par Coravel (invocables et planification déclarative au démarrage), à la place du planificateur maison. |
-| Mot de passe oublié | Table de tokens de réinitialisation hachés, à usage unique. Révocation des refresh tokens. |
+| Mot de passe oublié | Fait côté back : table `password_reset_tokens` (tokens hachés, à usage unique, valables 1 heure), endpoints `forgot-password` et `reset-password`, mail `PasswordReset`, révocation des refresh tokens et purge planifiée. |
 | Inscription sur invitation | Table `Invitation`. `POST /api/auth/register` devient conditionné par une invitation valide. C'est un **changement de comportement** de l'endpoint public existant. |
 | Gestion des utilisateurs | `GET /api/admin/users` existe. Ajout des invitations et d'une page admin « Utilisateurs ». |
 
