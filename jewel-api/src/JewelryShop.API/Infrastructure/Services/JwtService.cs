@@ -9,17 +9,21 @@ namespace JewelryShop.Infrastructure.Services;
 
 public class JwtService : IJwtService
 {
+    public const int DefaultAccessTokenMinutes = 15;
+
     private readonly string _secret;
     private readonly string _issuer;
     private readonly string _audience;
-    private readonly int _expiresInDays;
+    private readonly int _accessTokenMinutes;
 
     public JwtService(IConfiguration configuration)
     {
         _secret = configuration["Jwt:Secret"] ?? throw new InvalidOperationException("Jwt:Secret manquant.");
         _issuer = configuration["Jwt:Issuer"] ?? "JewelryShop";
         _audience = configuration["Jwt:Audience"] ?? "JewelryShop";
-        _expiresInDays = int.TryParse(configuration["Jwt:ExpiresInDays"], out var d) ? d : 7;
+        _accessTokenMinutes = int.TryParse(configuration["Jwt:AccessTokenMinutes"], out var minutes)
+            ? minutes
+            : DefaultAccessTokenMinutes;
     }
 
     public string GenerateToken(User user)
@@ -39,7 +43,7 @@ public class JwtService : IJwtService
             issuer: _issuer,
             audience: _audience,
             claims: claims,
-            expires: DateTime.UtcNow.AddDays(_expiresInDays),
+            expires: DateTime.UtcNow.AddMinutes(_accessTokenMinutes),
             signingCredentials: credentials);
 
         return new JwtSecurityTokenHandler().WriteToken(token);

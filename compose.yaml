@@ -34,7 +34,7 @@ services:
       Jwt__Secret: ${JWT_SECRET:?JWT_SECRET manquant dans .env}
       Jwt__Issuer: JewelryShop
       Jwt__Audience: JewelryShop
-      Jwt__ExpiresInDays: "7"
+      Jwt__AccessTokenMinutes: "15"
       Cloudinary__CloudName: ${CLOUDINARY_CLOUD_NAME:?CLOUDINARY_CLOUD_NAME manquant dans .env}
       Cloudinary__ApiKey: ${CLOUDINARY_API_KEY:?CLOUDINARY_API_KEY manquant dans .env}
       Cloudinary__ApiSecret: ${CLOUDINARY_API_SECRET:?CLOUDINARY_API_SECRET manquant dans .env}
