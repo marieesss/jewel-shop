@@ -1,0 +1,7 @@
+Bonjour,
+
+{{ if inviter_name }}{{ inviter_name }} vous invite à créer votre compte sur mycharmly.{{ else }}Vous êtes invité à créer votre compte sur mycharmly.{{ end }} Pour choisir votre mot de passe et finaliser votre inscription, ouvrez le lien ci-dessous. Il est valable jusqu'au {{ expires_at }}.
+
+{{ register_url }}
+
+Si vous ne vous attendiez pas à cette invitation, ignorez ce mail.
