@@ -1,0 +1,77 @@
+# Revue de code automatique des PR : bugs, sécurité, performances et tests manquants.
+# Relancer une revue : ajouter le label `claude-review` sur la PR (le retirer puis le remettre s'il y est déjà).
+name: Claude Code Review
+
+on:
+  pull_request:
+    types: [opened, ready_for_review, labeled]
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - '**/package-lock.json'
+      - '**/*.lock'
+
+# Une seule revue à la fois par PR : la plus récente remplace celle en cours.
+concurrency:
+  group: claude-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    # Pas de revue sur les brouillons ni les PR de bots ; un label ne relance que s'il s'agit de `claude-review`.
+    if: >
+      github.event.pull_request.draft == false &&
+      !endsWith(github.actor, '[bot]') &&
+      (github.event.action != 'labeled' || github.event.label.name == 'claude-review')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Diff réduit au code relu : sans lockfiles, migrations générées, fichiers minifiés ni snapshots.
+      - name: Préparer un diff filtré
+        id: diff
+        run: |
+          git diff origin/${{ github.base_ref }}...HEAD -- . \
+            ':(exclude)*.lock' ':(exclude)**/package-lock.json' \
+            ':(exclude)**/Migrations/**' ':(exclude)**/*.min.*' \
+            ':(exclude)**/*.snap' > pr.diff
+          echo "lines=$(wc -l < pr.diff)" >> "$GITHUB_OUTPUT"
+
+      - name: Signaler un diff trop gros
+        if: fromJSON(steps.diff.outputs.lines) >= 1500
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --body "Revue automatique non lancée : le diff filtré fait ${{ steps.diff.outputs.lines }} lignes (limite : 1500). Découpez la PR ou relisez-la à la main."
+
+      - name: Revue
+        if: fromJSON(steps.diff.outputs.lines) > 0 && fromJSON(steps.diff.outputs.lines) < 1500
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            PR #${{ github.event.pull_request.number }} sur ${{ github.repository }}.
+            Le diff filtré est dans ./pr.diff : lis-le. Les conventions du projet
+            (architecture, tests, migrations rétrocompatibles, sécurité) sont dans
+            ./CONTRIBUTING.md : lis seulement les sections utiles au diff.
+            N'explore pas le reste du repo, sauf si une ligne est impossible à juger
+            sans son contexte.
+
+            Signale uniquement : bugs, failles de sécurité, problèmes de performance,
+            tests manifestement manquants, et écarts aux règles « Ne pas casser la
+            production » de CONTRIBUTING.md. Ignore le style et le cosmétique.
+            5 commentaires inline maximum, en français, une ou deux phrases chacun.
+            Pas de résumé de la PR, pas de compliments.
+            S'il n'y a rien d'important : un seul commentaire « RAS ».
+          claude_args: |
+            --model claude-sonnet-5-5
+            --max-turns 6
+            --allowedTools "Read,mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*)"
