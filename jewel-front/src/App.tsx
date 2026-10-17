@@ -15,6 +15,7 @@ import { ProductCreatePage } from './pages/admin/ProductCreatePage';
 import { ProductListPage } from './pages/admin/ProductListPage';
 import { ProductDetailPage } from './pages/admin/ProductDetailPage';
 import { ProductEditPage } from './pages/admin/ProductEditPage';
+import { AdminUsersPage } from './pages/admin/AdminUsersPage';
 
 export default function App() {
   return (
@@ -50,6 +51,7 @@ export default function App() {
               <Route path="products/chains" element={<ProductListPage kind="chain" />} />
               <Route path="products/chains/:id" element={<ProductDetailPage kind="chain" />} />
               <Route path="products/chains/:id/edit" element={<ProductEditPage kind="chain" />} />
+              <Route path="users" element={<AdminUsersPage />} />
             </Route>
           </Route>
 

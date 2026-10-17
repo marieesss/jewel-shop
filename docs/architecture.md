@@ -215,13 +215,13 @@ src/
 ├── stores/       # MobX : AuthStore, ProductAdminStore, FavoritesStore, RootStore + hooks d'accès
 ├── routes/       # guards.tsx : ProtectedRoute, AdminRoute
 ├── pages/        # pages routées : AuthPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage, user/, admin/
-├── features/     # composants métier : admin/, auth/, products/, favorites/, user/
+├── features/     # composants métier : admin/, auth/, products/, favorites/, user/, users/
 ├── components/ui # composants génériques (Button, TextField, Pagination…)
 ├── hooks/        # useAsync
 └── lib/          # cn, format, returnUrl (redirection après connexion), sessionExpired (message à la connexion),
                   # passwordPolicy (règles du mot de passe, identiques au back), emailValidation,
                   # passwordReset (messages et erreur de lien), loginMessage (confirmation à la connexion),
-                  # invitation (message et erreurs d'invitation)
+                  # invitation (message et erreurs d'invitation), invitationEmail (règles de l'email d'invitation, identiques au back)
 ```
 
 - Routage déclaré dans `App.tsx`. `/login`, `/register`, `/forgot-password` et `/reset-password` sont publics. L'espace client (`/charms`, `/chains`, `/favorites`) exige une session. `/admin/...` exige le rôle `Admin`.
@@ -234,7 +234,8 @@ src/
 - `VITE_API_URL` est figée **au build**. Vide en production : URL relatives.
 - **Mot de passe oublié** : « Mot de passe oublié ? » mène à `/forgot-password`, qui affiche le même message de confirmation que l'email soit inscrit ou non. Le lien du mail ouvre `/reset-password?token=…`. Sans token, ou si l'API refuse le token (400 sur la clé `Token`), la page affiche « Ce lien de réinitialisation est invalide ou a expiré. » et un lien vers `/forgot-password`. Après un 204, elle redirige vers `/login` avec l'état de navigation `{ message }`, affiché en succès au-dessus du formulaire de connexion. Ces pages restent accessibles avec une session ouverte.
 - **Inscription sur invitation** : la page de connexion ne propose plus l'inscription. Le lien du mail d'invitation ouvre `/register?token=…`, qui appelle `GET /api/auth/invitations/{token}` au chargement. Sans token, ou sur un 404, la page affiche « Cette invitation est invalide ou a expiré. Demandez une nouvelle invitation à l'administrateur. » et un lien vers `/login`, sans formulaire ; une autre erreur affiche le message de l'API. Sinon, le formulaire affiche l'email de l'invitation en lecture seule et envoie `invitationToken` avec l'inscription. `AuthStore.register()` renvoie `'success'`, `'invalid-invitation'` (400 sur la clé `InvitationToken` : la page réaffiche le message d'invitation invalide) ou `'error'` (message dans `AuthStore.error`). Après un succès, l'utilisateur est connecté et redirigé vers `/`. La page reste accessible avec une session ouverte.
-- Les validations de formulaire reprennent celles du back (`features/products/productForm.ts`, `lib/passwordPolicy.ts`, `lib/emailValidation.ts`).
+- **Gestion des utilisateurs** (`/admin/users`, entrée « Utilisateurs » du menu admin) : en haut, le formulaire d'invitation (`features/users/InvitationForm`) appelle `POST /api/admin/invitations`. Il affiche « Invitation envoyée à {email}. » et vide le champ après un 201, et le message de l'API après un 400 ou un 409. En dessous, le tableau des inscrits (`features/users/UserTable`) est paginé par 20 via `GET /api/admin/users`. Les dates sont affichées en `dd/MM/yyyy` (`lib/format.ts`) et une date absente en « — ». `createdAt` est renvoyé en UTC sans fuseau (colonne `TIMESTAMP`) : `formatDate` le lit comme UTC puis l'affiche dans le fuseau du navigateur. `birthday` (date seule) est découpé sans passer par `Date`.
+- Les validations de formulaire reprennent celles du back (`features/products/productForm.ts`, `lib/passwordPolicy.ts`, `lib/emailValidation.ts`, `lib/invitationEmail.ts`).
 
 ---
 
@@ -315,7 +316,7 @@ Le retour arrière remet l'ancienne version du code, **pas l'ancien schéma** : 
 | Planification des tâches | Fait : les tâches périodiques sont planifiées par Coravel (invocables et planification déclarative au démarrage), à la place du planificateur maison. |
 | Mot de passe oublié | Fait côté back : table `password_reset_tokens` (tokens hachés, à usage unique, valables 1 heure), endpoints `forgot-password` et `reset-password`, mail `PasswordReset`, révocation des refresh tokens et purge planifiée. |
 | Inscription sur invitation | Fait : `GET /api/auth/invitations/{token}` et champ facultatif `invitationToken` de `POST /api/auth/register`, qui accepte l'invitation, et page front `/register` (l'inscription n'est plus proposée sur `/login`). Restent le token obligatoire et la fermeture de l'inscription publique (#42) : ce sera un **changement de comportement** de l'endpoint public existant. |
-| Gestion des utilisateurs | `GET /api/admin/users` existe et renvoie la date d'inscription (`createdAt`, `null` pour les comptes antérieurs). Fait côté back : table `invitations` (tokens hachés, valables 7 jours, statuts `Pending`, `Accepted`, `Expired`, `Revoked`), endpoints `POST /api/admin/invitations` (409 si un compte ou une invitation en attente existe déjà pour l'email), `GET /api/admin/invitations` (filtre sur le statut effectif : une invitation `Pending` dépassée est listée en `Expired`), `POST /api/admin/invitations/{id}/resend` (nouveau token et 7 jours de plus) et `POST /api/admin/invitations/{id}/revoke` (l'invitation révoquée est conservée), mail `Invitation` via l'outbox et expiration planifiée. Reste la page admin « Utilisateurs ». |
+| Gestion des utilisateurs | `GET /api/admin/users` existe et renvoie la date d'inscription (`createdAt`, `null` pour les comptes antérieurs). Fait côté back : table `invitations` (tokens hachés, valables 7 jours, statuts `Pending`, `Accepted`, `Expired`, `Revoked`), endpoints `POST /api/admin/invitations` (409 si un compte ou une invitation en attente existe déjà pour l'email), `GET /api/admin/invitations` (filtre sur le statut effectif : une invitation `Pending` dépassée est listée en `Expired`), `POST /api/admin/invitations/{id}/resend` (nouveau token et 7 jours de plus) et `POST /api/admin/invitations/{id}/revoke` (l'invitation révoquée est conservée), mail `Invitation` via l'outbox et expiration planifiée. Fait côté front : page admin « Utilisateurs » (invitation par email et liste paginée des inscrits). Reste la liste des invitations avec renvoyer et révoquer (#41). |
 
 ### v0.2 : création de collier et commandes
 
