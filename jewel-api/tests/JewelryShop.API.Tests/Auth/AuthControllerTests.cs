@@ -1,6 +1,7 @@
 using JewelryShop.API.Tests.Fakes;
 using JewelryShop.Features.Auth.Commands;
 using JewelryShop.Features.Auth.Controllers;
+using JewelryShop.Features.Auth.DTOs;
 using JewelryShop.Features.Invitations.DTOs;
 using JewelryShop.Features.Invitations.Queries;
 using Microsoft.AspNetCore.Mvc;
@@ -48,5 +49,19 @@ public class AuthControllerTests
         Assert.Equal(new GetInvitationByTokenQuery("token"), _sender.LastRequest);
         var ok = Assert.IsType<OkObjectResult>(result);
         Assert.Same(preview, ok.Value);
+    }
+
+    [Fact]
+    public async Task Register_envoie_la_commande_avec_le_token_d_invitation_et_repond_201()
+    {
+        var command = new RegisterCommand("Marie", "Dupont", null, "Secret123!", null, "token");
+        var response = new AuthResponse("jwt", 3, "User");
+        _sender.Response = new RegisterResult(response, "refresh");
+
+        var result = await _controller.Register(command, CancellationToken.None);
+
+        Assert.Equal(command, _sender.LastRequest);
+        var created = Assert.IsType<CreatedAtActionResult>(result);
+        Assert.Same(response, created.Value);
     }
 }
