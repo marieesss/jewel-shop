@@ -57,13 +57,14 @@ export const AuthPage = observer(function AuthPage() {
         setLocalError('Les mots de passe ne correspondent pas.');
         return;
       }
-      ok = await auth.register({
+      const outcome = await auth.register({
         name,
         surname,
         email,
         password,
         birthday: birthday || null,
       });
+      ok = outcome === 'success';
     } else {
       ok = await auth.login({ email, password });
     }
