@@ -16,6 +16,9 @@ public class FakeInvitationRepository : InMemoryRepository<Invitation>, IInvitat
         => Task.FromResult<IReadOnlyList<Invitation>>(
             Entities.Where(i => i.Email == email && i.Status == InvitationStatus.Pending).ToList());
 
+    public Task<Invitation?> GetByTokenHashAsync(string tokenHash, CancellationToken ct)
+        => Task.FromResult(Entities.FirstOrDefault(i => i.TokenHash == tokenHash));
+
     public Task<int> ExpirePendingAsync(CancellationToken ct)
     {
         ExpirePendingCount++;

@@ -10,6 +10,9 @@ public interface IInvitationRepository : IRepository<Invitation>
     /// <summary>Invitations au statut Pending pour cet email, dépassées comprises, suivies par le contexte.</summary>
     Task<IReadOnlyList<Invitation>> GetPendingByEmailAsync(string email, CancellationToken ct);
 
+    /// <summary>Invitation dont le token a ce hash, quel que soit son statut, suivie par le contexte.</summary>
+    Task<Invitation?> GetByTokenHashAsync(string tokenHash, CancellationToken ct);
+
     /// <summary>Passe à Expired les invitations Pending dont l'échéance est atteinte.</summary>
     Task<int> ExpirePendingAsync(CancellationToken ct);
 }

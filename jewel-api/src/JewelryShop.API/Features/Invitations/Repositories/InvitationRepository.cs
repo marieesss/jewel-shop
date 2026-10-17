@@ -17,6 +17,9 @@ public class InvitationRepository : Repository<Invitation>, IInvitationRepositor
             .Where(i => i.Email == email && i.Status == InvitationStatus.Pending)
             .ToListAsync(ct);
 
+    public Task<Invitation?> GetByTokenHashAsync(string tokenHash, CancellationToken ct)
+        => DbSet.FirstOrDefaultAsync(i => i.TokenHash == tokenHash, ct);
+
     public Task<int> ExpirePendingAsync(CancellationToken ct)
         => Context.Database.ExecuteSqlAsync(
             $"UPDATE invitations SET status = 'Expired' WHERE status = 'Pending' AND expires_at <= NOW()", ct);
