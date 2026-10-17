@@ -7,6 +7,7 @@ import { Pagination } from '../../components/ui/Pagination';
 import { useAsync } from '../../hooks/useAsync';
 import { PRODUCT_CONFIG, userPaths } from '../../features/products/productConfig';
 import { ProductCard } from '../../features/products/ProductCard';
+import { FavoriteErrorAlert } from '../../features/favorites/FavoriteErrorAlert';
 import {
   ProductFilters,
   emptyFilters,
@@ -60,6 +61,7 @@ export function UserProductListPage({ kind }: Props) {
   return (
     <div className="mx-auto w-full max-w-[1100px]">
       <PageHeader title={config.plural} subtitle="Trouvez la pièce parfaite" />
+      <FavoriteErrorAlert className="mb-4" />
 
       <div className="flex flex-col gap-6 md:flex-row md:items-start">
         {/* Filtres latéraux */}

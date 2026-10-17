@@ -8,6 +8,7 @@ import { useAsync } from '../../hooks/useAsync';
 import { PRODUCT_CONFIG, userPaths } from '../../features/products/productConfig';
 import { ProductImage } from '../../features/products/ProductImage';
 import { FavoriteButton } from '../../features/favorites/FavoriteButton';
+import { FavoriteErrorAlert } from '../../features/favorites/FavoriteErrorAlert';
 import { colorLabel, colorTone } from '../../api/products';
 import { formatPrice } from '../../lib/format';
 import type { ProductKind } from '../../stores/ProductAdminStore';
@@ -32,6 +33,8 @@ export function UserProductDetailPage({ kind }: Props) {
       >
         ← Retour aux {config.plural.toLowerCase()}
       </Link>
+
+      <FavoriteErrorAlert className="mb-4" />
 
       {loading && <Spinner label="Chargement…" />}
       {!loading && (error || Number.isNaN(productId)) && (
