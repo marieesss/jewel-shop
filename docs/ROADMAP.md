@@ -9,7 +9,7 @@ Chaque version est un milestone GitHub. Chaque fonctionnalité ci-dessous sera d
 **Objectif** : l'application n'est accessible qu'aux personnes invitées, avec une authentification robuste.
 
 ### 1. Service d'email
-- Interface `IEmailSender` côté back, avec deux implémentations : Mailpit (dev, conteneur Docker) et un fournisseur SMTP/API en prod (Brevo, Resend ou SMTP OVH).
+- Interface `IEmailSender` côté back, avec une seule implémentation SMTP (`SmtpEmailSender`) : Mailpit en local (conteneur Docker), relais SMTP de Brevo en staging et en production. Envoi activé par `Email__Enabled`.
 - Templates de mail stockés côté back.
 - Envoi asynchrone via une table outbox et un `BackgroundService` : une action n'échoue pas si le fournisseur de mail est indisponible, le mail est renvoyé plus tard.
 
