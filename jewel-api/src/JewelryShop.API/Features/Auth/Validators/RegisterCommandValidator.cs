@@ -13,14 +13,8 @@ public class RegisterCommandValidator : AbstractValidator<RegisterCommand>
         RuleFor(x => x.Surname)
             .NotEmpty().WithMessage("Le nom est requis.")
             .MaximumLength(100).WithMessage("100 caractères maximum.");
-        RuleFor(x => x.Email)
-            .NotEmpty().WithMessage("L'email est requis.")
-            .EmailAddress().WithMessage("L'email n'est pas valide.")
-            .MaximumLength(255).WithMessage("255 caractères maximum.")
-            .When(x => x.InvitationToken is null);
         RuleFor(x => x.InvitationToken)
-            .NotEmpty().WithMessage(InvitationDefaults.InvalidInvitationMessage)
-            .When(x => x.InvitationToken is not null);
+            .NotEmpty().WithMessage(InvitationDefaults.RequiredInvitationMessage);
         RuleFor(x => x.Password).PasswordPolicy();
         RuleFor(x => x.Birthday)
             .Must(b => b is null || b.Value < DateOnly.FromDateTime(DateTime.UtcNow))

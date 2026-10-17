@@ -4,8 +4,10 @@ using MediatR;
 namespace JewelryShop.Features.Auth.Commands;
 
 /// <summary>
-/// Avec <paramref name="InvitationToken"/>, le compte prend l'email de l'invitation et <paramref name="Email"/>
-/// est ignoré : il peut être absent ou vide.
+/// Le compte prend l'email de l'invitation désignée par <paramref name="InvitationToken"/>, obligatoire.
+/// <paramref name="Email"/> est ignoré : il reste accepté pour ne pas casser les clients qui l'envoient encore.
+/// <paramref name="InvitationToken"/> reste nullable pour qu'un token absent donne une erreur de validation
+/// et non une erreur de désérialisation.
 /// </summary>
 public record RegisterCommand(
     string Name,
