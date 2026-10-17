@@ -8,6 +8,7 @@ public class User : BaseEntity
     public string PasswordHash { get; set; } = null!;
     public DateOnly? Birthday { get; set; }
     public UserRole Role { get; set; } = UserRole.User;
+    public DateTime? CreatedAt { get; set; }
 
     public ICollection<Favorite> Favorites { get; set; } = new List<Favorite>();
     public ICollection<Creation> Creations { get; set; } = new List<Creation>();

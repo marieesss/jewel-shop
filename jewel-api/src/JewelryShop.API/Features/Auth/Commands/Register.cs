@@ -26,17 +26,17 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterR
         IInvitationRepository invitations,
         IPasswordHasher passwordHasher,
         IJwtService jwtService,
-        IRefreshTokenService refreshTokens,
         ISecureTokenGenerator tokenGenerator,
-        TimeProvider timeProvider)
+        TimeProvider timeProvider,
+        IRefreshTokenService refreshTokens)
     {
         _users = users;
         _invitations = invitations;
         _passwordHasher = passwordHasher;
         _jwtService = jwtService;
         _refreshTokens = refreshTokens;
-        _tokenGenerator = tokenGenerator;
         _timeProvider = timeProvider;
+        _tokenGenerator = tokenGenerator;
     }
 
     public async Task<RegisterResult> Handle(RegisterCommand request, CancellationToken cancellationToken)
@@ -57,7 +57,8 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterR
             Email = email,
             PasswordHash = _passwordHasher.Hash(request.Password),
             Birthday = request.Birthday,
-            Role = UserRole.User
+            Role = UserRole.User,
+            CreatedAt = _timeProvider.GetUtcNow().UtcDateTime
         };
 
         await _users.AddAsync(user, cancellationToken);
