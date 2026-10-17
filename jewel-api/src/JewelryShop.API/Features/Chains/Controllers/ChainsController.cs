@@ -73,12 +73,14 @@ public class ChainsController : ApiControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> UploadImage(long id, IFormFile file, CancellationToken ct)
+    public async Task<IActionResult> UploadImage(long id, IFormFile? file, CancellationToken ct)
     {
-        if (file is null || file.Length == 0)
-            return BadRequest("Aucun fichier fourni.");
-
-        var command = new UploadChainImageCommand(id, file.OpenReadStream(), file.FileName, file.ContentType);
+        var command = new UploadChainImageCommand(
+            id,
+            file?.OpenReadStream() ?? Stream.Null,
+            file?.Length ?? 0,
+            file?.FileName ?? string.Empty,
+            file?.ContentType ?? string.Empty);
         var imageUrl = await Sender.Send(command, ct);
         return Ok(new { imageUrl });
     }
