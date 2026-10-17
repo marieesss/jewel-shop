@@ -11,6 +11,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0AB3BF05
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JewelryShop.API.Tests", "tests\JewelryShop.API.Tests\JewelryShop.API.Tests.csproj", "{2032324D-1D25-4610-BCBE-F6B831EA0743}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JewelryShop.API.IntegrationTests", "tests\JewelryShop.API.IntegrationTests\JewelryShop.API.IntegrationTests.csproj", "{FA5F3EDA-F25C-4137-A4E9-4F9335A53421}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +47,18 @@ Global
 		{2032324D-1D25-4610-BCBE-F6B831EA0743}.Release|x64.Build.0 = Release|Any CPU
 		{2032324D-1D25-4610-BCBE-F6B831EA0743}.Release|x86.ActiveCfg = Release|Any CPU
 		{2032324D-1D25-4610-BCBE-F6B831EA0743}.Release|x86.Build.0 = Release|Any CPU
+		{FA5F3EDA-F25C-4137-A4E9-4F9335A53421}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FA5F3EDA-F25C-4137-A4E9-4F9335A53421}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FA5F3EDA-F25C-4137-A4E9-4F9335A53421}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{FA5F3EDA-F25C-4137-A4E9-4F9335A53421}.Debug|x64.Build.0 = Debug|Any CPU
+		{FA5F3EDA-F25C-4137-A4E9-4F9335A53421}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{FA5F3EDA-F25C-4137-A4E9-4F9335A53421}.Debug|x86.Build.0 = Debug|Any CPU
+		{FA5F3EDA-F25C-4137-A4E9-4F9335A53421}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FA5F3EDA-F25C-4137-A4E9-4F9335A53421}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FA5F3EDA-F25C-4137-A4E9-4F9335A53421}.Release|x64.ActiveCfg = Release|Any CPU
+		{FA5F3EDA-F25C-4137-A4E9-4F9335A53421}.Release|x64.Build.0 = Release|Any CPU
+		{FA5F3EDA-F25C-4137-A4E9-4F9335A53421}.Release|x86.ActiveCfg = Release|Any CPU
+		{FA5F3EDA-F25C-4137-A4E9-4F9335A53421}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -52,5 +66,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{DD02F94A-EFD4-4A2D-BBD9-FDDBC6244D6B} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{2032324D-1D25-4610-BCBE-F6B831EA0743} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{FA5F3EDA-F25C-4137-A4E9-4F9335A53421} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 EndGlobal

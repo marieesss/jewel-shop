@@ -75,3 +75,7 @@ static void RunMigrations(WebApplication app)
         throw;
     }
 }
+
+// Rend accessible aux tests d'intégration la classe générée par les top-level statements
+// (WebApplicationFactory<Program>).
+public partial class Program { }
