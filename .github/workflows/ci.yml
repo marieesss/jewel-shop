@@ -44,6 +44,8 @@ jobs:
       - name: Compiler
         run: dotnet build JewelryShop.sln --configuration Release --no-restore
 
+      # Tests unitaires et tests d'intégration. Ces derniers lancent PostgreSQL avec Testcontainers,
+      # sur le Docker déjà installé sur les runners ubuntu-latest.
       - name: Tester
         run: dotnet test JewelryShop.sln --configuration Release --no-build --verbosity normal
 
