@@ -7,8 +7,12 @@ import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { TextField } from '../../components/ui/TextField';
 
+interface InvitationFormProps {
+  onInvited?: () => void;
+}
+
 /** Formulaire d'invitation d'une personne par email (admin). */
-export function InvitationForm() {
+export function InvitationForm({ onInvited }: InvitationFormProps) {
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -32,6 +36,7 @@ export function InvitationForm() {
       await createInvitation(trimmedEmail);
       setSuccess(`Invitation envoyée à ${trimmedEmail}.`);
       setEmail('');
+      onInvited?.();
     } catch (err) {
       setError(extractApiError(err));
     } finally {
