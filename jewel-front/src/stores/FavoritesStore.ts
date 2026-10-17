@@ -90,6 +90,10 @@ export class FavoritesStore {
     }
   }
 
+  clearError(): void {
+    this.error = null;
+  }
+
   reset(): void {
     this.favorites = [];
     this.loaded = false;
