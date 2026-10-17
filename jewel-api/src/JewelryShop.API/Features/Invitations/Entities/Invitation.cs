@@ -50,6 +50,22 @@ public class Invitation : BaseEntity
 
     public void MarkExpired() => Status = InvitationStatus.Expired;
 
+    /// <summary>Remplace le token (l'ancien lien ne fonctionne plus) et relance une validité complète.</summary>
+    public void Renew(string tokenHash, DateTime now)
+    {
+        TokenHash = tokenHash;
+        Status = InvitationStatus.Pending;
+        ExpiresAt = now + InvitationDefaults.Lifetime;
+        RevokedAt = null;
+    }
+
+    /// <summary>Révoque l'invitation sans la supprimer : son lien ne fonctionne plus.</summary>
+    public void Revoke(DateTime now)
+    {
+        Status = InvitationStatus.Revoked;
+        RevokedAt = now;
+    }
+
     /// <summary>
     /// Passe par la navigation et non par l'id : le compte créé à l'inscription n'a pas encore d'id,
     /// EF renseigne accepted_user_id à la sauvegarde.

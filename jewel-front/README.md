@@ -1,59 +1,58 @@
-# Jewel Front
+# mycharmly : front
 
-Front-end React + TypeScript + MobX pour **JewelryShop**.
-Implémente l'écran **« Login & Inscription »** (design Claude Design) connecté à l'API .NET.
+Interface client et admin de mycharmly : catalogue des chaînes et breloques, favoris, et espace d'administration des produits.
 
-## Stack
+## Pile
 
-- **React 18** + **TypeScript** (Vite)
-- **MobX** (`mobx` + `mobx-react-lite`) pour l'état d'authentification
-- **Axios** pour les appels HTTP (injection automatique du Bearer token)
+React 18, TypeScript, Vite, MobX, Tailwind, axios, react-router 6.
+
+## Prérequis
+
+Node.js 20.
 
 ## Démarrage
 
 ```bash
-npm install
+npm ci
 npm run dev          # http://localhost:5173
 ```
 
-L'API doit tourner en parallèle (profil `http` → `http://localhost:5030`) :
+L'API doit tourner en parallèle sur http://localhost:5030 : voir [`CONTRIBUTING.md`](../CONTRIBUTING.md) §2.
 
-```bash
-cd ../jewel-api
-dotnet run --project src/JewelryShop.API
-```
+## Scripts
 
-> Le CORS du back-end autorise `http://localhost:5173` par défaut.
-> Pour changer l'origine : variable d'environnement `Cors__Origins`
-> (valeurs séparées par des virgules).
+| Script                 | Rôle                                                 |
+| ---------------------- | ---------------------------------------------------- |
+| `npm run dev`          | Serveur de développement Vite                        |
+| `npm run build`        | Vérification des types (`tsc -b`) puis build de prod |
+| `npm run preview`      | Sert le build de production en local                 |
+| `npm run lint`         | ESLint                                               |
+| `npm run format`       | Formate le code avec Prettier                        |
+| `npm run format:check` | Vérifie le formatage Prettier                        |
+| `npm test`             | Tests Vitest                                         |
 
 ## Configuration
 
-`.env` :
+| Variable       | Rôle                                                                                                                                             |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `VITE_API_URL` | URL de l'API, lue **au build**. Vide : URL relatives (`/api/...`), cas de la production. Non définie (dev) : `http://localhost:5030` par défaut. |
 
-```
-VITE_API_URL=http://localhost:5030
-```
+## Structure de `src/`
 
-## Structure
+| Dossier          | Rôle                                                                               |
+| ---------------- | ---------------------------------------------------------------------------------- |
+| `api/`           | Client axios, intercepteurs d'authentification, appels HTTP et types des DTO       |
+| `stores/`        | État MobX (`AuthStore`, `ProductAdminStore`, `FavoritesStore`) et hooks d'accès    |
+| `routes/`        | Guards des routes protégées (`ProtectedRoute`, `AdminRoute`)                       |
+| `pages/`         | Pages routées : `AuthPage`, espace client (`user/`) et admin (`admin/`)            |
+| `features/`      | Composants métier par domaine (`admin`, `auth`, `products`, `favorites`, `user`)   |
+| `components/ui/` | Composants génériques, sans appel API (`Button`, `TextField`, `Pagination`…)       |
+| `hooks/`         | Hooks partagés (`useAsync`)                                                        |
+| `lib/`           | Utilitaires (`cn`, formatage, redirection après connexion, règles du mot de passe) |
 
-| Dossier                  | Rôle                                                                       |
-| ------------------------ | -------------------------------------------------------------------------- |
-| `src/api/`               | Client Axios + endpoints `auth` (`login`, `register`, `refresh`, `logout`) |
-| `src/stores/`            | `AuthStore` (MobX) + contexte React (`useAuthStore`)                       |
-| `src/components/`        | `FormInput`, `DecoPanel`, icônes SVG                                       |
-| `src/pages/AuthPage.tsx` | Écran Connexion / Inscription (design)                                     |
-| `src/App.tsx`            | Bascule connecté / non connecté                                            |
+Les routes sont déclarées dans `src/App.tsx`.
 
-## Flux d'authentification
+## Pour aller plus loin
 
-1. L'utilisateur soumet le formulaire (connexion ou inscription).
-2. `AuthStore` appelle `POST /api/auth/login` ou `/register`.
-3. La réponse `{ token, userId, role }` est gardée **en mémoire** dans `AuthStore`
-   (rien dans `localStorage`). L'API pose le refresh token dans un cookie `httpOnly`.
-4. Les requêtes suivantes envoient automatiquement `Authorization: Bearer <token>`.
-5. Au chargement de la page, `AuthStore.restoreSession()` appelle `POST /api/auth/refresh`
-   pour restaurer la session. Sur un 401, l'intercepteur axios rafraîchit le token puis
-   rejoue la requête. Si le refresh échoue, l'utilisateur est renvoyé sur `/login` avec
-   le message « Votre session a expiré. Veuillez vous reconnecter. ».
-6. La déconnexion appelle `POST /api/auth/logout`.
+- [`CONTRIBUTING.md`](../CONTRIBUTING.md) : conventions, vérifications avant de pousser, déroulé d'une contribution.
+- [`docs/architecture.md`](../docs/architecture.md) : architecture du front et de l'API.

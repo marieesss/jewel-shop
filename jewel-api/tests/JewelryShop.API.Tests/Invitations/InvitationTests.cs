@@ -69,6 +69,32 @@ public class InvitationTests
     }
 
     [Fact]
+    public void Renouvelee_repasse_en_attente_avec_un_nouveau_token_valable_7_jours()
+    {
+        var invitation = InvitationTestData.Create(1, "nouvelle@exemple.com", _now.AddDays(-20), InvitationStatus.Revoked, _now.AddDays(-19));
+
+        invitation.Renew(new string('b', 64), _now);
+
+        Assert.Equal(InvitationStatus.Pending, invitation.Status);
+        Assert.Equal(new string('b', 64), invitation.TokenHash);
+        Assert.Equal(_now.AddDays(7), invitation.ExpiresAt);
+        Assert.Null(invitation.RevokedAt);
+        Assert.Equal(_now.AddDays(-20), invitation.CreatedAt);
+    }
+
+    [Fact]
+    public void Revoquee_garde_sa_date_de_revocation_et_n_attend_plus_d_acceptation()
+    {
+        var invitation = CreatePending();
+
+        invitation.Revoke(_now.AddDays(1));
+
+        Assert.Equal(InvitationStatus.Revoked, invitation.Status);
+        Assert.Equal(_now.AddDays(1), invitation.RevokedAt);
+        Assert.False(invitation.IsAwaitingAcceptance(_now.AddDays(1)));
+    }
+
+    [Fact]
     public void Passe_a_accepted_avec_la_date_et_le_compte_cree()
     {
         var invitation = CreatePending();
