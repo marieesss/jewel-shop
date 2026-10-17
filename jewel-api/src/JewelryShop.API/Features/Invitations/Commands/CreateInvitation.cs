@@ -1,8 +1,6 @@
-using System.Globalization;
 using JewelryShop.Common.Exceptions;
 using JewelryShop.Common.Interfaces;
 using JewelryShop.Features.Invitations.DTOs;
-using JewelryShop.Infrastructure.Email;
 using MediatR;
 using Microsoft.Extensions.Options;
 
@@ -14,8 +12,6 @@ namespace JewelryShop.Features.Invitations.Commands;
 /// </summary>
 public class CreateInvitationCommandHandler : IRequestHandler<CreateInvitationCommand, InvitationDto>
 {
-    private const string EmailDateFormat = "dd/MM/yyyy";
-
     private readonly IInvitationRepository _invitations;
     private readonly IUserRepository _users;
     private readonly ISecureTokenGenerator _tokenGenerator;
@@ -55,12 +51,7 @@ public class CreateInvitationCommandHandler : IRequestHandler<CreateInvitationCo
         var token = _tokenGenerator.Generate();
         var invitation = Invitation.Create(email, _tokenGenerator.Hash(token), admin, now);
         _invitations.Add(invitation);
-        _emailQueue.Enqueue(email, EmailTemplates.Invitation, new
-        {
-            invitation.InviterName,
-            RegisterUrl = _appOptions.FrontendUrl($"/register?token={token}"),
-            ExpiresAt = invitation.ExpiresAt.ToString(EmailDateFormat, CultureInfo.InvariantCulture)
-        });
+        InvitationEmail.Enqueue(_emailQueue, _appOptions, invitation, token);
 
         await _invitations.SaveChangesAsync(cancellationToken);
 

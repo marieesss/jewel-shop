@@ -12,10 +12,29 @@ public class InvitationRepository : Repository<Invitation>, IInvitationRepositor
 
     public void Add(Invitation invitation) => DbSet.Add(invitation);
 
+    public async Task<Invitation?> GetByIdWithInviterAsync(long id, CancellationToken ct)
+        => await DbSet.Include(i => i.InvitedBy).FirstOrDefaultAsync(i => i.Id == id, ct);
+
     public async Task<IReadOnlyList<Invitation>> GetPendingByEmailAsync(string email, CancellationToken ct)
         => await DbSet
             .Where(i => i.Email == email && i.Status == InvitationStatus.Pending)
             .ToListAsync(ct);
+
+    public async Task<(IReadOnlyList<Invitation> Items, int TotalCount)> GetPagedAsync(
+        InvitationStatus status, DateTime now, int page, int pageSize, CancellationToken ct)
+    {
+        var query = DbSet.AsNoTracking().WhereEffectiveStatus(status, now);
+
+        var total = await query.CountAsync(ct);
+        var items = await query
+            .OrderByNewest()
+            .Include(i => i.InvitedBy)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(ct);
+
+        return (items, total);
+    }
 
     public Task<int> ExpirePendingAsync(CancellationToken ct)
         => Context.Database.ExecuteSqlAsync(
