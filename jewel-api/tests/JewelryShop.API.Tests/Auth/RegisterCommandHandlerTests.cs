@@ -19,9 +19,11 @@ public class RegisterCommandHandlerTests
 
     public RegisterCommandHandlerTests()
     {
+        var timeProvider = new FakeTimeProvider(_now);
         var refreshTokenService = new RefreshTokenService(
-            _refreshTokens, _tokenGenerator, new FakeTimeProvider(_now), new ListLogger<RefreshTokenService>());
-        _handler = new RegisterCommandHandler(_users, new FakePasswordHasher(), new FakeJwtService(), refreshTokenService);
+            _refreshTokens, _tokenGenerator, timeProvider, new ListLogger<RefreshTokenService>());
+        _handler = new RegisterCommandHandler(
+            _users, new FakePasswordHasher(), new FakeJwtService(), refreshTokenService, timeProvider);
     }
 
     private static RegisterCommand ValidCommand() =>
@@ -36,6 +38,16 @@ public class RegisterCommandHandlerTests
         Assert.Equal("marie@mycharmly.eu", user.Email);
         Assert.Equal(UserRole.User, user.Role);
         Assert.Equal("User", result.Response.Role);
+    }
+
+    [Fact]
+    public async Task Enregistre_la_date_et_l_heure_utc_de_l_inscription()
+    {
+        await _handler.Handle(ValidCommand(), CancellationToken.None);
+
+        var user = Assert.Single(_users.All);
+        Assert.Equal(_now.UtcDateTime, user.CreatedAt);
+        Assert.Equal(DateTimeKind.Utc, user.CreatedAt!.Value.Kind);
     }
 
     [Fact]

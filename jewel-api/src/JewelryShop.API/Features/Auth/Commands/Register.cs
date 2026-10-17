@@ -12,17 +12,20 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterR
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtService _jwtService;
     private readonly IRefreshTokenService _refreshTokens;
+    private readonly TimeProvider _timeProvider;
 
     public RegisterCommandHandler(
         IUserRepository users,
         IPasswordHasher passwordHasher,
         IJwtService jwtService,
-        IRefreshTokenService refreshTokens)
+        IRefreshTokenService refreshTokens,
+        TimeProvider timeProvider)
     {
         _users = users;
         _passwordHasher = passwordHasher;
         _jwtService = jwtService;
         _refreshTokens = refreshTokens;
+        _timeProvider = timeProvider;
     }
 
     public async Task<RegisterResult> Handle(RegisterCommand request, CancellationToken cancellationToken)
@@ -39,7 +42,8 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterR
             Email = email,
             PasswordHash = _passwordHasher.Hash(request.Password),
             Birthday = request.Birthday,
-            Role = UserRole.User
+            Role = UserRole.User,
+            CreatedAt = _timeProvider.GetUtcNow().UtcDateTime
         };
 
         await _users.AddAsync(user, cancellationToken);
