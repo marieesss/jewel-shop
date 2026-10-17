@@ -76,7 +76,7 @@ public class InvitationConfiguration : IEntityTypeConfiguration<Invitation>
             .HasForeignKey(i => i.InvitedById)
             .OnDelete(DeleteBehavior.SetNull);
 
-        builder.HasOne<User>()
+        builder.HasOne(i => i.AcceptedUser)
             .WithMany()
             .HasForeignKey(i => i.AcceptedUserId)
             .OnDelete(DeleteBehavior.SetNull);

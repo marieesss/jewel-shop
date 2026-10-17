@@ -12,6 +12,7 @@ public class Invitation : BaseEntity
     public DateTime CreatedAt { get; private set; }
     public DateTime? AcceptedAt { get; private set; }
     public long? AcceptedUserId { get; private set; }
+    public User? AcceptedUser { get; private set; }
     public DateTime? RevokedAt { get; private set; }
 
     public static Invitation Create(string email, string tokenHash, User invitedBy, DateTime now) => new()
@@ -48,4 +49,15 @@ public class Invitation : BaseEntity
     }
 
     public void MarkExpired() => Status = InvitationStatus.Expired;
+
+    /// <summary>
+    /// Passe par la navigation et non par l'id : le compte créé à l'inscription n'a pas encore d'id,
+    /// EF renseigne accepted_user_id à la sauvegarde.
+    /// </summary>
+    public void Accept(User user, DateTime now)
+    {
+        Status = InvitationStatus.Accepted;
+        AcceptedAt = now;
+        AcceptedUser = user;
+    }
 }
