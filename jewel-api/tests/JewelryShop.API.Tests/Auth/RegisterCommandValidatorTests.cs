@@ -169,4 +169,34 @@ public class RegisterCommandValidatorTests
             nameof(RegisterCommand.Birthday),
             "La date de naissance doit être dans le passé.");
     }
+
+    [Fact]
+    public void Sans_invitation_refuse_un_email_absent()
+    {
+        var result = _validator.Validate(ValidCommand() with { Email = null });
+
+        ValidationAssert.HasError(result, nameof(RegisterCommand.Email), "L'email est requis.");
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("pas-un-email")]
+    public void Avec_une_invitation_n_applique_pas_les_regles_de_l_email(string? email)
+    {
+        var result = _validator.Validate(ValidCommand() with { Email = email, InvitationToken = "token" });
+
+        Assert.True(result.IsValid);
+    }
+
+    [Fact]
+    public void Refuse_un_token_d_invitation_vide()
+    {
+        var result = _validator.Validate(ValidCommand() with { InvitationToken = "" });
+
+        ValidationAssert.HasError(
+            result,
+            nameof(RegisterCommand.InvitationToken),
+            "Cette invitation est invalide ou a expiré.");
+    }
 }

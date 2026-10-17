@@ -22,7 +22,6 @@ public class UploadChainImageCommandHandler : IRequestHandler<UploadChainImageCo
 
         var newUrl = await _storage.SaveAsync(request.Content, request.FileName, "chains", cancellationToken);
 
-        // Supprime l'ancienne image si elle existait
         if (!string.IsNullOrWhiteSpace(chain.ImageUrl))
             _storage.Delete(chain.ImageUrl);
 

@@ -93,4 +93,19 @@ public class InvitationTests
         Assert.Equal(_now.AddDays(1), invitation.RevokedAt);
         Assert.False(invitation.IsAwaitingAcceptance(_now.AddDays(1)));
     }
+
+    [Fact]
+    public void Passe_a_accepted_avec_la_date_et_le_compte_cree()
+    {
+        var invitation = CreatePending();
+        var user = new User { Email = "nouvelle@exemple.com" };
+        var acceptedAt = _now.AddDays(1);
+
+        invitation.Accept(user, acceptedAt);
+
+        Assert.Equal(InvitationStatus.Accepted, invitation.Status);
+        Assert.Equal(acceptedAt, invitation.AcceptedAt);
+        Assert.Same(user, invitation.AcceptedUser);
+        Assert.False(invitation.IsAwaitingAcceptance(acceptedAt));
+    }
 }

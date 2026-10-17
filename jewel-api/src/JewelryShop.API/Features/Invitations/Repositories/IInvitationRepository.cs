@@ -13,6 +13,9 @@ public interface IInvitationRepository : IRepository<Invitation>
     /// <summary>Invitations au statut Pending pour cet email, dépassées comprises, suivies par le contexte.</summary>
     Task<IReadOnlyList<Invitation>> GetPendingByEmailAsync(string email, CancellationToken ct);
 
+    /// <summary>Invitation dont le token a ce hash, quel que soit son statut, suivie par le contexte.</summary>
+    Task<Invitation?> GetByTokenHashAsync(string tokenHash, CancellationToken ct);
+
     /// <summary>Page d'invitations au statut effectif demandé, des plus récentes aux plus anciennes, non suivies, inviteur chargé.</summary>
     Task<(IReadOnlyList<Invitation> Items, int TotalCount)> GetPagedAsync(
         InvitationStatus status, DateTime now, int page, int pageSize, CancellationToken ct);
