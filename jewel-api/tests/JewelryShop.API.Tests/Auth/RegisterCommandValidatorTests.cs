@@ -8,7 +8,7 @@ public class RegisterCommandValidatorTests
     private readonly RegisterCommandValidator _validator = new();
 
     private static RegisterCommand ValidCommand() =>
-        new("Marie", "Dupont", "marie@mycharmly.eu", "Secret123!", new DateOnly(1995, 4, 12));
+        new("Marie", "Dupont", "marie@mycharmly.eu", "Secret123!", new DateOnly(1995, 4, 12), "token");
 
     [Fact]
     public void Accepte_une_inscription_valide()
@@ -36,26 +36,6 @@ public class RegisterCommandValidatorTests
         var result = _validator.Validate(ValidCommand() with { Surname = ValidationAssert.TextOf(surname) });
 
         ValidationAssert.HasError(result, nameof(RegisterCommand.Surname), expectedMessage);
-    }
-
-    [Theory]
-    [InlineData("", "L'email est requis.")]
-    [InlineData("pas-un-email", "L'email n'est pas valide.")]
-    public void Refuse_un_email_invalide(string email, string expectedMessage)
-    {
-        var result = _validator.Validate(ValidCommand() with { Email = email });
-
-        ValidationAssert.HasError(result, nameof(RegisterCommand.Email), expectedMessage);
-    }
-
-    [Fact]
-    public void Refuse_un_email_de_plus_de_255_caracteres()
-    {
-        var email = new string('a', 250) + "@x.com";
-
-        var result = _validator.Validate(ValidCommand() with { Email = email });
-
-        ValidationAssert.HasError(result, nameof(RegisterCommand.Email), "255 caractères maximum.");
     }
 
     [Theory]
@@ -170,33 +150,28 @@ public class RegisterCommandValidatorTests
             "La date de naissance doit être dans le passé.");
     }
 
-    [Fact]
-    public void Sans_invitation_refuse_un_email_absent()
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("pas-un-email")]
+    [InlineData(256)]
+    public void N_applique_aucune_regle_a_l_email(object? email)
     {
-        var result = _validator.Validate(ValidCommand() with { Email = null });
+        var result = _validator.Validate(ValidCommand() with { Email = email is null ? null : ValidationAssert.TextOf(email) });
 
-        ValidationAssert.HasError(result, nameof(RegisterCommand.Email), "L'email est requis.");
+        Assert.True(result.IsValid);
     }
 
     [Theory]
     [InlineData(null)]
     [InlineData("")]
-    [InlineData("pas-un-email")]
-    public void Avec_une_invitation_n_applique_pas_les_regles_de_l_email(string? email)
+    public void Refuse_une_inscription_sans_token_d_invitation(string? invitationToken)
     {
-        var result = _validator.Validate(ValidCommand() with { Email = email, InvitationToken = "token" });
-
-        Assert.True(result.IsValid);
-    }
-
-    [Fact]
-    public void Refuse_un_token_d_invitation_vide()
-    {
-        var result = _validator.Validate(ValidCommand() with { InvitationToken = "" });
+        var result = _validator.Validate(ValidCommand() with { InvitationToken = invitationToken });
 
         ValidationAssert.HasError(
             result,
             nameof(RegisterCommand.InvitationToken),
-            "Cette invitation est invalide ou a expiré.");
+            "Une invitation est nécessaire pour créer un compte.");
     }
 }

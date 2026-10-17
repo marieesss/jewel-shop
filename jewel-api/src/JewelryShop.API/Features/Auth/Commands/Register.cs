@@ -8,8 +8,8 @@ using MediatR;
 namespace JewelryShop.Features.Auth.Commands;
 
 /// <summary>
-/// Crée un compte et ouvre la session. Avec un token d'invitation, le compte prend l'email de l'invitation,
-/// qui passe à Accepted : compte, invitation et refresh token sont enregistrés dans la même sauvegarde.
+/// Crée un compte sur invitation et ouvre la session. Le compte prend l'email de l'invitation, qui passe à Accepted :
+/// compte, invitation et refresh token sont enregistrés dans la même sauvegarde.
 /// </summary>
 public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterResult>
 {
@@ -42,10 +42,8 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterR
     public async Task<RegisterResult> Handle(RegisterCommand request, CancellationToken cancellationToken)
     {
         var now = _timeProvider.GetUtcNow().UtcDateTime;
-        var invitation = request.InvitationToken is null
-            ? null
-            : await GetAwaitingInvitationAsync(request.InvitationToken, now, cancellationToken);
-        var email = invitation?.Email ?? request.Email!.Trim().ToLowerInvariant();
+        var invitation = await GetAwaitingInvitationAsync(request.InvitationToken!, now, cancellationToken);
+        var email = invitation.Email;
 
         if (await _users.ExistsByEmailAsync(email, cancellationToken))
             throw new ConflictException("Un compte existe déjà avec cet email.");
@@ -62,7 +60,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterR
         };
 
         await _users.AddAsync(user, cancellationToken);
-        invitation?.Accept(user, now);
+        invitation.Accept(user, now);
         var refreshToken = _refreshTokens.Issue(user);
         await _users.SaveChangesAsync(cancellationToken);
 
