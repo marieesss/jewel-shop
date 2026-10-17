@@ -7,7 +7,8 @@ public record UserDto(
     string Surname,
     string Email,
     DateOnly? Birthday,
-    string Role);
+    string Role,
+    DateTime? CreatedAt);
 
 public static class UserMappingExtensions
 {
@@ -17,5 +18,6 @@ public static class UserMappingExtensions
         u.Surname,
         u.Email,
         u.Birthday,
-        u.Role.ToString());
+        u.Role.ToString(),
+        u.CreatedAt);
 }
