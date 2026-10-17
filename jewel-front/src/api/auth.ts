@@ -12,6 +12,12 @@ export interface RegisterPayload {
   email: string;
   password: string;
   birthday?: string | null;
+  invitationToken?: string;
+}
+
+export interface InvitationDetails {
+  email: string;
+  expiresAt: string;
 }
 
 export interface LoginPayload {
@@ -50,4 +56,12 @@ export async function forgotPassword(email: string): Promise<void> {
 /** POST /api/auth/reset-password → 204, 400 si le token est invalide, utilisé ou expiré */
 export async function resetPassword(token: string, password: string): Promise<void> {
   await api.post('/api/auth/reset-password', { token, password });
+}
+
+/** GET /api/auth/invitations/{token} → { email, expiresAt } */
+export async function getInvitation(token: string): Promise<InvitationDetails> {
+  const { data } = await api.get<InvitationDetails>(
+    `/api/auth/invitations/${encodeURIComponent(token)}`
+  );
+  return data;
 }

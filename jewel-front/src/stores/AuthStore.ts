@@ -12,8 +12,13 @@ import { installAuthInterceptors } from '../api/authInterceptors';
 import { api } from '../api/client';
 import { extractApiError } from '../api/errors';
 import { createSingleFlightRefresh } from '../api/singleFlightRefresh';
+import { isInvalidInvitationError } from '../lib/invitation';
 
 const ADMIN_ROLE = 'Admin';
+
+export type RegisterOutcome = 'success' | 'invalid-invitation' | 'error';
+
+type RequestOutcome = { ok: true } | { ok: false; error: unknown };
 
 // Emplacement de l'access token avant son passage en mémoire : nettoyé pour ne pas le laisser dans le navigateur.
 const LEGACY_TOKEN_KEY = 'jewelryshop_token';
@@ -53,11 +58,18 @@ export class AuthStore {
   }
 
   async login(payload: LoginPayload): Promise<boolean> {
-    return this.run(() => apiLogin(payload));
+    const outcome = await this.run(() => apiLogin(payload));
+    return outcome.ok;
   }
 
-  async register(payload: RegisterPayload): Promise<boolean> {
-    return this.run(() => apiRegister(payload));
+  /** Crée le compte ; une invitation refusée est signalée à part, sans message d'erreur générique. */
+  async register(payload: RegisterPayload): Promise<RegisterOutcome> {
+    const outcome = await this.run(() => apiRegister(payload));
+    if (outcome.ok) return 'success';
+    if (!isInvalidInvitationError(outcome.error)) return 'error';
+
+    this.clearError();
+    return 'invalid-invitation';
   }
 
   /** Restaure la session à partir du cookie de refresh ; un échec laisse simplement l'utilisateur déconnecté. */
@@ -113,18 +125,18 @@ export class AuthStore {
   }
 
   /** Exécute une requête d'auth et applique la réponse, en gérant loading/error. */
-  private async run(request: () => Promise<AuthResponse>): Promise<boolean> {
+  private async run(request: () => Promise<AuthResponse>): Promise<RequestOutcome> {
     this.loading = true;
     this.error = null;
     try {
       const session = await request();
       runInAction(() => this.applySession(session));
-      return true;
+      return { ok: true };
     } catch (err) {
       runInAction(() => {
         this.error = extractApiError(err, 'Email ou mot de passe incorrect.');
       });
-      return false;
+      return { ok: false, error: err };
     } finally {
       runInAction(() => {
         this.loading = false;

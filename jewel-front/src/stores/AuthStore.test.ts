@@ -1,5 +1,6 @@
+import { AxiosError, AxiosHeaders, type AxiosResponse } from 'axios';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { login, logout, refresh, type AuthResponse } from '../api/auth';
+import { login, logout, refresh, register, type AuthResponse } from '../api/auth';
 import { AuthStore } from './AuthStore';
 
 vi.mock('../api/auth', () => ({
@@ -10,6 +11,25 @@ vi.mock('../api/auth', () => ({
 }));
 
 const session: AuthResponse = { token: 'access', userId: 7, role: 'Admin' };
+
+const registerPayload = {
+  name: 'Marie',
+  surname: 'Dupont',
+  email: 'marie@exemple.com',
+  password: 'MotDePasse1!',
+  invitationToken: 'invitation',
+};
+
+function apiError(status: number, errors: Record<string, string[]>): AxiosError {
+  const response = {
+    status,
+    data: { status, title: 'Erreur', errors },
+    statusText: '',
+    headers: {},
+    config: { headers: new AxiosHeaders() },
+  } as AxiosResponse;
+  return new AxiosError('Erreur', undefined, undefined, undefined, response);
+}
 
 function connectedStore(): AuthStore {
   const store = new AuthStore();
@@ -123,5 +143,42 @@ describe('AuthStore', () => {
 
     expect(ok).toBe(true);
     expect(store.token).toBe('access');
+  });
+
+  it('applique la session renvoyée par l’inscription', async () => {
+    vi.mocked(register).mockResolvedValue(session);
+    const store = new AuthStore();
+
+    const outcome = await store.register(registerPayload);
+
+    expect(outcome).toBe('success');
+    expect(store.token).toBe('access');
+    expect(register).toHaveBeenCalledWith(registerPayload);
+  });
+
+  it('signale une invitation refusée, sans message d’erreur générique', async () => {
+    vi.mocked(register).mockRejectedValue(
+      apiError(400, { InvitationToken: ['Cette invitation est invalide ou a expiré.'] })
+    );
+    const store = new AuthStore();
+
+    const outcome = await store.register(registerPayload);
+
+    expect(outcome).toBe('invalid-invitation');
+    expect(store.error).toBeNull();
+    expect(store.isAuthenticated).toBe(false);
+  });
+
+  it('expose le message de l’API quand l’inscription échoue pour une autre raison', async () => {
+    vi.mocked(register).mockRejectedValue(
+      apiError(409, { Email: ['Un compte existe déjà pour cet email.'] })
+    );
+    const store = new AuthStore();
+
+    const outcome = await store.register(registerPayload);
+
+    expect(outcome).toBe('error');
+    expect(store.error).not.toBeNull();
+    expect(store.isAuthenticated).toBe(false);
   });
 });
