@@ -1,5 +1,7 @@
 using JewelryShop.Common.Exceptions;
 using JewelryShop.Features.Auth.Commands;
+using JewelryShop.Features.Invitations.DTOs;
+using JewelryShop.Features.Invitations.Queries;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JewelryShop.Features.Auth.Controllers;
@@ -18,6 +20,16 @@ public class AuthController : ApiControllerBase
         RefreshTokenCookie.Append(Response, result.RefreshToken);
         return CreatedAtAction(nameof(Register), result.Response);
     }
+
+    /// <summary>
+    /// Renvoie l'email et l'échéance de l'invitation en attente qui porte ce token, pour la page d'inscription.
+    /// Répond 404 si l'invitation est inconnue, expirée, révoquée ou déjà acceptée.
+    /// </summary>
+    [HttpGet("invitations/{token}")]
+    [ProducesResponseType(typeof(InvitationPreviewDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetInvitation(string token, CancellationToken ct)
+        => Ok(await Sender.Send(new GetInvitationByTokenQuery(token), ct));
 
     /// <summary>Authentifie un utilisateur, retourne un JWT et pose le refresh token en cookie.</summary>
     [HttpPost("login")]
