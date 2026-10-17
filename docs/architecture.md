@@ -81,7 +81,11 @@ sequenceDiagram
 - `POST /api/auth/register` et `POST /api/auth/login` renvoient un **JWT** (HS256, valable `Jwt__AccessTokenMinutes` minutes, 15 par défaut ; tolérance d'horloge `ClockSkew` de 30 secondes à la validation) avec l'identifiant (`sub`) et le rôle, et posent le refresh token en cookie (voir ci-dessous).
 - Mots de passe hachés avec BCrypt. Rôles : `User` et `Admin` (`UserRole`).
 - Les endpoints admin portent `[Authorize(Roles = "Admin")]`. `AdminController` regroupe les routes `api/admin/...`.
-- L'inscription est **publique** aujourd'hui.
+- L'inscription est encore **publique** : le token d'invitation est facultatif jusqu'à #42.
+- **Inscription sur invitation** :
+  - `GET /api/auth/invitations/{token}` (anonyme) : 200 `{ email, expiresAt }` si l'invitation est en attente et non expirée. Sinon (inconnue, expirée, révoquée ou acceptée), 404 « Cette invitation est invalide ou a expiré. », sans distinguer les cas ;
+  - `POST /api/auth/register` accepte un champ facultatif `invitationToken`. Avec ce champ, l'email du corps est ignoré (il peut être vide) et le compte prend l'email de l'invitation, avec le rôle `User`. Une invitation inconnue, expirée, révoquée ou déjà acceptée donne un 400 sur `InvitationToken` (« Cette invitation est invalide ou a expiré. »), un compte existant pour l'email un 409. L'invitation passe à `Accepted` (`accepted_at`, `accepted_user_id`) dans la même sauvegarde que le compte et le refresh token ;
+  - sans `invitationToken`, l'inscription fonctionne comme avant.
 
 ### Mot de passe oublié
 
@@ -308,7 +312,7 @@ Le retour arrière remet l'ancienne version du code, **pas l'ancien schéma** : 
 | Protection des routes front | Fait : les guards `ProtectedRoute` / `AdminRoute` redirigent vers `/login?returnUrl=…`, et `AuthPage` renvoie sur la page demandée après connexion si le chemin est interne et autorisé pour le rôle. |
 | Planification des tâches | Fait : les tâches périodiques sont planifiées par Coravel (invocables et planification déclarative au démarrage), à la place du planificateur maison. |
 | Mot de passe oublié | Fait côté back : table `password_reset_tokens` (tokens hachés, à usage unique, valables 1 heure), endpoints `forgot-password` et `reset-password`, mail `PasswordReset`, révocation des refresh tokens et purge planifiée. |
-| Inscription sur invitation | Table `Invitation`. `POST /api/auth/register` devient conditionné par une invitation valide. C'est un **changement de comportement** de l'endpoint public existant. |
+| Inscription sur invitation | Fait côté back : `GET /api/auth/invitations/{token}` et champ facultatif `invitationToken` de `POST /api/auth/register`, qui accepte l'invitation. Restent la page front (#39), puis le token obligatoire et la fermeture de l'inscription publique (#42) : ce sera un **changement de comportement** de l'endpoint public existant. |
 | Gestion des utilisateurs | `GET /api/admin/users` existe. Fait côté back : table `invitations` (tokens hachés, valables 7 jours, statuts `Pending`, `Accepted`, `Expired`, `Revoked`), endpoint `POST /api/admin/invitations` (409 si un compte ou une invitation en attente existe déjà pour l'email), mail `Invitation` via l'outbox et expiration planifiée. Reste la page admin « Utilisateurs ». |
 
 ### v0.2 : création de collier et commandes
