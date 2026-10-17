@@ -15,7 +15,7 @@ Documents liés :
 | Dossier | Contenu | Pile |
 |---|---|---|
 | `jewel-api/` | API REST | .NET 8, ASP.NET Core, MediatR, FluentValidation, EF Core + PostgreSQL, Evolve (migrations SQL) |
-| `jewel-api/tests/` | Tests unitaires de l'API | xUnit |
+| `jewel-api/tests/` | Tests unitaires (`JewelryShop.API.Tests`) et tests d'intégration (`JewelryShop.API.IntegrationTests`) de l'API | xUnit, Testcontainers PostgreSQL |
 | `jewel-api/db/migrations/` | Migrations SQL versionnées | `V<n>__Description.sql` |
 | `jewel-front/` | Interface client et admin | React 18, TypeScript, Vite, MobX, Tailwind |
 | `deploy/` | Infra : passerelle Nginx, k3s, manifests Kubernetes (base + overlays `staging` / `production`) | Kustomize |
@@ -156,6 +156,8 @@ cd jewel-api && dotnet format JewelryShop.sln --verify-no-changes && dotnet buil
 cd jewel-front && npm run lint && npm run format:check && npm run build && npm test
 ```
 
+`dotnet test` lance aussi les tests d'intégration de l'API, qui ont besoin de Docker démarré (§5).
+
 Pour corriger le formatage automatiquement : `dotnet format JewelryShop.sln` dans `jewel-api`, `npm run format` dans `jewel-front`. Les règles sont dans `.editorconfig` (racine), `jewel-front/eslint.config.js` et `jewel-front/.prettierrc.json`. Un reformatage se fait dans un commit séparé, sans changement de comportement.
 
 ---
@@ -246,6 +248,19 @@ Conventions (voir `jewel-api/tests/JewelryShop.API.Tests/`) :
 ```bash
 cd jewel-api && dotnet test JewelryShop.sln
 ```
+
+### Tests d'intégration de l'API
+
+Les tests d'intégration (`jewel-api/tests/JewelryShop.API.IntegrationTests/`) appellent l'API par HTTP, avec toute sa pipeline (middlewares, validation, authentification, cookies), sur une vraie base PostgreSQL. Ils servent à vérifier ce qu'une doublure ne voit pas : codes HTTP et corps d'erreur, cookies, mapping EF sur le schéma créé par les migrations Evolve.
+
+- **Docker doit être démarré** : `JewelryShopApiFactory` lance un conteneur `postgres:16-alpine` avec Testcontainers, puis démarre l'API avec `WebApplicationFactory`, qui joue les migrations Evolve.
+- Un seul conteneur et une seule API pour tout le projet (collection `ApiCollection`) : les classes de test s'exécutent l'une après l'autre.
+- La base n'est pas vidée entre les tests. **Chaque test crée ses propres données** (`TestAccounts.CreateUserAsync`, `CreatePendingInvitationAsync`), avec un email unique, et ne suppose rien sur le reste de la base.
+- Les tâches périodiques ne tournent pas et l'envoi de mail est remplacé par `FakeEmailSender` : aucun mail ne part.
+- Le client de test (`CreateApiClient`) appelle l'API en HTTPS, pour que le cookie `Secure` du refresh token soit reçu, et ne gère pas les cookies tout seul : un test lit le `Set-Cookie` et renvoie le cookie qu'il veut (`RefreshTokenCookies`).
+- Un dossier par fonctionnalité et une classe par endpoint (`Auth/LoginTests`, `Auth/RefreshTests`…), avec les mêmes noms de tests en français que les tests unitaires.
+
+`dotnet test JewelryShop.sln` lance les tests unitaires et les tests d'intégration. Pour ne lancer que les tests unitaires, sans Docker : `dotnet test tests/JewelryShop.API.Tests`.
 
 Côté front, la logique pure (calcul, validation, formatage) est testée avec Vitest. Les tests sont placés à côté du fichier testé (`*.test.ts`), avec la même convention de noms en français, et la CI les lance avec `npm test`.
 
@@ -360,7 +375,7 @@ Section « Impact production » d'une PR :
 
 Sur chaque PR, la CI exécute :
 
-1. **API** : `dotnet restore`, vérification du formatage (`dotnet format --verify-no-changes`), `build` en Release, puis `test`.
+1. **API** : `dotnet restore`, vérification du formatage (`dotnet format --verify-no-changes`), `build` en Release, puis `test` (tests unitaires et tests d'intégration, avec le Docker du runner).
 2. **Front** : `npm ci`, `npm run lint`, `npm run format:check`, `npm run build` (vérification des types et build Vite), puis `npm test` (Vitest).
 
 Ces deux jobs, `API (.NET)` et `Front (React)`, sont obligatoires pour merger sur `main`.
