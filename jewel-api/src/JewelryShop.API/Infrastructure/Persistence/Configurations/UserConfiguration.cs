@@ -1,10 +1,17 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace JewelryShop.Infrastructure.Persistence.Configurations;
 
 public class UserConfiguration : IEntityTypeConfiguration<User>
 {
+    // La colonne est en timestamp sans fuseau et contient de l'UTC. Npgsql refuse d'y écrire
+    // un DateTime de Kind Utc : on l'écrit en Unspecified et on le relit en Utc.
+    private static readonly ValueConverter<DateTime?, DateTime?> _nullableUtcConverter = new(
+        value => value.HasValue ? DateTime.SpecifyKind(value.Value, DateTimeKind.Unspecified) : value,
+        value => value.HasValue ? DateTime.SpecifyKind(value.Value, DateTimeKind.Utc) : value);
+
     public void Configure(EntityTypeBuilder<User> builder)
     {
         builder.ToTable("users");
@@ -41,6 +48,11 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasConversion<string>()
             .HasDefaultValue(UserRole.User)
             .IsRequired();
+
+        builder.Property(u => u.CreatedAt)
+            .HasColumnName("created_at")
+            .HasColumnType("timestamp")
+            .HasConversion(_nullableUtcConverter);
 
         builder.HasIndex(u => u.Email).IsUnique();
 
