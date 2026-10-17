@@ -9,6 +9,7 @@ interface FormInputProps {
   icon?: ReactNode;
   delay?: number;
   required?: boolean;
+  readOnly?: boolean;
 }
 
 export function FormInput({
@@ -20,6 +21,7 @@ export function FormInput({
   icon,
   delay = 0,
   required,
+  readOnly,
 }: FormInputProps) {
   const hasValue = value.length > 0;
 
@@ -38,9 +40,10 @@ export function FormInput({
           type={type}
           value={value}
           required={required}
+          readOnly={readOnly}
           placeholder={placeholder}
           onChange={(e) => onChange(e.target.value)}
-          className={`w-full rounded-xl border-[1.5px] border-transparent bg-lin py-[13px] font-body text-sm font-normal text-encre outline-none transition-all focus:border-fuchsia focus:bg-white focus:shadow-focus ${
+          className={`w-full rounded-xl border-[1.5px] border-transparent bg-lin py-[13px] font-body text-sm font-normal text-encre outline-none transition-all focus:border-fuchsia focus:bg-white focus:shadow-focus read-only:text-slate ${
             icon ? 'pl-[42px] pr-4' : 'px-4'
           }`}
         />
