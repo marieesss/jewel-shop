@@ -126,7 +126,7 @@ erDiagram
 
 | Table | Contenu |
 |---|---|
-| `users` | nom, prénom, email (unique), hash du mot de passe, date de naissance, rôle |
+| `users` | nom, prénom, email (unique), hash du mot de passe, date de naissance, rôle, date d'inscription (`created_at`, UTC, `NULL` pour les comptes créés avant son ajout) |
 | `chains` | chaîne : nom, description, couleur, image, lien, coût, prix, longueur (`numeric(6,2)`) |
 | `charms` | breloque : mêmes champs, avec un stock en unités au lieu de la longueur |
 | `options` | longueurs proposées (nom, longueur `numeric(6,2)`) |
@@ -309,7 +309,7 @@ Le retour arrière remet l'ancienne version du code, **pas l'ancien schéma** : 
 | Planification des tâches | Fait : les tâches périodiques sont planifiées par Coravel (invocables et planification déclarative au démarrage), à la place du planificateur maison. |
 | Mot de passe oublié | Fait côté back : table `password_reset_tokens` (tokens hachés, à usage unique, valables 1 heure), endpoints `forgot-password` et `reset-password`, mail `PasswordReset`, révocation des refresh tokens et purge planifiée. |
 | Inscription sur invitation | Table `Invitation`. `POST /api/auth/register` devient conditionné par une invitation valide. C'est un **changement de comportement** de l'endpoint public existant. |
-| Gestion des utilisateurs | `GET /api/admin/users` existe. Fait côté back : table `invitations` (tokens hachés, valables 7 jours, statuts `Pending`, `Accepted`, `Expired`, `Revoked`), endpoints `POST /api/admin/invitations` (409 si un compte ou une invitation en attente existe déjà pour l'email), `GET /api/admin/invitations` (filtre sur le statut effectif : une invitation `Pending` dépassée est listée en `Expired`), `POST /api/admin/invitations/{id}/resend` (nouveau token et 7 jours de plus) et `POST /api/admin/invitations/{id}/revoke` (l'invitation révoquée est conservée), mail `Invitation` via l'outbox et expiration planifiée. Reste la page admin « Utilisateurs ». |
+| Gestion des utilisateurs | `GET /api/admin/users` existe et renvoie la date d'inscription (`createdAt`, `null` pour les comptes antérieurs). Fait côté back : table `invitations` (tokens hachés, valables 7 jours, statuts `Pending`, `Accepted`, `Expired`, `Revoked`), endpoints `POST /api/admin/invitations` (409 si un compte ou une invitation en attente existe déjà pour l'email), `GET /api/admin/invitations` (filtre sur le statut effectif : une invitation `Pending` dépassée est listée en `Expired`), `POST /api/admin/invitations/{id}/resend` (nouveau token et 7 jours de plus) et `POST /api/admin/invitations/{id}/revoke` (l'invitation révoquée est conservée), mail `Invitation` via l'outbox et expiration planifiée. Reste la page admin « Utilisateurs ». |
 
 ### v0.2 : création de collier et commandes
 
