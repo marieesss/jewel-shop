@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { IMAGE_ACCEPT, IMAGE_MAX_SIZE_MB, validateImageFile } from '../../lib/imageFile';
 import { FieldShell } from './FieldShell';
 
 interface ImageUploadProps {
@@ -7,13 +8,9 @@ interface ImageUploadProps {
   onChange: (file: File | null) => void;
   error?: string;
   required?: boolean;
-  /** Taille maximale acceptée en Mo (validation côté client). */
-  maxSizeMb?: number;
-  /** Remonte une erreur de validation locale (type/taille). */
+  /** Remonte une erreur de validation locale (type, extension, taille). */
   onValidationError?: (message: string | null) => void;
 }
-
-const ACCEPT = 'image/png,image/jpeg,image/webp,image/gif';
 
 /** Sélecteur de fichier image réutilisable, avec aperçu et retrait. */
 export function ImageUpload({
@@ -22,7 +19,6 @@ export function ImageUpload({
   onChange,
   error,
   required,
-  maxSizeMb = 5,
   onValidationError,
 }: ImageUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -45,12 +41,9 @@ export function ImageUpload({
       onChange(null);
       return;
     }
-    if (!file.type.startsWith('image/')) {
-      onValidationError?.('Le fichier doit être une image.');
-      return;
-    }
-    if (file.size > maxSizeMb * 1024 * 1024) {
-      onValidationError?.(`Image trop lourde (max ${maxSizeMb} Mo).`);
+    const [firstError] = validateImageFile(file);
+    if (firstError) {
+      onValidationError?.(firstError);
       return;
     }
     onChange(file);
@@ -67,7 +60,7 @@ export function ImageUpload({
       <input
         ref={inputRef}
         type="file"
-        accept={ACCEPT}
+        accept={IMAGE_ACCEPT}
         className="hidden"
         onChange={(e) => handleSelect(e.target.files?.[0] ?? null)}
       />
@@ -95,7 +88,9 @@ export function ImageUpload({
         >
           <span className="text-base">＋</span>
           Choisir une image
-          <span className="text-[11px] text-slate/70">PNG, JPG, WEBP — max {maxSizeMb} Mo</span>
+          <span className="text-[11px] text-slate/70">
+            PNG, JPG, WEBP — max {IMAGE_MAX_SIZE_MB} Mo
+          </span>
         </button>
       )}
     </FieldShell>
