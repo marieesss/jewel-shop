@@ -59,31 +59,41 @@ Chaque version est un milestone GitHub. Chaque fonctionnalité ci-dessous sera d
 - Stock en unités sur les breloques.
 - Formulaire admin de chaîne : le champ « Longueur (cm) » devient « Stock (cm) », « Coût / Prix » deviennent « Coût / Prix au mètre », et deux champs « Coût / Prix du fermoir » sont ajoutés.
 
-### 2. Adresse de livraison
+### 2. Tags
+- Table `Tag` : nom (unique, sans distinction de casse), slug, catégorie (`Thème`, `Couleur`, `Matière`, `Occasion`), `CreatedAt`.
+- Tables de liaison `ChainTag` et `CharmTag`, avec suppression en cascade.
+- Nouvelle entrée « Tags » dans le menu admin : liste par catégorie, création, renommage et suppression (la confirmation indique le nombre d'articles concernés).
+- Fusion de deux tags : les articles du tag fusionné passent sur le tag conservé.
+- Formulaires admin de chaîne et de breloque : sélection multiple des tags, avec création d'un tag à la volée.
+- Filtrage par tags du catalogue et des étapes du parcours de création : **OU à l'intérieur d'une catégorie, ET entre catégories** (par exemple (Mer OU Plage) ET Doré).
+- Nombre d'articles affiché pour chaque tag, calculé côté back, pour ne pas proposer de filtre menant à une liste vide.
+- Filtres conservés dans l'URL (`?tags=...`).
+
+### 3. Adresse de livraison
 - Adresse enregistrée sur le profil utilisateur, préremplie au moment de la commande.
 - L'adresse est **copiée** dans la commande, pour qu'un changement de profil ne modifie pas les anciennes commandes.
 
-### 3. Parcours de création
+### 4. Parcours de création
 - Bouton « Créer mon collier », puis un parcours en étapes :
   1. Choix de la chaîne (favoris en premier) et de la longueur, avec un guide visuel des longueurs.
   2. Choix des breloques sur une page dédiée (favoris en premier) : un clic ajoute une breloque, on peut la retirer, en mettre plusieurs identiques, et réordonner par drag and drop (dnd-kit).
 - **Maximum 8 breloques**, vérifié côté front et côté back.
 - État du collier conservé entre les étapes côté front. Pas de sauvegarde en base : une popup « Votre collier ne sera pas sauvegardé » s'affiche si l'utilisateur quitte le parcours.
 
-### 4. Récapitulatif et commande
+### 5. Récapitulatif et commande
 - Page récapitulative : chaque article avec son prix, et le prix total.
 - Commentaire optionnel de l'utilisateur.
 - Création de la commande : `Order` et `OrderLine`, avec les **prix copiés** au moment de la commande, et la position de chaque breloque.
 - Stock décrémenté à la création de la commande (la longueur en cm pour la chaîne, une unité par breloque), recrédité en cas d'annulation.
 - Mail de confirmation au client.
 
-### 5. Suivi de commande (client)
+### 6. Suivi de commande (client)
 - Onglet « Mes commandes », avec la liste et le détail.
 - Statuts : `Validation` → `Traitement` → `Envoyé` → `Reçu`, plus `Annulée`.
 - Le client marque la commande comme reçue (uniquement depuis `Envoyé`).
 - Le client peut annuler uniquement en `Validation`.
 
-### 6. Gestion des commandes (admin)
+### 7. Gestion des commandes (admin)
 - Liste des commandes, filtrable par statut.
 - Détail de la commande, notes internes (`OrderNote`), fiche client (infos, adresse, historique de commandes).
 - Changement de statut selon une machine à états vérifiée côté back, avec historique (`OrderStatusHistory`).
@@ -115,6 +125,32 @@ Contrainte : VPS OVH avec 2 vCores, 4 Go de RAM et 40 Go de disque, partagé ave
 ### 4. Intégration dans l'admin
 - À l'upload d'une photo produit : l'API .NET appelle l'API images, puis stocke l'URL et le `public_id` Cloudinary.
 - L'admin voit le résultat détouré et le valide, ou relance le traitement.
+
+---
+
+## v0.4 : IA pour le catalogue et la recherche
+
+**Objectif** : accélérer la saisie du catalogue et permettre au client de chercher en langage naturel.
+
+Contraintes : aucun modèle hébergé sur le VPS, appels à une API externe. **Aucune donnée personnelle** (nom, email, adresse) n'est envoyée au fournisseur.
+
+### 1. Client IA
+- Interface `IAiClient` côté back, avec une seule implémentation HTTP vers le fournisseur. Activé par `Ai__Enabled` ; désactivé, les fonctionnalités IA sont masquées et l'application fonctionne sans.
+- Réponses demandées en JSON et validées contre un schéma côté back : une réponse invalide est traitée comme une erreur.
+- Timeout sur chaque appel, consommation journalisée, plafond de dépense mensuel au-delà duquel les appels sont refusés.
+
+### 2. Tags et description automatiques
+- À l'upload d'une photo produit, après le détourage, la photo est envoyée à un modèle de vision.
+- Le modèle propose des tags choisis parmi les tags existants (il n'en crée pas) et une description du produit.
+- Traitement asynchrone (tâche Coravel) : l'upload n'attend pas la réponse de l'IA.
+- Les propositions apparaissent dans l'écran de validation de la v0.3 : l'admin les accepte, les modifie ou les rejette, et peut relancer la proposition. **Rien n'est enregistré sur le produit sans validation.**
+
+### 3. Recherche en langage naturel
+- Champ de recherche sur le catalogue et dans le parcours de création (par exemple « un collier doré sur le thème de la mer pour ma mère »).
+- Le modèle convertit la phrase en filtres : tags existants, prix maximum, longueur. Il ne génère aucun texte affiché au client.
+- Les filtres obtenus sont affichés comme des filtres classiques, que l'utilisateur peut retirer ou modifier.
+- En cas d'erreur ou de timeout (**3 s**), repli sur une recherche textuelle sur le nom et la description.
+- Limitation de débit par utilisateur, et cache des recherches identiques.
 
 ---
 
