@@ -41,7 +41,8 @@ src/JewelryShop.API/
 ├── Program.cs                     # chargement du .env, migrations, démarrage
 ├── Startup.cs                     # injection de dépendances et pipeline HTTP
 ├── Common/                        # ApiControllerBase, BaseEntity, PagedResult, exceptions,
-│                                  # ValidationBehavior, Repository<T>, interfaces de services
+│                                  # ValidationBehavior, Repository<T>, interfaces de services,
+│                                  # Validation/ImageFileRules (règles des images uploadées)
 ├── Features/<Fonctionnalité>/     # Entities/, Repositories/, Controllers/, Commands/, Queries/,
 │                                  # Validators/, DTOs/, Common/ (code partagé de la fonctionnalité)
 └── Infrastructure/
@@ -75,6 +76,7 @@ sequenceDiagram
 - Le controller ne fait que traduire la requête HTTP en commande MediatR.
 - Le `ValidationBehavior` exécute tous les validateurs avant le handler.
 - Les erreurs métier sont des exceptions typées, converties par le middleware en JSON `{ status, title, errors }`. Les 4xx sont journalisées en `Information`, les 5xx en `Error`.
+- **Upload d'image** (`POST /api/chains/{id}/image`, `POST /api/charms/{id}/image`) : les validateurs appliquent `ImageFileRules` (`Common/Validation/`). Un fichier absent ou vide donne « Aucun fichier fourni. ». Sinon, le type MIME doit être `image/jpeg`, `image/png` ou `image/webp` (« Le fichier doit être une image JPEG, PNG ou WEBP. »), l'extension doit correspondre au type (`.jpg` ou `.jpeg`, `.png`, `.webp`, sans tenir compte de la casse : « L'extension du fichier ne correspond pas à son format. ») et la taille ne doit pas dépasser 5 Mo (« L'image ne doit pas dépasser 5 Mo. »). Toutes ces erreurs sont des 400 sous la clé `File`.
 
 ### Authentification et autorisation
 
@@ -221,7 +223,8 @@ src/
                   # passwordPolicy (règles du mot de passe, identiques au back), emailValidation,
                   # passwordReset (messages et erreur de lien), loginMessage (confirmation à la connexion),
                   # invitation (message et erreurs d'invitation), invitationEmail (règles de l'email d'invitation, identiques au back),
-                  # invitationActions (statuts filtrables, actions permises par statut et leurs messages)
+                  # invitationActions (statuts filtrables, actions permises par statut et leurs messages),
+                  # imageFile (règles des images uploadées, identiques au back)
 ```
 
 - Routage déclaré dans `App.tsx`. `/login`, `/register`, `/forgot-password` et `/reset-password` sont publics. L'espace client (`/charms`, `/chains`, `/favorites`) exige une session. `/admin/...` exige le rôle `Admin`.
@@ -235,7 +238,7 @@ src/
 - **Mot de passe oublié** : « Mot de passe oublié ? » mène à `/forgot-password`, qui affiche le même message de confirmation que l'email soit inscrit ou non. Le lien du mail ouvre `/reset-password?token=…`. Sans token, ou si l'API refuse le token (400 sur la clé `Token`), la page affiche « Ce lien de réinitialisation est invalide ou a expiré. » et un lien vers `/forgot-password`. Après un 204, elle redirige vers `/login` avec l'état de navigation `{ message }`, affiché en succès au-dessus du formulaire de connexion. Ces pages restent accessibles avec une session ouverte.
 - **Inscription sur invitation** : la page de connexion ne propose plus l'inscription. Le lien du mail d'invitation ouvre `/register?token=…`, qui appelle `GET /api/auth/invitations/{token}` au chargement. Sans token, ou sur un 404, la page affiche « Cette invitation est invalide ou a expiré. Demandez une nouvelle invitation à l'administrateur. » et un lien vers `/login`, sans formulaire ; une autre erreur affiche le message de l'API. Sinon, le formulaire affiche l'email de l'invitation en lecture seule et envoie `invitationToken` avec l'inscription. `AuthStore.register()` renvoie `'success'`, `'invalid-invitation'` (400 sur la clé `InvitationToken` : la page réaffiche le message d'invitation invalide) ou `'error'` (message dans `AuthStore.error`). Après un succès, l'utilisateur est connecté et redirigé vers `/`. La page reste accessible avec une session ouverte.
 - **Gestion des utilisateurs** (`/admin/users`, entrée « Utilisateurs » du menu admin) : en haut, le formulaire d'invitation (`features/users/InvitationForm`) appelle `POST /api/admin/invitations`. Il affiche « Invitation envoyée à {email}. » et vide le champ après un 201, et le message de l'API après un 400 ou un 409. En dessous, la section « Invitations » (`features/users/InvitationList`) liste les invitations par statut effectif via `GET /api/admin/invitations`, des plus récentes aux plus anciennes, paginées par 20 : un `Select` propose « En attente » (par défaut), « Expirées », « Révoquées » et « Acceptées », et une liste vide affiche « Aucune invitation. ». « Renvoyer » (statuts `Pending`, `Expired` et `Revoked`) appelle `POST /api/admin/invitations/{id}/resend` et affiche « Invitation renvoyée à {email}. ». « Révoquer » (statuts `Pending` et `Expired`) demande une confirmation (`window.confirm`), appelle `POST /api/admin/invitations/{id}/revoke` et affiche « Invitation révoquée. ». Une invitation acceptée n'a aucune action. Une erreur affiche le message de l'API. La liste est rechargée après une action réussie et après une invitation créée par le formulaire ; si une action vide la dernière page, la page précédente est affichée. Tout en bas, le tableau des inscrits (`features/users/UserTable`) est paginé par 20 via `GET /api/admin/users`. Les dates sont affichées en `dd/MM/yyyy` (`lib/format.ts`) et une date absente en « — ». `createdAt` est renvoyé en UTC sans fuseau (colonne `TIMESTAMP`) : `formatDate` le lit comme UTC puis l'affiche dans le fuseau du navigateur. `birthday` (date seule) est découpé sans passer par `Date`.
-- Les validations de formulaire reprennent celles du back (`features/products/productForm.ts`, `lib/passwordPolicy.ts`, `lib/emailValidation.ts`, `lib/invitationEmail.ts`).
+- Les validations de formulaire reprennent celles du back (`features/products/productForm.ts`, `lib/passwordPolicy.ts`, `lib/emailValidation.ts`, `lib/invitationEmail.ts`, `lib/imageFile.ts`).
 
 ---
 
