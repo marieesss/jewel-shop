@@ -58,6 +58,7 @@ Chaque version est un milestone GitHub. Chaque fonctionnalité ci-dessous sera d
 - Longueurs et stock stockés en **cm entiers** pour éviter les erreurs d'arrondi.
 - Stock en unités sur les breloques.
 - Formulaire admin de chaîne : le champ « Longueur (cm) » devient « Stock (cm) », « Coût / Prix » deviennent « Coût / Prix au mètre », et deux champs « Coût / Prix du fermoir » sont ajoutés.
+- Le lien des chaînes et des breloques n'est plus affiché sur la fiche produit côté utilisateur. Il reste visible dans l'admin.
 
 ### 2. Tags
 - Table `Tag` : nom (unique, sans distinction de casse), slug, catégorie (`Thème`, `Couleur`, `Matière`, `Occasion`), `CreatedAt`.
