@@ -4,6 +4,7 @@ using JewelryShop.API.IntegrationTests.Infrastructure;
 using JewelryShop.Common;
 using JewelryShop.Common.Enums;
 using JewelryShop.Features.Chains.DTOs;
+using JewelryShop.Features.Favorites.DTOs;
 
 namespace JewelryShop.API.IntegrationTests.Chains;
 
@@ -44,5 +45,39 @@ public class GetChainsTests
         Assert.Equal(250, chain.StockCm);
         Assert.Equal(10m, chain.PricePerMeter);
         Assert.Null(chain.Price);
+    }
+
+    [Fact]
+    public async Task Filtre_par_prix_les_chaines_du_nouveau_format_sur_leur_prix_au_metre()
+    {
+        var admin = await _api.CreateClientAsAsync(UserRole.Admin);
+        var meter = await admin.CreateChainAsync(ChainsApi.MeterBody(ChainsApi.UniqueName()));
+
+        var inRange = await GetItemsAsync("minPrice=10&maxPrice=10");
+        var tooExpensive = await GetItemsAsync("maxPrice=9.99");
+
+        Assert.Contains(inRange, c => c.Id == meter.Id);
+        Assert.DoesNotContain(tooExpensive, c => c.Id == meter.Id);
+    }
+
+    [Fact]
+    public async Task Renvoie_le_stock_de_la_chaine_dans_les_favoris()
+    {
+        var admin = await _api.CreateClientAsAsync(UserRole.Admin);
+        var created = await admin.CreateChainAsync(ChainsApi.MeterBody(ChainsApi.UniqueName()));
+
+        var response = await admin.PostAsJsonAsync("/api/favorites", new { ChainId = created.Id });
+        response.EnsureSuccessStatusCode();
+
+        var favorites = await admin.GetFromJsonAsync<PagedResult<FavoriteDto>>("/api/favorites?pageSize=100");
+        var favorite = Assert.Single(favorites!.Items, f => f.ChainId == created.Id);
+        Assert.Equal(250, favorite.Chain!.StockCm);
+    }
+
+    private async Task<IReadOnlyList<ChainDto>> GetItemsAsync(string query)
+    {
+        var page = await _api.CreateApiClient()
+            .GetFromJsonAsync<PagedResult<ChainDto>>($"{ChainsApi.Path}?pageSize=100&{query}");
+        return page!.Items;
     }
 }
