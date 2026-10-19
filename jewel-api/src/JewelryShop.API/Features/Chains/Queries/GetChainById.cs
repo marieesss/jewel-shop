@@ -12,7 +12,7 @@ public class GetChainByIdQueryHandler : IRequestHandler<GetChainByIdQuery, Chain
 
     public async Task<ChainDto> Handle(GetChainByIdQuery request, CancellationToken cancellationToken)
     {
-        var chain = await _chains.GetByIdAsync(request.Id, cancellationToken)
+        var chain = await _chains.GetByIdWithRollsAsync(request.Id, cancellationToken)
             ?? throw new NotFoundException("Chaîne", request.Id);
 
         return chain.ToDto();

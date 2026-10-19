@@ -10,6 +10,11 @@ public class ChainRepository : Repository<Chain>, IChainRepository
     {
     }
 
+    public async Task<Chain?> GetByIdWithRollsAsync(long id, CancellationToken cancellationToken = default)
+        => await DbSet
+            .Include(c => c.Rolls)
+            .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+
     public async Task<(IReadOnlyList<Chain> Items, int TotalCount)> GetPagedAsync(
         ProductColor? color,
         decimal? minPrice,
@@ -18,16 +23,16 @@ public class ChainRepository : Repository<Chain>, IChainRepository
         int pageSize,
         CancellationToken cancellationToken = default)
     {
-        var query = DbSet.AsNoTracking().AsQueryable();
+        var query = DbSet.AsNoTracking().Include(c => c.Rolls).AsQueryable();
 
         if (color.HasValue)
             query = query.Where(c => c.Color == color.Value);
 
         if (minPrice.HasValue)
-            query = query.Where(c => c.Price >= minPrice.Value);
+            query = query.Where(c => (c.Price ?? c.PricePerMeter) >= minPrice.Value);
 
         if (maxPrice.HasValue)
-            query = query.Where(c => c.Price <= maxPrice.Value);
+            query = query.Where(c => (c.Price ?? c.PricePerMeter) <= maxPrice.Value);
 
         query = query.OrderBy(c => c.Id);
 

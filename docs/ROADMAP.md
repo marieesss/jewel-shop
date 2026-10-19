@@ -50,14 +50,14 @@ Chaque version est un milestone GitHub. Chaque fonctionnalité ci-dessous sera d
 **Objectif** : un utilisateur compose son collier, passe commande, et l'admin suit la commande jusqu'à la réception. Pas de paiement en ligne dans cette version.
 
 ### 1. Modèle catalogue
-- **Chaînes vendues au mètre** : `Chain` (nom, description, couleur, photo, lien, coût au mètre, prix au mètre, coût du fermoir, prix du fermoir, stock total en cm).
-- Le stock est un total : l'admin saisit la longueur disponible en cm (par exemple 500), sans gérer de rouleaux séparés.
+- **Chaînes vendues au mètre** : `Chain` (nom, description, couleur, photo, lien, coût au mètre, prix au mètre, coût du fermoir, prix du fermoir) et ses **rouleaux**.
+- Le stock est géré par rouleaux : l'admin saisit la longueur de chaque rouleau acheté (par exemple 500 cm). Une longueur commandée est prise dans un seul rouleau, car deux bouts de chaîne ne s'assemblent pas. Le stock d'une chaîne est la somme des longueurs restantes de ses rouleaux.
 - Longueurs proposées au client : table de référence `ChainLength` (38, 42, 45, 50, 55, 60, 65, 70, 81 cm), administrable.
 - Prix d'une chaîne = prix au mètre × longueur / 100 + prix du fermoir, arrondi à 2 décimales et calculé côté back.
-- Une longueur n'est proposée que si le stock de la chaîne la couvre.
+- Une longueur n'est proposée que si au moins un rouleau de la chaîne la couvre.
 - Longueurs et stock stockés en **cm entiers** pour éviter les erreurs d'arrondi.
 - Stock en unités sur les breloques.
-- Formulaire admin de chaîne : le champ « Longueur (cm) » devient « Stock (cm) », « Coût / Prix » deviennent « Coût / Prix au mètre », et deux champs « Coût / Prix du fermoir » sont ajoutés.
+- Formulaire admin de chaîne : le champ « Longueur (cm) » devient « Longueur du rouleau (cm) » à la création, les rouleaux sont listés et ajoutés sur la fiche de la chaîne, « Coût / Prix » deviennent « Coût / Prix au mètre », et deux champs « Coût / Prix du fermoir » sont ajoutés.
 - Le lien des chaînes et des breloques n'est plus affiché sur la fiche produit côté utilisateur, et **l'API ne le renvoie plus aux utilisateurs non admin**. Il reste visible dans l'admin.
 
 ### 2. Tags

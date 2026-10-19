@@ -14,7 +14,7 @@ public class FavoriteRepository : Repository<Favorite>, IFavoriteRepository
         long userId, int page, int pageSize, CancellationToken cancellationToken = default)
     {
         var query = DbSet.AsNoTracking()
-            .Include(f => f.Chain)
+            .Include(f => f.Chain).ThenInclude(c => c!.Rolls)
             .Include(f => f.Charm)
             .Where(f => f.UserId == userId)
             .OrderByDescending(f => f.Id);

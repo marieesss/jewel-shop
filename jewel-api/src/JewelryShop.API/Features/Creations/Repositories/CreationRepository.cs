@@ -12,7 +12,7 @@ public class CreationRepository : Repository<Creation>, ICreationRepository
 
     public async Task<Creation?> GetByIdWithItemsAsync(long id, CancellationToken cancellationToken = default)
         => await DbSet.AsNoTracking()
-            .Include(c => c.Chain)
+            .Include(c => c.Chain).ThenInclude(c => c.Rolls)
             .Include(c => c.Option)
             .Include(c => c.Items.OrderBy(i => i.Position))
                 .ThenInclude(i => i.Charm)
@@ -22,7 +22,7 @@ public class CreationRepository : Repository<Creation>, ICreationRepository
         long userId, int page, int pageSize, CancellationToken cancellationToken = default)
     {
         var query = DbSet.AsNoTracking()
-            .Include(c => c.Chain)
+            .Include(c => c.Chain).ThenInclude(c => c.Rolls)
             .Include(c => c.Option)
             .Include(c => c.Items.OrderBy(i => i.Position))
                 .ThenInclude(i => i.Charm)

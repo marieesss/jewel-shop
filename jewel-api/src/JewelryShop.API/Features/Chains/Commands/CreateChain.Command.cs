@@ -1,3 +1,4 @@
+using JewelryShop.Features.Chains.Common;
 using JewelryShop.Features.Chains.DTOs;
 using MediatR;
 
@@ -7,7 +8,12 @@ public record CreateChainCommand(
     string Name,
     string Description,
     ProductColor Color,
-    decimal Cost,
-    decimal Price,
-    decimal Length,
-    string? Url = null) : IRequest<ChainDto>;
+    decimal? Cost = null,
+    decimal? Price = null,
+    decimal? Length = null,
+    string? Url = null,
+    decimal? CostPerMeter = null,
+    decimal? PricePerMeter = null,
+    decimal? ClaspCost = null,
+    decimal? ClaspPrice = null,
+    int? InitialRollLengthCm = null) : IRequest<ChainDto>, IChainPrices;

@@ -6,6 +6,9 @@ namespace JewelryShop.API.Tests.Fakes;
 
 public class FakeChainRepository : InMemoryRepository<Chain>, IChainRepository
 {
+    public Task<Chain?> GetByIdWithRollsAsync(long id, CancellationToken cancellationToken = default)
+        => GetByIdAsync(id, cancellationToken);
+
     public Task<(IReadOnlyList<Chain> Items, int TotalCount)> GetPagedAsync(
         ProductColor? color,
         decimal? minPrice,

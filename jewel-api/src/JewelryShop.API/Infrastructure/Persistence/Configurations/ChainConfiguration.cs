@@ -39,17 +39,39 @@ public class ChainConfiguration : IEntityTypeConfiguration<Chain>
 
         builder.Property(c => c.Cost)
             .HasColumnName("cost")
-            .HasColumnType("numeric(10,2)")
-            .IsRequired();
+            .HasColumnType("numeric(10,2)");
 
         builder.Property(c => c.Price)
             .HasColumnName("price")
-            .HasColumnType("numeric(10,2)")
-            .IsRequired();
+            .HasColumnType("numeric(10,2)");
 
         builder.Property(c => c.Length)
             .HasColumnName("length")
-            .HasColumnType("numeric(6,2)")
+            .HasColumnType("numeric(6,2)");
+
+        builder.Property(c => c.CostPerMeter)
+            .HasColumnName("cost_per_meter")
+            .HasColumnType("numeric(10,2)");
+
+        builder.Property(c => c.PricePerMeter)
+            .HasColumnName("price_per_meter")
+            .HasColumnType("numeric(10,2)");
+
+        builder.Property(c => c.ClaspCost)
+            .HasColumnName("clasp_cost")
+            .HasColumnType("numeric(10,2)")
             .IsRequired();
+
+        builder.Property(c => c.ClaspPrice)
+            .HasColumnName("clasp_price")
+            .HasColumnType("numeric(10,2)")
+            .IsRequired();
+
+        builder.Ignore(c => c.StockCm);
+
+        builder.HasMany(c => c.Rolls)
+            .WithOne()
+            .HasForeignKey(r => r.ChainId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

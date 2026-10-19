@@ -11,6 +11,10 @@ public class UpdateChainCommandValidatorTests
     private static UpdateChainCommand ValidCommand() =>
         new(7, "Gourmette", "Maille fine", ProductColor.Gold, 12.50m, 39.90m, 45m, "https://img.mycharmly.eu/gourmette.jpg");
 
+    private static UpdateChainCommand MeterCommand() =>
+        new(7, "Gourmette", "Maille fine", ProductColor.Gold,
+            CostPerMeter: 4m, PricePerMeter: 10m, ClaspCost: 1m, ClaspPrice: 3m);
+
     [Fact]
     public void Accepte_une_chaine_valide()
     {
@@ -103,5 +107,63 @@ public class UpdateChainCommandValidatorTests
         var result = _validator.Validate(ValidCommand() with { Url = new string('a', 501) });
 
         ValidationAssert.HasError(result, nameof(UpdateChainCommand.Url), "500 caractères maximum.");
+    }
+
+    [Fact]
+    public void Accepte_le_nouveau_format_sans_les_anciens_champs()
+    {
+        var result = _validator.Validate(MeterCommand());
+
+        Assert.True(result.IsValid);
+    }
+
+    [Fact]
+    public void Accepte_le_nouveau_format_sans_fermoir()
+    {
+        var result = _validator.Validate(MeterCommand() with { ClaspCost = null, ClaspPrice = null });
+
+        Assert.True(result.IsValid);
+    }
+
+    [Fact]
+    public void Refuse_un_prix_au_metre_negatif()
+    {
+        var result = _validator.Validate(MeterCommand() with { PricePerMeter = -0.01m });
+
+        ValidationAssert.HasError(result, nameof(UpdateChainCommand.PricePerMeter), "Le prix doit être positif.");
+    }
+
+    [Fact]
+    public void Refuse_un_cout_au_metre_negatif()
+    {
+        var result = _validator.Validate(MeterCommand() with { CostPerMeter = -0.01m });
+
+        ValidationAssert.HasError(result, nameof(UpdateChainCommand.CostPerMeter), "Le coût doit être positif.");
+    }
+
+    [Fact]
+    public void Refuse_un_fermoir_negatif()
+    {
+        var result = _validator.Validate(MeterCommand() with { ClaspCost = -0.01m, ClaspPrice = -0.01m });
+
+        ValidationAssert.HasError(result, nameof(UpdateChainCommand.ClaspCost), "Le coût doit être positif.");
+        ValidationAssert.HasError(result, nameof(UpdateChainCommand.ClaspPrice), "Le prix doit être positif.");
+    }
+
+    [Fact]
+    public void Exige_le_prix_au_metre_quand_seul_le_cout_au_metre_est_fourni()
+    {
+        var result = _validator.Validate(MeterCommand() with { PricePerMeter = null });
+
+        ValidationAssert.HasError(result, nameof(UpdateChainCommand.PricePerMeter), "Le prix au mètre est requis.");
+    }
+
+    [Fact]
+    public void Exige_les_prix_au_metre_quand_l_ancien_format_est_incomplet()
+    {
+        var result = _validator.Validate(ValidCommand() with { Price = null });
+
+        ValidationAssert.HasError(result, nameof(UpdateChainCommand.CostPerMeter), "Le coût au mètre est requis.");
+        ValidationAssert.HasError(result, nameof(UpdateChainCommand.PricePerMeter), "Le prix au mètre est requis.");
     }
 }
