@@ -1,3 +1,5 @@
+using JewelryShop.Features.Chains.Common;
+
 namespace JewelryShop.Features.Chains.Entities;
 
 public class Chain : BaseEntity
@@ -20,4 +22,32 @@ public class Chain : BaseEntity
     public ICollection<Creation> Creations { get; set; } = new List<Creation>();
 
     public int StockCm => Rolls.Sum(r => r.RemainingLengthCm);
+
+    /// <summary>
+    /// Enregistre les prix saisis. Au nouveau format, les anciennes colonnes ne sont pas touchées ;
+    /// à l'ancien, les prix au mètre en sont déduits. Un fermoir absent garde sa valeur.
+    /// </summary>
+    public void ApplyPrices(IChainPrices prices)
+    {
+        if (prices.UsesMeterPrices())
+        {
+            CostPerMeter = prices.CostPerMeter!.Value;
+            PricePerMeter = prices.PricePerMeter!.Value;
+        }
+        else
+        {
+            Cost = prices.Cost!.Value;
+            Price = prices.Price!.Value;
+            Length = prices.Length!.Value;
+            CostPerMeter = ChainPricing.PerMeter(Cost.Value, Length.Value);
+            PricePerMeter = ChainPricing.PerMeter(Price.Value, Length.Value);
+        }
+
+        if (prices.ClaspCost is { } claspCost)
+            ClaspCost = claspCost;
+        if (prices.ClaspPrice is { } claspPrice)
+            ClaspPrice = claspPrice;
+    }
+
+    public void AddRoll(int lengthCm, DateTime now) => Rolls.Add(ChainRoll.Create(lengthCm, now));
 }

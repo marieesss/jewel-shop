@@ -1,10 +1,13 @@
 using FluentValidation;
 using JewelryShop.Features.Chains.Commands;
+using JewelryShop.Features.Chains.Common;
 
 namespace JewelryShop.Features.Chains.Validators;
 
 public class CreateChainCommandValidator : AbstractValidator<CreateChainCommand>
 {
+    public const string InitialRollLengthMessage = "La longueur du rouleau doit être supérieure à 0.";
+
     public CreateChainCommandValidator()
     {
         RuleFor(x => x.Name)
@@ -14,12 +17,11 @@ public class CreateChainCommandValidator : AbstractValidator<CreateChainCommand>
             .MaximumLength(10000).WithMessage("10000 caractères maximum.");
         RuleFor(x => x.Color)
             .IsInEnum().WithMessage("Couleur invalide.");
-        RuleFor(x => x.Cost)
-            .GreaterThanOrEqualTo(0).WithMessage("Le coût doit être positif.");
-        RuleFor(x => x.Price)
-            .GreaterThanOrEqualTo(0).WithMessage("Le prix doit être positif.");
-        RuleFor(x => x.Length)
-            .GreaterThan(0).WithMessage("La longueur doit être supérieure à 0.");
+        Include(new ChainPricesValidator<CreateChainCommand>());
+        RuleFor(x => x.InitialRollLengthCm)
+            .NotNull().WithMessage(InitialRollLengthMessage)
+            .GreaterThan(0).WithMessage(InitialRollLengthMessage)
+            .When(x => x.UsesMeterPrices());
         RuleFor(x => x.Url)
             .MaximumLength(500).WithMessage("500 caractères maximum.");
     }
