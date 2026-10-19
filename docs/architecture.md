@@ -121,6 +121,7 @@ erDiagram
     users ||--o{ creations : ""
     users ||--o{ refresh_tokens : ""
     users ||--o{ password_reset_tokens : ""
+    chains ||--o{ chain_rolls : ""
     chains ||--o{ favorites : ""
     charms ||--o{ favorites : ""
     chains ||--o{ creations : ""
@@ -132,7 +133,8 @@ erDiagram
 | Table | Contenu |
 |---|---|
 | `users` | nom, prénom, email (unique), hash du mot de passe, date de naissance, rôle, date d'inscription (`created_at`, UTC, `NULL` pour les comptes créés avant son ajout) |
-| `chains` | chaîne : nom, description, couleur, image, lien, coût, prix, longueur (`numeric(6,2)`) |
+| `chains` | chaîne : nom, description, couleur, image, lien, coût et prix au mètre, coût et prix du fermoir (`0` par défaut). Les anciennes colonnes coût, prix et longueur (`numeric(6,2)`) restent remplies par l'ancien format de l'API et sont vides pour une chaîne créée au nouveau format |
+| `chain_rolls` | rouleau d'une chaîne : longueur initiale et longueur restante en cm entiers, date d'ajout. Supprimé avec la chaîne. Le stock d'une chaîne (`stockCm`) est la somme des longueurs restantes |
 | `charms` | breloque : mêmes champs, avec un stock en unités au lieu de la longueur |
 | `options` | longueurs proposées (nom, longueur `numeric(6,2)`) |
 | `favorites` | favori d'un utilisateur : exactement une chaîne **ou** une breloque (contrainte `CHECK`) |
@@ -325,7 +327,7 @@ Le retour arrière remet l'ancienne version du code, **pas l'ancien schéma** : 
 
 | Sujet | Impact sur l'architecture |
 |---|---|
-| Modèle catalogue | `chains` passe d'un prix et d'une longueur à un **coût et prix au mètre**, un **stock en cm entiers** et un **coût et prix de fermoir**. Migration de données sur les lignes existantes (`length numeric` → stock en cm). Nouvelle table de référence `ChainLength`, à articuler avec la table `options` existante. Calcul du prix côté back. |
+| Modèle catalogue | Fait côté back (phase « expand ») : `chains` a un **coût et prix au mètre** et un **coût et prix de fermoir**, et son stock est réparti en **rouleaux** (`chain_rolls`, cm entiers). La migration V7 calcule les prix au mètre des chaînes existantes et crée un rouleau de leur longueur. L'API accepte encore l'ancien format (`cost`, `price`, `length`) ; les anciennes colonnes seront supprimées une fois le front passé au nouveau format. Nouvelle table de référence `ChainLength`, à articuler avec la table `options` existante. Calcul du prix côté back. |
 | Adresse de livraison | Champs d'adresse sur `users` (nullables), copiés dans la commande. |
 | Parcours de création | Parcours front en étapes, état côté front uniquement, drag and drop (dnd-kit, nouvelle dépendance). Maximum 8 breloques vérifié des deux côtés. À articuler avec les entités `Creation` / `CreationItem` existantes. |
 | Commandes | Nouvelles tables `Order`, `OrderLine` (prix copiés, position des breloques), `OrderStatusHistory`, `OrderNote`. Machine à états côté back. Mouvements de stock dans la même transaction que la commande. Mails via l'outbox de la v0.1. |
