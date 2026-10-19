@@ -7,9 +7,14 @@ public record ChainDto(
     string Color,
     string? ImageUrl,
     string? Url,
-    decimal Cost,
-    decimal Price,
-    decimal Length);
+    decimal? Cost,
+    decimal? Price,
+    decimal? Length,
+    decimal? CostPerMeter,
+    decimal? PricePerMeter,
+    decimal ClaspCost,
+    decimal ClaspPrice,
+    int StockCm);
 
 public static class ChainMappingExtensions
 {
@@ -22,5 +27,10 @@ public static class ChainMappingExtensions
         c.Url,
         c.Cost,
         c.Price,
-        c.Length);
+        c.Length,
+        c.CostPerMeter,
+        c.PricePerMeter,
+        c.ClaspCost,
+        c.ClaspPrice,
+        c.StockCm);
 }
