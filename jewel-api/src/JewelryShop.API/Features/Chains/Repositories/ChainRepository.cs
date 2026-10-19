@@ -10,7 +10,7 @@ public class ChainRepository : Repository<Chain>, IChainRepository
     {
     }
 
-    public override async Task<Chain?> GetByIdAsync(long id, CancellationToken cancellationToken = default)
+    public async Task<Chain?> GetByIdWithRollsAsync(long id, CancellationToken cancellationToken = default)
         => await DbSet
             .Include(c => c.Rolls)
             .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
@@ -29,10 +29,10 @@ public class ChainRepository : Repository<Chain>, IChainRepository
             query = query.Where(c => c.Color == color.Value);
 
         if (minPrice.HasValue)
-            query = query.Where(c => c.Price >= minPrice.Value);
+            query = query.Where(c => (c.Price ?? c.PricePerMeter) >= minPrice.Value);
 
         if (maxPrice.HasValue)
-            query = query.Where(c => c.Price <= maxPrice.Value);
+            query = query.Where(c => (c.Price ?? c.PricePerMeter) <= maxPrice.Value);
 
         query = query.OrderBy(c => c.Id);
 

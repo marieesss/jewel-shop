@@ -12,7 +12,7 @@ public class UpdateChainCommandHandler : IRequestHandler<UpdateChainCommand, Cha
 
     public async Task<ChainDto> Handle(UpdateChainCommand request, CancellationToken cancellationToken)
     {
-        var chain = await _chains.GetByIdAsync(request.Id, cancellationToken)
+        var chain = await _chains.GetByIdWithRollsAsync(request.Id, cancellationToken)
             ?? throw new NotFoundException("Chaîne", request.Id);
 
         chain.Name = request.Name.Trim();
