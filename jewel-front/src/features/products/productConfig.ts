@@ -9,12 +9,12 @@ import {
   type ProductListParams,
 } from '../../api/products';
 import type { ProductKind } from '../../stores/ProductAdminStore';
-import { formatLengthCm } from '../../lib/format';
+import { formatLengthCm, formatOptionalPrice, formatPrice } from '../../lib/format';
 
 export type ProductDto = CharmDto | ChainDto;
 export type ProductSlug = 'charms' | 'chains';
 
-interface SpecificField {
+export interface DetailField {
   label: string;
   value: string;
 }
@@ -29,7 +29,27 @@ export interface ProductKindConfig {
   fetchList: (params: ProductListParams) => Promise<PagedResult<ProductDto>>;
   fetchById: (id: number) => Promise<ProductDto>;
   /** Champ propre au type (stock pour la breloque, longueur pour la chaîne). */
-  specificField: (product: ProductDto) => SpecificField;
+  specificField: (product: ProductDto) => DetailField;
+  /** Champs de la fiche admin propres au type (stock et prix). */
+  adminFields: (product: ProductDto) => DetailField[];
+}
+
+function charmAdminFields(charm: CharmDto): DetailField[] {
+  return [
+    { label: 'Stock', value: String(charm.stock) },
+    { label: 'Coût', value: formatPrice(charm.cost) },
+    { label: 'Prix', value: formatPrice(charm.price) },
+  ];
+}
+
+function chainAdminFields(chain: ChainDto): DetailField[] {
+  return [
+    { label: 'Stock total', value: formatLengthCm(chain.stockCm) },
+    { label: 'Coût au mètre', value: formatOptionalPrice(chain.costPerMeter) },
+    { label: 'Prix au mètre', value: formatOptionalPrice(chain.pricePerMeter) },
+    { label: 'Coût du fermoir', value: formatPrice(chain.claspCost) },
+    { label: 'Prix du fermoir', value: formatPrice(chain.claspPrice) },
+  ];
 }
 
 export const PRODUCT_CONFIG: Record<ProductKind, ProductKindConfig> = {
@@ -42,6 +62,7 @@ export const PRODUCT_CONFIG: Record<ProductKind, ProductKindConfig> = {
     fetchList: getCharms,
     fetchById: getCharmById,
     specificField: (p) => ({ label: 'Stock', value: String((p as CharmDto).stock) }),
+    adminFields: (p) => charmAdminFields(p as CharmDto),
   },
   chain: {
     kind: 'chain',
@@ -52,6 +73,7 @@ export const PRODUCT_CONFIG: Record<ProductKind, ProductKindConfig> = {
     fetchList: getChains,
     fetchById: getChainById,
     specificField: (p) => ({ label: 'Longueur', value: formatLengthCm((p as ChainDto).length) }),
+    adminFields: (p) => chainAdminFields(p as ChainDto),
   },
 };
 

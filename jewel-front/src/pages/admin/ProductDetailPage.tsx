@@ -71,11 +71,11 @@ export function ProductDetailPage({ kind }: ProductDetailPageProps) {
             <Card className="px-5 py-2">
               <DetailRow label="Référence">#{data.id}</DetailRow>
               <DetailRow label="Couleur">{colorLabel(data.color)}</DetailRow>
-              <DetailRow label={config.specificField(data).label}>
-                {config.specificField(data).value}
-              </DetailRow>
-              <DetailRow label="Coût">{formatOptionalPrice(data.cost)}</DetailRow>
-              <DetailRow label="Prix">{formatOptionalPrice(data.price)}</DetailRow>
+              {config.adminFields(data).map((field) => (
+                <DetailRow key={field.label} label={field.label}>
+                  {field.value}
+                </DetailRow>
+              ))}
               <DetailRow label="Lien">
                 {data.url ? (
                   <a
