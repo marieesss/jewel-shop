@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using JewelryShop.Common.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -15,13 +16,14 @@ public class FakeSender : ISender
 
     /// <summary>
     /// Branche le sender sur le controller (qui le résout dans <c>HttpContext.RequestServices</c>)
-    /// et connecte l'utilisateur <paramref name="userId"/>.
+    /// et connecte l'utilisateur <paramref name="userId"/> avec le rôle <paramref name="role"/>.
     /// </summary>
-    public void AttachTo(ControllerBase controller, long userId = 1)
+    public void AttachTo(ControllerBase controller, long userId = 1, UserRole role = UserRole.User)
     {
         var services = new ServiceCollection().AddSingleton<ISender>(this).BuildServiceProvider();
         var user = new ClaimsPrincipal(new ClaimsIdentity(
-            [new Claim(ClaimTypes.NameIdentifier, userId.ToString())], authenticationType: "Test"));
+            [new Claim(ClaimTypes.NameIdentifier, userId.ToString()), new Claim(ClaimTypes.Role, role.ToString())],
+            authenticationType: "Test"));
 
         controller.ControllerContext = new ControllerContext
         {
