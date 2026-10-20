@@ -19,12 +19,18 @@ public abstract class ApiControllerBase : ControllerBase
     /// sur un endpoint [Authorize]).
     /// </summary>
     protected long GetUserId()
+        => GetUserIdOrNull()
+           ?? throw new InvalidOperationException("Claim 'sub' introuvable dans le token.");
+
+    /// <summary>
+    /// Id de l'utilisateur connecté, ou null pour un appel anonyme (endpoint sans [Authorize]
+    /// appelé sans token, ou avec un token invalide ou expiré).
+    /// </summary>
+    protected long? GetUserIdOrNull()
     {
         var value = User.FindFirstValue(ClaimTypes.NameIdentifier)
                  ?? User.FindFirstValue("sub");
 
-        return long.TryParse(value, out var id)
-            ? id
-            : throw new InvalidOperationException("Claim 'sub' introuvable dans le token.");
+        return long.TryParse(value, out var id) ? id : null;
     }
 }
