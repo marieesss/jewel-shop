@@ -83,6 +83,7 @@ sequenceDiagram
 - `POST /api/auth/register` et `POST /api/auth/login` renvoient un **JWT** (HS256, valable `Jwt__AccessTokenMinutes` minutes, 15 par défaut ; tolérance d'horloge `ClockSkew` de 30 secondes à la validation) avec l'identifiant (`sub`) et le rôle, et posent le refresh token en cookie (voir ci-dessous).
 - Mots de passe hachés avec BCrypt. Rôles : `User` et `Admin` (`UserRole`).
 - Les endpoints admin portent `[Authorize(Roles = "Admin")]`. `AdminController` regroupe les routes `api/admin/...`.
+- **Champs réservés aux admins** : `GET /api/chains` et `GET /api/charms` (liste et détail) restent anonymes, mais le lien fournisseur (`url`) et les coûts (`cost`, et pour une chaîne `costPerMeter` et `claspCost`) ne sont renvoyés qu'à un appelant dont le token porte le rôle `Admin` (`ApiControllerBase.IsAdmin`). Les DTO publics (`ChainDto`, `CharmDto`) et admin (`AdminChainDto`, `AdminCharmDto`, qui en héritent) sont dans le même fichier ; le DTO public déclare le DTO admin avec `[JsonDerivedType]` pour que la sérialisation garde ses champs dans un `PagedResult<ChainDto>`. La création et la modification renvoient le DTO admin. Les favoris embarquent toujours le DTO public.
 - L'inscription est **fermée au public** : un compte ne se crée que sur invitation.
 - **Inscription sur invitation** :
   - `GET /api/auth/invitations/{token}` (anonyme) : 200 `{ email, expiresAt }` si l'invitation est en attente et non expirée. Sinon (inconnue, expirée, révoquée ou acceptée), 404 « Cette invitation est invalide ou a expiré. », sans distinguer les cas ;

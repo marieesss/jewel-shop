@@ -27,7 +27,7 @@ public class UpdateChainTests
             ChainsApi.LegacyBody(created.Name, cost: 15m, price: 60m, length: 300m));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var chain = await response.Content.ReadFromJsonAsync<ChainDto>();
+        var chain = await response.Content.ReadFromJsonAsync<AdminChainDto>();
         Assert.NotNull(chain);
         Assert.Equal(60m, chain.Price);
         Assert.Equal(5m, chain.CostPerMeter);
@@ -47,7 +47,7 @@ public class UpdateChainTests
         var response = await admin.PutAsJsonAsync($"{ChainsApi.Path}/{created.Id}", ChainsApi.MeterBody(created.Name));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var chain = await response.Content.ReadFromJsonAsync<ChainDto>();
+        var chain = await response.Content.ReadFromJsonAsync<AdminChainDto>();
         Assert.NotNull(chain);
         Assert.Equal(20m, chain.Cost);
         Assert.Equal(50m, chain.Price);

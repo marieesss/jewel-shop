@@ -16,4 +16,4 @@ public record CreateChainCommand(
     decimal? PricePerMeter = null,
     decimal? ClaspCost = null,
     decimal? ClaspPrice = null,
-    int? InitialRollLengthCm = null) : IRequest<ChainDto>, IChainPrices;
+    int? InitialRollLengthCm = null) : IRequest<AdminChainDto>, IChainPrices;

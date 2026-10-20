@@ -13,6 +13,9 @@ public abstract class ApiControllerBase : ControllerBase
     protected ISender Sender =>
         _sender ??= HttpContext.RequestServices.GetRequiredService<ISender>();
 
+    /// <summary>Vrai si le token de l'appelant porte le rôle Admin ; faux pour un appel anonyme.</summary>
+    protected bool IsAdmin => User.IsInRole(nameof(UserRole.Admin));
+
     /// <summary>
     /// Extrait l'Id utilisateur depuis le claim "sub" du JWT.
     /// Lève une InvalidOperationException si le claim est absent (ne devrait jamais arriver

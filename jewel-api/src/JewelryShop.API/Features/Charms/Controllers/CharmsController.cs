@@ -22,7 +22,7 @@ public class CharmsController : ApiControllerBase
     {
         ProductColor? colorEnum = Enum.TryParse<ProductColor>(color, ignoreCase: true, out var c) ? c : null;
         var result = await Sender.Send(
-            new GetCharmsQuery(colorEnum, inStockOnly, minPrice, maxPrice, page, pageSize), ct);
+            new GetCharmsQuery(colorEnum, inStockOnly, minPrice, maxPrice, page, pageSize, IsAdmin), ct);
         return Ok(result);
     }
 
@@ -32,7 +32,7 @@ public class CharmsController : ApiControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(long id, CancellationToken ct)
     {
-        var result = await Sender.Send(new GetCharmByIdQuery(id), ct);
+        var result = await Sender.Send(new GetCharmByIdQuery(id, IsAdmin), ct);
         return Ok(result);
     }
 

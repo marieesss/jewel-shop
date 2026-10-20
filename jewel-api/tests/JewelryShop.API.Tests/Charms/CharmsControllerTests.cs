@@ -2,6 +2,7 @@ using JewelryShop.API.Tests.Fakes;
 using JewelryShop.Common.Enums;
 using JewelryShop.Features.Charms.Commands;
 using JewelryShop.Features.Charms.Controllers;
+using JewelryShop.Features.Charms.Queries;
 using Microsoft.AspNetCore.Http;
 
 namespace JewelryShop.API.Tests.Charms;
@@ -12,6 +13,42 @@ public class CharmsControllerTests
     private readonly CharmsController _controller = new();
 
     public CharmsControllerTests() => _sender.AttachTo(_controller);
+
+    [Fact]
+    public async Task Demande_les_breloques_sans_champs_admin_pour_un_utilisateur()
+    {
+        await _controller.GetAll(null, null, null, null, ct: CancellationToken.None);
+
+        Assert.Equal(new GetCharmsQuery(null, null, null, null, 1, 20, IncludeAdminFields: false), _sender.LastRequest);
+    }
+
+    [Fact]
+    public async Task Demande_les_breloques_avec_les_champs_admin_pour_un_admin()
+    {
+        _sender.AttachTo(_controller, role: UserRole.Admin);
+
+        await _controller.GetAll(null, null, null, null, ct: CancellationToken.None);
+
+        Assert.Equal(new GetCharmsQuery(null, null, null, null, 1, 20, IncludeAdminFields: true), _sender.LastRequest);
+    }
+
+    [Fact]
+    public async Task Demande_le_detail_sans_champs_admin_pour_un_utilisateur()
+    {
+        await _controller.GetById(7, CancellationToken.None);
+
+        Assert.Equal(new GetCharmByIdQuery(7, IncludeAdminFields: false), _sender.LastRequest);
+    }
+
+    [Fact]
+    public async Task Demande_le_detail_avec_les_champs_admin_pour_un_admin()
+    {
+        _sender.AttachTo(_controller, role: UserRole.Admin);
+
+        await _controller.GetById(7, CancellationToken.None);
+
+        Assert.Equal(new GetCharmByIdQuery(7, IncludeAdminFields: true), _sender.LastRequest);
+    }
 
     [Fact]
     public async Task Met_a_jour_la_breloque_de_la_route_et_non_celle_du_corps()

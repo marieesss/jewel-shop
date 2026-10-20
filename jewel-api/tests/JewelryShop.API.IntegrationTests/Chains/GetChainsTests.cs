@@ -27,8 +27,8 @@ public class GetChainsTests
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var page = await response.Content.ReadFromJsonAsync<PagedResult<ChainDto>>();
         Assert.NotNull(page);
-        Assert.Equal(legacy, Assert.Single(page.Items, c => c.Id == legacy.Id));
-        Assert.Equal(meter, Assert.Single(page.Items, c => c.Id == meter.Id));
+        Assert.Equal(legacy.ToPublic(), Assert.Single(page.Items, c => c.Id == legacy.Id));
+        Assert.Equal(meter.ToPublic(), Assert.Single(page.Items, c => c.Id == meter.Id));
     }
 
     [Fact]

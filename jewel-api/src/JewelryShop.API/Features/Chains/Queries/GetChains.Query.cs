@@ -9,4 +9,5 @@ public record GetChainsQuery(
     decimal? MinPrice,
     decimal? MaxPrice,
     int Page = 1,
-    int PageSize = 20) : IRequest<PagedResult<ChainDto>>;
+    int PageSize = 20,
+    bool IncludeAdminFields = false) : IRequest<PagedResult<ChainDto>>;

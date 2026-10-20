@@ -15,6 +15,6 @@ public class GetCharmByIdQueryHandler : IRequestHandler<GetCharmByIdQuery, Charm
         var charm = await _charms.GetByIdAsync(request.Id, cancellationToken)
             ?? throw new NotFoundException("Breloque", request.Id);
 
-        return charm.ToDto();
+        return charm.ToDto(request.IncludeAdminFields);
     }
 }
