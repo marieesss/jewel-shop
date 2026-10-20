@@ -6,6 +6,9 @@ namespace JewelryShop.API.Tests.Fakes;
 
 public class FakeCharmRepository : InMemoryRepository<Charm>, ICharmRepository
 {
+    public long? LastFavoritesFirstForUserId { get; private set; }
+
+    /// <summary>Renvoie les breloques semées sans filtrer ni trier : le tri est fait par EF.</summary>
     public Task<(IReadOnlyList<Charm> Items, int TotalCount)> GetPagedAsync(
         ProductColor? color,
         bool? inStockOnly,
@@ -13,6 +16,10 @@ public class FakeCharmRepository : InMemoryRepository<Charm>, ICharmRepository
         decimal? maxPrice,
         int page,
         int pageSize,
+        long? favoritesFirstForUserId,
         CancellationToken cancellationToken = default)
-        => throw new NotSupportedException();
+    {
+        LastFavoritesFirstForUserId = favoritesFirstForUserId;
+        return Task.FromResult<(IReadOnlyList<Charm>, int)>((Entities.ToList(), Entities.Count));
+    }
 }
