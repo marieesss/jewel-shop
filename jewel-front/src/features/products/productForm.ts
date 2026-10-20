@@ -26,7 +26,7 @@ export function commonFromProduct(p: {
   name: string;
   description: string;
   color: string;
-  url: string | null;
+  url?: string | null;
   cost: number;
   price: number;
 }): ProductCommonValues {
