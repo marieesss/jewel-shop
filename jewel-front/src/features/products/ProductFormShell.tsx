@@ -2,7 +2,7 @@ import type { FormEvent, ReactNode } from 'react';
 import { Card } from '../../components/ui/Card';
 import { Alert } from '../../components/ui/Alert';
 import { Button } from '../../components/ui/Button';
-import { ProductCommonFields } from './ProductCommonFields';
+import { ProductCommonFields, type PriceLabels } from './ProductCommonFields';
 import type { FieldErrors, ProductCommonValues } from './productForm';
 
 interface Props {
@@ -10,6 +10,8 @@ interface Props {
   common: ProductCommonValues;
   onCommonChange: (patch: Partial<ProductCommonValues>) => void;
   commonErrors: FieldErrors<keyof ProductCommonValues>;
+  /** Libellés du coût et du prix (par défaut « Coût (€) » et « Prix (€) »). */
+  priceLabels?: PriceLabels;
   /** Champs spécifiques au type de produit (stock, longueur…). */
   children: ReactNode;
   submitLabel: string;
@@ -27,6 +29,7 @@ export function ProductFormShell({
   common,
   onCommonChange,
   commonErrors,
+  priceLabels,
   children,
   submitLabel,
   loading,
@@ -37,7 +40,12 @@ export function ProductFormShell({
     <form onSubmit={onSubmit} noValidate>
       <Card>
         <div className="flex flex-col gap-[18px]">
-          <ProductCommonFields values={common} onChange={onCommonChange} errors={commonErrors} />
+          <ProductCommonFields
+            values={common}
+            onChange={onCommonChange}
+            errors={commonErrors}
+            priceLabels={priceLabels}
+          />
           {children}
         </div>
 

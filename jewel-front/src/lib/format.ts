@@ -8,6 +8,18 @@ export function formatPrice(value: number): string {
   return eur.format(value);
 }
 
+export const MISSING_VALUE = '—';
+
+/** Formate un montant facultatif (`null` ou absent → « — »). */
+export function formatOptionalPrice(value: number | null | undefined): string {
+  return value === null || value === undefined ? MISSING_VALUE : formatPrice(value);
+}
+
+/** Formate une longueur facultative en cm (ex. 45 → « 45 cm », `null` ou absent → « — »). */
+export function formatLengthCm(value: number | null | undefined): string {
+  return value === null || value === undefined ? MISSING_VALUE : `${value} cm`;
+}
+
 export const MISSING_DATE = '—';
 
 // L'API renvoie les dates UTC sans fuseau (colonne TIMESTAMP) : sans le `Z`, le

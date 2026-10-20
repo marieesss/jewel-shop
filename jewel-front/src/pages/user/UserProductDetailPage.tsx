@@ -10,7 +10,7 @@ import { ProductImage } from '../../features/products/ProductImage';
 import { FavoriteButton } from '../../features/favorites/FavoriteButton';
 import { FavoriteErrorAlert } from '../../features/favorites/FavoriteErrorAlert';
 import { colorLabel, colorTone } from '../../api/products';
-import { formatPrice } from '../../lib/format';
+import { formatOptionalPrice } from '../../lib/format';
 import type { ProductKind } from '../../stores/ProductAdminStore';
 
 interface Props {
@@ -56,7 +56,7 @@ export function UserProductDetailPage({ kind }: Props) {
             </div>
 
             <p className="mb-4 font-display text-xl font-medium text-fuchsia">
-              {formatPrice(data.price)}
+              {formatOptionalPrice(data.price)}
             </p>
 
             <div className="mb-5">
@@ -74,7 +74,7 @@ export function UserProductDetailPage({ kind }: Props) {
               <DetailRow label={config.specificField(data).label}>
                 {config.specificField(data).value}
               </DetailRow>
-              <DetailRow label="Prix">{formatPrice(data.price)}</DetailRow>
+              <DetailRow label="Prix">{formatOptionalPrice(data.price)}</DetailRow>
               {data.url && (
                 <DetailRow label="Lien">
                   <a

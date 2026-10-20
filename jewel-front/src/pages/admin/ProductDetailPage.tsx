@@ -9,7 +9,7 @@ import { useAsync } from '../../hooks/useAsync';
 import { PRODUCT_CONFIG, adminPaths } from '../../features/products/productConfig';
 import { ProductImage } from '../../features/products/ProductImage';
 import { colorLabel, colorTone } from '../../api/products';
-import { formatPrice } from '../../lib/format';
+import { formatOptionalPrice } from '../../lib/format';
 import type { ProductKind } from '../../stores/ProductAdminStore';
 
 interface ProductDetailPageProps {
@@ -53,7 +53,7 @@ export function ProductDetailPage({ kind }: ProductDetailPageProps) {
             </div>
 
             <p className="mb-4 font-display text-xl font-medium text-fuchsia">
-              {formatPrice(data.price)}
+              {formatOptionalPrice(data.price)}
             </p>
 
             <Link to={adminPaths.edit(config.slug, data.id)} className="mb-5 inline-block">
@@ -71,11 +71,11 @@ export function ProductDetailPage({ kind }: ProductDetailPageProps) {
             <Card className="px-5 py-2">
               <DetailRow label="Référence">#{data.id}</DetailRow>
               <DetailRow label="Couleur">{colorLabel(data.color)}</DetailRow>
-              <DetailRow label={config.specificField(data).label}>
-                {config.specificField(data).value}
-              </DetailRow>
-              <DetailRow label="Coût">{formatPrice(data.cost)}</DetailRow>
-              <DetailRow label="Prix">{formatPrice(data.price)}</DetailRow>
+              {config.adminFields(data).map((field) => (
+                <DetailRow key={field.label} label={field.label}>
+                  {field.value}
+                </DetailRow>
+              ))}
               <DetailRow label="Lien">
                 {data.url ? (
                   <a

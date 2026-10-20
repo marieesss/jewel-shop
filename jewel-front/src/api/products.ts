@@ -116,29 +116,32 @@ export interface ChainDto {
   color: string;
   imageUrl: string | null;
   url: string | null;
-  /**
-   * Ancien format. L'API les renvoie vides pour une chaîne créée avec les prix au mètre,
-   * ce que ce front ne fait pas encore : ils restent typés comme toujours remplis.
-   */
-  cost: number;
-  price: number;
-  length: number;
-  costPerMeter?: number | null;
-  pricePerMeter?: number | null;
-  claspCost?: number;
-  claspPrice?: number;
+  /** Ancien format : vides pour une chaîne créée avec les prix au mètre. */
+  cost?: number | null;
+  price?: number | null;
+  length?: number | null;
+  costPerMeter: number | null;
+  pricePerMeter: number | null;
+  claspCost: number;
+  claspPrice: number;
   /** Longueur restante de tous les rouleaux, en cm. */
-  stockCm?: number;
+  stockCm: number;
 }
 
-export interface CreateChainPayload {
+export interface UpdateChainPayload {
   name: string;
   description: string;
   color: ProductColor;
-  cost: number;
-  price: number;
-  length: number;
   url?: string | null;
+  costPerMeter: number;
+  pricePerMeter: number;
+  claspCost: number;
+  claspPrice: number;
+}
+
+export interface CreateChainPayload extends UpdateChainPayload {
+  /** Longueur du premier rouleau, en cm entiers. */
+  initialRollLengthCm: number;
 }
 
 /** POST /api/chains (Admin) → 201 ChainDto */
@@ -163,7 +166,7 @@ export async function getChainById(id: number): Promise<ChainDto> {
 }
 
 /** PUT /api/chains/{id} (Admin) → ChainDto */
-export async function updateChain(id: number, payload: CreateChainPayload): Promise<ChainDto> {
+export async function updateChain(id: number, payload: UpdateChainPayload): Promise<ChainDto> {
   const { data } = await api.put<ChainDto>(`/api/chains/${id}`, {
     ...payload,
     color: COLOR_TO_VALUE[payload.color],

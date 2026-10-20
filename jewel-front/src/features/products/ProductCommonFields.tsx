@@ -8,7 +8,15 @@ interface Props {
   values: ProductCommonValues;
   onChange: (patch: Partial<ProductCommonValues>) => void;
   errors: FieldErrors<keyof ProductCommonValues>;
+  priceLabels?: PriceLabels;
 }
+
+export interface PriceLabels {
+  cost: string;
+  price: string;
+}
+
+const DEFAULT_PRICE_LABELS: PriceLabels = { cost: 'Coût (€)', price: 'Prix (€)' };
 
 const COLOR_OPTIONS = PRODUCT_COLORS.map((c) => ({
   value: c,
@@ -16,7 +24,12 @@ const COLOR_OPTIONS = PRODUCT_COLORS.map((c) => ({
 }));
 
 /** Champs partagés par les formulaires breloque & chaîne. */
-export function ProductCommonFields({ values, onChange, errors }: Props) {
+export function ProductCommonFields({
+  values,
+  onChange,
+  errors,
+  priceLabels = DEFAULT_PRICE_LABELS,
+}: Props) {
   return (
     <>
       <TextField
@@ -56,7 +69,7 @@ export function ProductCommonFields({ values, onChange, errors }: Props) {
       <div className="flex gap-3">
         <div className="flex-1">
           <TextField
-            label="Coût (€)"
+            label={priceLabels.cost}
             type="number"
             step="0.01"
             min="0"
@@ -69,7 +82,7 @@ export function ProductCommonFields({ values, onChange, errors }: Props) {
         </div>
         <div className="flex-1">
           <TextField
-            label="Prix (€)"
+            label={priceLabels.price}
             type="number"
             step="0.01"
             min="0"

@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Badge } from '../../components/ui/Badge';
 import { colorLabel, colorTone } from '../../api/products';
-import { formatPrice } from '../../lib/format';
+import { formatOptionalPrice } from '../../lib/format';
 import { ProductImage } from './ProductImage';
 import { FavoriteButton } from '../favorites/FavoriteButton';
 import type { ProductKind } from '../../stores/ProductAdminStore';
@@ -10,7 +10,8 @@ interface ProductCardProps {
   to: string;
   name: string;
   color: string;
-  price: number;
+  /** Absent pour une chaîne au nouveau format, dont le prix dépend de la longueur. */
+  price: number | null | undefined;
   imageUrl: string | null;
   /** Active la pastille « favori » (côté user). */
   favorite?: { kind: ProductKind; productId: number };
@@ -37,7 +38,7 @@ export function ProductCard({ to, name, color, price, imageUrl, favorite }: Prod
           <Badge tone={colorTone(color)}>{colorLabel(color)}</Badge>
         </div>
         <p className="mt-auto font-display text-lg font-medium text-fuchsia">
-          {formatPrice(price)}
+          {formatOptionalPrice(price)}
         </p>
       </div>
     </Link>
