@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { formatDate, formatDateOnly } from './format';
+import {
+  formatDate,
+  formatDateOnly,
+  formatLengthCm,
+  formatOptionalPrice,
+  formatPrice,
+} from './format';
 
 const PARIS = 'Europe/Paris';
 
@@ -28,5 +34,30 @@ describe('formatDateOnly', () => {
 
   it('formate une date seule sans décalage de jour', () => {
     expect(formatDateOnly('1990-01-01')).toBe('01/01/1990');
+  });
+});
+
+describe('formatOptionalPrice', () => {
+  it('affiche « — » pour un prix absent', () => {
+    expect(formatOptionalPrice(null)).toBe('—');
+    expect(formatOptionalPrice(undefined)).toBe('—');
+  });
+
+  it('formate un prix renseigné comme formatPrice', () => {
+    expect(formatOptionalPrice(12.5)).toBe(formatPrice(12.5));
+  });
+
+  it('formate un prix à zéro', () => {
+    expect(formatOptionalPrice(0)).toBe(formatPrice(0));
+  });
+});
+
+describe('formatLengthCm', () => {
+  it('affiche « — » pour une longueur absente', () => {
+    expect(formatLengthCm(null)).toBe('—');
+  });
+
+  it('affiche la longueur en cm', () => {
+    expect(formatLengthCm(45)).toBe('45 cm');
   });
 });

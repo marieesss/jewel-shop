@@ -9,6 +9,7 @@ import {
   type ProductListParams,
 } from '../../api/products';
 import type { ProductKind } from '../../stores/ProductAdminStore';
+import { formatLengthCm } from '../../lib/format';
 
 export type ProductDto = CharmDto | ChainDto;
 export type ProductSlug = 'charms' | 'chains';
@@ -50,7 +51,7 @@ export const PRODUCT_CONFIG: Record<ProductKind, ProductKindConfig> = {
     hasStock: false,
     fetchList: getChains,
     fetchById: getChainById,
-    specificField: (p) => ({ label: 'Longueur', value: `${(p as ChainDto).length} cm` }),
+    specificField: (p) => ({ label: 'Longueur', value: formatLengthCm((p as ChainDto).length) }),
   },
 };
 

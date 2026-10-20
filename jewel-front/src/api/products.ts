@@ -116,19 +116,16 @@ export interface ChainDto {
   color: string;
   imageUrl: string | null;
   url: string | null;
-  /**
-   * Ancien format. L'API les renvoie vides pour une chaîne créée avec les prix au mètre,
-   * ce que ce front ne fait pas encore : ils restent typés comme toujours remplis.
-   */
-  cost: number;
-  price: number;
-  length: number;
-  costPerMeter?: number | null;
-  pricePerMeter?: number | null;
-  claspCost?: number;
-  claspPrice?: number;
+  /** Ancien format : vides pour une chaîne créée avec les prix au mètre. */
+  cost?: number | null;
+  price?: number | null;
+  length?: number | null;
+  costPerMeter: number | null;
+  pricePerMeter: number | null;
+  claspCost: number;
+  claspPrice: number;
   /** Longueur restante de tous les rouleaux, en cm. */
-  stockCm?: number;
+  stockCm: number;
 }
 
 export interface UpdateChainPayload {
