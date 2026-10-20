@@ -4,17 +4,20 @@ import { useProductAdminStore } from '../../stores/context';
 import { TextField } from '../../components/ui/TextField';
 import { ImageUpload } from '../../components/ui/ImageUpload';
 import { ProductFormShell } from './ProductFormShell';
+import { emptyProductCommon, type ProductCommonValues } from './productForm';
 import {
-  commonFromProduct,
-  emptyProductCommon,
-  toNumber,
-  validateCommon,
-  type FieldErrors,
-  type ProductCommonValues,
-} from './productForm';
+  chainCommonFromProduct,
+  chainSpecificFromProduct,
+  emptyChainSpecific,
+  toCreateChainPayload,
+  toUpdateChainPayload,
+  validateChain,
+  type ChainErrors,
+  type ChainSpecificValues,
+} from './chainFormValues';
 import type { ChainDto } from '../../api/products';
 
-type ChainErrors = FieldErrors<keyof ProductCommonValues | 'length'>;
+const METER_PRICE_LABELS = { cost: 'Coût au mètre (€)', price: 'Prix au mètre (€)' };
 
 interface ChainFormProps {
   /** Produit à éditer ; absent ⇒ mode création. */
@@ -23,15 +26,20 @@ interface ChainFormProps {
   onSuccess?: () => void;
 }
 
-/** Formulaire chaîne (création ou édition ; champ spécifique : longueur > 0, en cm). */
+/**
+ * Formulaire chaîne (création ou édition) : prix au mètre, fermoir, et longueur du premier
+ * rouleau à la création. Les rouleaux suivants se gèrent sur la fiche de la chaîne.
+ */
 export const ChainForm = observer(function ChainForm({ product, onSuccess }: ChainFormProps) {
   const store = useProductAdminStore();
   const isEdit = Boolean(product);
 
   const [common, setCommon] = useState<ProductCommonValues>(
-    product ? commonFromProduct(product) : emptyProductCommon
+    product ? chainCommonFromProduct(product) : emptyProductCommon
   );
-  const [length, setLength] = useState(product ? String(product.length) : '');
+  const [specific, setSpecific] = useState<ChainSpecificValues>(
+    product ? chainSpecificFromProduct(product) : emptyChainSpecific
+  );
   const [image, setImage] = useState<File | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
   const [errors, setErrors] = useState<ChainErrors>({});
@@ -44,31 +52,22 @@ export const ChainForm = observer(function ChainForm({ product, onSuccess }: Cha
     store.reset();
   };
 
+  const patchSpecific = (p: Partial<ChainSpecificValues>) => {
+    setSpecific((s) => ({ ...s, ...p }));
+    store.reset();
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    const nextErrors: ChainErrors = validateCommon(common);
-
-    const lengthNum = toNumber(length);
-    if (Number.isNaN(lengthNum)) nextErrors.length = 'Longueur requise.';
-    else if (lengthNum <= 0) nextErrors.length = 'La longueur doit être supérieure à 0.';
+    const nextErrors = validateChain(common, specific, !isEdit);
 
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0 || imageError) return;
 
-    const payload = {
-      name: common.name.trim(),
-      description: common.description.trim(),
-      color: common.color,
-      url: common.url.trim() || null,
-      cost: toNumber(common.cost),
-      price: toNumber(common.price),
-      length: lengthNum,
-    };
-
     const ok =
       isEdit && product
-        ? await store.updateChain(product.id, payload, image)
-        : await store.createChain(payload, image);
+        ? await store.updateChain(product.id, toUpdateChainPayload(common, specific), image)
+        : await store.createChain(toCreateChainPayload(common, specific), image);
 
     if (!ok) return;
 
@@ -76,7 +75,7 @@ export const ChainForm = observer(function ChainForm({ product, onSuccess }: Cha
       onSuccess?.();
     } else {
       setCommon(emptyProductCommon);
-      setLength('');
+      setSpecific(emptyChainSpecific);
       setImage(null);
       setImageError(null);
       setErrors({});
@@ -94,25 +93,53 @@ export const ChainForm = observer(function ChainForm({ product, onSuccess }: Cha
       common={common}
       onCommonChange={patch}
       commonErrors={errors}
+      priceLabels={METER_PRICE_LABELS}
       submitLabel={isEdit ? 'Enregistrer les modifications' : 'Créer la chaîne'}
       loading={store.loading}
       error={store.error}
       success={success}
     >
-      <TextField
-        label="Longueur (cm)"
-        type="number"
-        step="0.1"
-        min="0"
-        value={length}
-        onChange={(v) => {
-          setLength(v);
-          store.reset();
-        }}
-        placeholder="45"
-        error={errors.length}
-        required
-      />
+      <div className="flex gap-3">
+        <div className="flex-1">
+          <TextField
+            label="Coût du fermoir (€)"
+            type="number"
+            step="0.01"
+            min="0"
+            value={specific.claspCost}
+            onChange={(v) => patchSpecific({ claspCost: v })}
+            placeholder="0.00"
+            error={errors.claspCost}
+            required
+          />
+        </div>
+        <div className="flex-1">
+          <TextField
+            label="Prix du fermoir (€)"
+            type="number"
+            step="0.01"
+            min="0"
+            value={specific.claspPrice}
+            onChange={(v) => patchSpecific({ claspPrice: v })}
+            placeholder="0.00"
+            error={errors.claspPrice}
+            required
+          />
+        </div>
+      </div>
+      {!isEdit && (
+        <TextField
+          label="Longueur du rouleau (cm)"
+          type="number"
+          step="1"
+          min="1"
+          value={specific.initialRollLengthCm}
+          onChange={(v) => patchSpecific({ initialRollLengthCm: v })}
+          placeholder="500"
+          error={errors.initialRollLengthCm}
+          required
+        />
+      )}
       <ImageUpload
         label={isEdit ? 'Remplacer la photo' : 'Photo'}
         value={image}

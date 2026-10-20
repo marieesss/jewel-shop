@@ -131,14 +131,20 @@ export interface ChainDto {
   stockCm?: number;
 }
 
-export interface CreateChainPayload {
+export interface UpdateChainPayload {
   name: string;
   description: string;
   color: ProductColor;
-  cost: number;
-  price: number;
-  length: number;
   url?: string | null;
+  costPerMeter: number;
+  pricePerMeter: number;
+  claspCost: number;
+  claspPrice: number;
+}
+
+export interface CreateChainPayload extends UpdateChainPayload {
+  /** Longueur du premier rouleau, en cm entiers. */
+  initialRollLengthCm: number;
 }
 
 /** POST /api/chains (Admin) → 201 ChainDto */
@@ -163,7 +169,7 @@ export async function getChainById(id: number): Promise<ChainDto> {
 }
 
 /** PUT /api/chains/{id} (Admin) → ChainDto */
-export async function updateChain(id: number, payload: CreateChainPayload): Promise<ChainDto> {
+export async function updateChain(id: number, payload: UpdateChainPayload): Promise<ChainDto> {
   const { data } = await api.put<ChainDto>(`/api/chains/${id}`, {
     ...payload,
     color: COLOR_TO_VALUE[payload.color],

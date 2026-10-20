@@ -8,6 +8,7 @@ import {
   uploadChainImage,
   type CreateCharmPayload,
   type CreateChainPayload,
+  type UpdateChainPayload,
 } from '../api/products';
 import { extractApiError } from '../api/errors';
 
@@ -62,7 +63,7 @@ export class ProductAdminStore {
 
   async updateChain(
     id: number,
-    payload: CreateChainPayload,
+    payload: UpdateChainPayload,
     image?: File | null
   ): Promise<boolean> {
     return this.run('chain', 'update', payload.name, async () => {
