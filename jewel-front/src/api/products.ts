@@ -57,7 +57,8 @@ export interface CharmDto {
   description: string;
   color: string;
   imageUrl: string | null;
-  url: string | null;
+  /** Lien fournisseur, réservé à l'admin : absent des réponses destinées aux clients (#93). */
+  url?: string | null;
   cost: number;
   price: number;
   stock: number;
@@ -115,7 +116,8 @@ export interface ChainDto {
   description: string;
   color: string;
   imageUrl: string | null;
-  url: string | null;
+  /** Lien fournisseur, réservé à l'admin : absent des réponses destinées aux clients (#93). */
+  url?: string | null;
   /**
    * Ancien format. L'API les renvoie vides pour une chaîne créée avec les prix au mètre,
    * ce que ce front ne fait pas encore : ils restent typés comme toujours remplis.
