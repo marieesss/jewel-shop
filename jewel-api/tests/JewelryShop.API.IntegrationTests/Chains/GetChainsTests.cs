@@ -74,6 +74,52 @@ public class GetChainsTests
         Assert.Equal(250, favorite.Chain!.StockCm);
     }
 
+    [Fact]
+    public async Task Place_les_chaines_favorites_de_l_utilisateur_en_tete_de_la_page_1()
+    {
+        var admin = await _api.CreateClientAsAsync(UserRole.Admin);
+        await admin.CreateChainAsync(ChainsApi.MeterBody(ChainsApi.UniqueName()));
+        var favorite = await admin.CreateChainAsync(ChainsApi.MeterBody(ChainsApi.UniqueName()));
+        var user = await _api.CreateClientAsAsync(UserRole.User);
+        (await user.PostAsJsonAsync("/api/favorites", new { ChainId = favorite.Id })).EnsureSuccessStatusCode();
+
+        var ids = await GetIdsAsync(user, "favoritesFirst=true");
+
+        Assert.Equal(favorite.Id, ids[0]);
+        Assert.Equal(ids.Skip(1).Order(), ids.Skip(1));
+    }
+
+    [Fact]
+    public async Task Garde_l_ordre_habituel_des_chaines_pour_un_appel_anonyme_avec_favoritesFirst()
+    {
+        var anonymous = _api.CreateApiClient();
+
+        var response = await anonymous.GetAsync($"{ChainsApi.Path}?favoritesFirst=true");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var page = await response.Content.ReadFromJsonAsync<PagedResult<ChainDto>>();
+        Assert.Equal(await GetIdsAsync(anonymous, ""), page!.Items.Select(c => c.Id));
+    }
+
+    [Fact]
+    public async Task Garde_l_ordre_des_chaines_par_id_sans_le_parametre_malgre_des_favoris()
+    {
+        var admin = await _api.CreateClientAsAsync(UserRole.Admin);
+        var favorite = await admin.CreateChainAsync(ChainsApi.MeterBody(ChainsApi.UniqueName()));
+        var user = await _api.CreateClientAsAsync(UserRole.User);
+        (await user.PostAsJsonAsync("/api/favorites", new { ChainId = favorite.Id })).EnsureSuccessStatusCode();
+
+        var ids = await GetIdsAsync(user, "");
+
+        Assert.Equal(ids.Order(), ids);
+    }
+
+    private static async Task<IReadOnlyList<long>> GetIdsAsync(HttpClient client, string query)
+    {
+        var page = await client.GetFromJsonAsync<PagedResult<ChainDto>>($"{ChainsApi.Path}?{query}");
+        return page!.Items.Select(c => c.Id).ToList();
+    }
+
     private async Task<IReadOnlyList<ChainDto>> GetItemsAsync(string query)
     {
         var page = await _api.CreateApiClient()
