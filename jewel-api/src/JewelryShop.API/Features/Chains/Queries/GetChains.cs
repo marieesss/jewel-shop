@@ -18,7 +18,7 @@ public class GetChainsQueryHandler : IRequestHandler<GetChainsQuery, PagedResult
         var (items, total) = await _chains.GetPagedAsync(
             request.Color, request.MinPrice, request.MaxPrice, page, pageSize, cancellationToken);
 
-        var dtos = items.Select(c => c.ToDto()).ToList();
+        var dtos = items.Select(c => c.ToDto(request.IncludeAdminFields)).ToList();
         return new PagedResult<ChainDto>(dtos, total, page, pageSize);
     }
 }

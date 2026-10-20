@@ -3,13 +3,13 @@ using MediatR;
 
 namespace JewelryShop.Features.Charms.Commands;
 
-public class CreateCharmCommandHandler : IRequestHandler<CreateCharmCommand, CharmDto>
+public class CreateCharmCommandHandler : IRequestHandler<CreateCharmCommand, AdminCharmDto>
 {
     private readonly ICharmRepository _charms;
 
     public CreateCharmCommandHandler(ICharmRepository charms) => _charms = charms;
 
-    public async Task<CharmDto> Handle(CreateCharmCommand request, CancellationToken cancellationToken)
+    public async Task<AdminCharmDto> Handle(CreateCharmCommand request, CancellationToken cancellationToken)
     {
         var charm = new Charm
         {
@@ -25,6 +25,6 @@ public class CreateCharmCommandHandler : IRequestHandler<CreateCharmCommand, Cha
         await _charms.AddAsync(charm, cancellationToken);
         await _charms.SaveChangesAsync(cancellationToken);
 
-        return charm.ToDto();
+        return charm.ToAdminDto();
     }
 }
