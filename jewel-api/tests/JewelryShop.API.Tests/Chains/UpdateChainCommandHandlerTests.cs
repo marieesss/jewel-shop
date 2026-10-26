@@ -33,7 +33,7 @@ public class UpdateChainCommandHandlerTests
         _chain.AddRoll(500, _rollDate);
         _chain.AddRoll(200, _rollDate);
         _chains.Seed(_chain);
-        _handler = new UpdateChainCommandHandler(_chains);
+        _handler = new UpdateChainCommandHandler(_chains, new FakeChainLengthRepository());
     }
 
     private static UpdateChainCommand LegacyCommand() =>

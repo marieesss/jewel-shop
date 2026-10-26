@@ -36,18 +36,19 @@ public static class ChainsApi
         Length = length
     };
 
-    public static object MeterBody(string name, ProductColor color = ProductColor.Gold) => new
-    {
-        Name = name,
-        Description = "Maille fine",
-        Color = color,
-        CostPerMeter = 4m,
-        PricePerMeter = 10m,
-        ClaspCost = 1.5m,
-        ClaspPrice = 3m,
-        InitialRollLengthCm = 250,
-        Url = SupplierUrl
-    };
+    public static object MeterBody(
+        string name, ProductColor color = ProductColor.Gold, decimal claspPrice = 3m, int initialRollLengthCm = 250) => new
+        {
+            Name = name,
+            Description = "Maille fine",
+            Color = color,
+            CostPerMeter = 4m,
+            PricePerMeter = 10m,
+            ClaspCost = 1.5m,
+            ClaspPrice = claspPrice,
+            InitialRollLengthCm = initialRollLengthCm,
+            Url = SupplierUrl
+        };
 
     public static async Task<AdminChainDto> CreateChainAsync(this HttpClient admin, object body)
     {
@@ -58,7 +59,8 @@ public static class ChainsApi
 
     /// <summary>La même chaîne telle qu'un client la reçoit, sans lien ni coûts.</summary>
     public static ChainDto ToPublic(this AdminChainDto c) => new(
-        c.Id, c.Name, c.Description, c.Color, c.ImageUrl, c.Price, c.Length, c.PricePerMeter, c.ClaspPrice, c.StockCm);
+        c.Id, c.Name, c.Description, c.Color, c.ImageUrl, c.Price, c.Length, c.PricePerMeter, c.ClaspPrice, c.StockCm,
+        c.AvailableLengths, c.FromPrice);
 
     public static string UniqueName() => $"Chaîne {Guid.NewGuid():N}";
 }

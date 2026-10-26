@@ -17,7 +17,7 @@ public class GetChainByIdQueryHandlerTests
 
     public GetChainByIdQueryHandlerTests()
     {
-        _handler = new GetChainByIdQueryHandler(_chains);
+        _handler = new GetChainByIdQueryHandler(_chains, new FakeChainLengthRepository());
         _chains.Seed(Chain());
     }
 
@@ -47,7 +47,7 @@ public class GetChainByIdQueryHandlerTests
         var dto = await _handler.Handle(new GetChainByIdQuery(7), CancellationToken.None);
 
         Assert.IsType<ChainDto>(dto);
-        Assert.Equal(new ChainDto(7, "Forçat", "", "Gold", null, 30m, 300m, 10m, 3m, 300), dto);
+        Assert.Equal(new ChainDto(7, "Forçat", "", "Gold", null, 30m, 300m, 10m, 3m, 300), dto with { AvailableLengths = null });
     }
 
     [Fact]
