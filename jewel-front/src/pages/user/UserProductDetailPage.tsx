@@ -75,18 +75,6 @@ export function UserProductDetailPage({ kind }: Props) {
                 {config.specificField(data).value}
               </DetailRow>
               <DetailRow label="Prix">{formatPrice(data.price)}</DetailRow>
-              {data.url && (
-                <DetailRow label="Lien">
-                  <a
-                    href={data.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-fuchsia underline underline-offset-2 hover:opacity-70"
-                  >
-                    Ouvrir
-                  </a>
-                </DetailRow>
-              )}
             </Card>
           </div>
         </div>
