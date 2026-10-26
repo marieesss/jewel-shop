@@ -122,6 +122,21 @@ describe('toCreateChainPayload', () => {
 });
 
 describe('toUpdateChainPayload', () => {
+  it('envoie les prix au mètre et le fermoir, avec les textes nettoyés', () => {
+    expect(
+      toUpdateChainPayload({ ...validCommon, name: '  Forçat  ', url: '   ' }, validSpecific)
+    ).toEqual({
+      name: 'Forçat',
+      description: 'Maille fine',
+      color: 'Gold',
+      url: null,
+      costPerMeter: 4.5,
+      pricePerMeter: 20,
+      claspCost: 0.8,
+      claspPrice: 3,
+    });
+  });
+
   it("n'envoie ni l'ancien format ni de rouleau", () => {
     const payload = toUpdateChainPayload(validCommon, validSpecific);
     expect(payload).not.toHaveProperty('cost');
