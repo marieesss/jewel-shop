@@ -192,6 +192,7 @@ public static class Startup
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IChainRepository, ChainRepository>();
+        services.AddScoped<IChainLengthRepository, ChainLengthRepository>();
         services.AddScoped<ICharmRepository, CharmRepository>();
         services.AddScoped<IFavoriteRepository, FavoriteRepository>();
         services.AddScoped<ICreationRepository, CreationRepository>();

@@ -10,6 +10,7 @@ public class AppDbContext : DbContext
 
     public DbSet<User> Users => Set<User>();
     public DbSet<Chain> Chains => Set<Chain>();
+    public DbSet<ChainLength> ChainLengths => Set<ChainLength>();
     public DbSet<Charm> Charms => Set<Charm>();
     public DbSet<Option> Options => Set<Option>();
     public DbSet<Favorite> Favorites => Set<Favorite>();

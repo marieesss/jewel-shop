@@ -53,7 +53,7 @@ src/JewelryShop.API/
                                    # CloudinaryFileStorageService
 ```
 
-Fonctionnalités existantes : `Auth`, `Admin`, `Users`, `Chains`, `Charms`, `Favorites`, `Creations`, `Options`, `Emails` (outbox, sans endpoint).
+Fonctionnalités existantes : `Auth`, `Admin`, `Users`, `Chains`, `ChainLengths`, `Charms`, `Favorites`, `Creations`, `Options`, `Emails` (outbox, sans endpoint).
 
 ### Traitement d'une requête
 
@@ -78,6 +78,7 @@ sequenceDiagram
 - Les erreurs métier sont des exceptions typées, converties par le middleware en JSON `{ status, title, errors }`. Les 4xx sont journalisées en `Information`, les 5xx en `Error`.
 - **Upload d'image** (`POST /api/chains/{id}/image`, `POST /api/charms/{id}/image`) : les validateurs appliquent `ImageFileRules` (`Common/Validation/`). Un fichier absent ou vide donne « Aucun fichier fourni. ». Sinon, le type MIME doit être `image/jpeg`, `image/png` ou `image/webp` (« Le fichier doit être une image JPEG, PNG ou WEBP. »), l'extension doit correspondre au type (`.jpg` ou `.jpeg`, `.png`, `.webp`, sans tenir compte de la casse : « L'extension du fichier ne correspond pas à son format. ») et la taille ne doit pas dépasser 5 Mo (« L'image ne doit pas dépasser 5 Mo. »). Toutes ces erreurs sont des 400 sous la clé `File`.
 - **Listes du catalogue** (`GET /api/chains`, `GET /api/charms`, anonymes) : paginées et triées par id. Avec `favoritesFirst=true`, les favoris de l'utilisateur connecté passent en tête, puis les autres produits, chaque groupe trié par id. Le tri s'applique après les filtres et avant la pagination. Le paramètre est ignoré pour un appel anonyme (sans token, ou avec un token invalide ou expiré), qui garde l'ordre habituel.
+- **Longueurs de chaîne** : `GET /api/chain-lengths` (anonyme) et `GET /api/admin/chain-lengths` renvoient les longueurs `{ id, lengthCm, label }` triées de la plus courte à la plus longue. `POST /api/admin/chain-lengths` (201), `PUT /api/admin/chain-lengths/{id}` (200) et `DELETE /api/admin/chain-lengths/{id}` (204) sont réservés aux admins. La longueur doit être comprise entre 10 et 200 cm (« La longueur doit être comprise entre 10 et 200 cm. ») et le libellé est requis (« Le libellé est requis. », « 50 caractères maximum. ») : 400 sous la clé du champ. Une longueur déjà existante donne un 409 « Cette longueur existe déjà. », un id inconnu un 404. Les commandes copient la longueur en cm : supprimer une longueur ne les modifie pas.
 
 ### Authentification et autorisation
 
@@ -137,6 +138,7 @@ erDiagram
 | `users` | nom, prénom, email (unique), hash du mot de passe, date de naissance, rôle, date d'inscription (`created_at`, UTC, `NULL` pour les comptes créés avant son ajout) |
 | `chains` | chaîne : nom, description, couleur, image, lien, coût et prix au mètre, coût et prix du fermoir (`0` par défaut). Les anciennes colonnes coût, prix et longueur (`numeric(6,2)`) restent remplies par l'ancien format de l'API et sont vides pour une chaîne créée au nouveau format |
 | `chain_rolls` | rouleau d'une chaîne : longueur initiale et longueur restante en cm entiers, date d'ajout. Supprimé avec la chaîne. Le stock d'une chaîne (`stockCm`) est la somme des longueurs restantes |
+| `chain_lengths` | longueur de chaîne proposée : longueur en cm entiers (unique, de 10 à 200), libellé (50 caractères maximum), date de création. Remplie par la migration V8 avec 9 longueurs (38 à 81 cm) |
 | `charms` | breloque : mêmes champs, avec un stock en unités au lieu de la longueur |
 | `options` | longueurs proposées (nom, longueur `numeric(6,2)`) |
 | `favorites` | favori d'un utilisateur : exactement une chaîne **ou** une breloque (contrainte `CHECK`) |
@@ -329,7 +331,7 @@ Le retour arrière remet l'ancienne version du code, **pas l'ancien schéma** : 
 
 | Sujet | Impact sur l'architecture |
 |---|---|
-| Modèle catalogue | Fait côté back (phase « expand ») : `chains` a un **coût et prix au mètre** et un **coût et prix de fermoir**, et son stock est réparti en **rouleaux** (`chain_rolls`, cm entiers). La migration V7 calcule les prix au mètre des chaînes existantes et crée un rouleau de leur longueur. L'API accepte encore l'ancien format (`cost`, `price`, `length`) ; les anciennes colonnes seront supprimées une fois le front passé au nouveau format. Nouvelle table de référence `ChainLength`, à articuler avec la table `options` existante. Calcul du prix côté back. |
+| Modèle catalogue | Fait côté back (phase « expand ») : `chains` a un **coût et prix au mètre** et un **coût et prix de fermoir**, et son stock est réparti en **rouleaux** (`chain_rolls`, cm entiers). La migration V7 calcule les prix au mètre des chaînes existantes et crée un rouleau de leur longueur. L'API accepte encore l'ancien format (`cost`, `price`, `length`) ; les anciennes colonnes seront supprimées une fois le front passé au nouveau format. Table de référence `chain_lengths` faite côté back (migration V8, `GET /api/chain-lengths` public et CRUD `api/admin/chain-lengths`) ; la page admin reste à faire, et l'articulation avec la table `options` existante reste à décider. Calcul du prix côté back. |
 | Adresse de livraison | Champs d'adresse sur `users` (nullables), copiés dans la commande. |
 | Parcours de création | Parcours front en étapes, état côté front uniquement, drag and drop (dnd-kit, nouvelle dépendance). Maximum 8 breloques vérifié des deux côtés. À articuler avec les entités `Creation` / `CreationItem` existantes. |
 | Commandes | Nouvelles tables `Order`, `OrderLine` (prix copiés, position des breloques), `OrderStatusHistory`, `OrderNote`. Machine à états côté back. Mouvements de stock dans la même transaction que la commande. Mails via l'outbox de la v0.1. |

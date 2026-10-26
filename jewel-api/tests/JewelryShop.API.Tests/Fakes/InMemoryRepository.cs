@@ -31,7 +31,7 @@ public class InMemoryRepository<T> : IRepository<T> where T : BaseEntity
 
     public void Delete(T entity) => Entities.Remove(entity);
 
-    public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    public virtual Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         SaveChangesCount++;
         return Task.FromResult(1);
