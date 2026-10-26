@@ -17,7 +17,7 @@ public class GetCharmsQueryHandler : IRequestHandler<GetCharmsQuery, PagedResult
 
         var (items, total) = await _charms.GetPagedAsync(
             request.Color, request.InStockOnly, request.MinPrice, request.MaxPrice,
-            page, pageSize, cancellationToken);
+            page, pageSize, request.FavoritesFirstForUserId, cancellationToken);
 
         var dtos = items.Select(c => c.ToDto(request.IncludeAdminFields)).ToList();
         return new PagedResult<CharmDto>(dtos, total, page, pageSize);

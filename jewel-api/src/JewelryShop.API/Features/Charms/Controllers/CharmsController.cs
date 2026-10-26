@@ -8,7 +8,10 @@ namespace JewelryShop.Features.Charms.Controllers;
 [Route("api/charms")]
 public class CharmsController : ApiControllerBase
 {
-    /// <summary>Liste paginée avec filtres optionnels.</summary>
+    /// <summary>
+    /// Liste paginée avec filtres optionnels. <c>favoritesFirst=true</c> place d'abord les favoris
+    /// de l'utilisateur connecté ; il est ignoré pour un appel anonyme.
+    /// </summary>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll(
@@ -18,11 +21,14 @@ public class CharmsController : ApiControllerBase
         [FromQuery] decimal? maxPrice,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
+        [FromQuery] bool favoritesFirst = false,
         CancellationToken ct = default)
     {
         ProductColor? colorEnum = Enum.TryParse<ProductColor>(color, ignoreCase: true, out var c) ? c : null;
-        var result = await Sender.Send(
-            new GetCharmsQuery(colorEnum, inStockOnly, minPrice, maxPrice, page, pageSize, IsAdmin), ct);
+        var favoritesFirstForUserId = favoritesFirst ? GetUserIdOrNull() : null;
+        var query = new GetCharmsQuery(
+            colorEnum, inStockOnly, minPrice, maxPrice, page, pageSize, favoritesFirstForUserId);
+        var result = await Sender.Send(query, ct);
         return Ok(result);
     }
 

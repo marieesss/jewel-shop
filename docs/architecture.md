@@ -77,6 +77,7 @@ sequenceDiagram
 - Le `ValidationBehavior` exécute tous les validateurs avant le handler.
 - Les erreurs métier sont des exceptions typées, converties par le middleware en JSON `{ status, title, errors }`. Les 4xx sont journalisées en `Information`, les 5xx en `Error`.
 - **Upload d'image** (`POST /api/chains/{id}/image`, `POST /api/charms/{id}/image`) : les validateurs appliquent `ImageFileRules` (`Common/Validation/`). Un fichier absent ou vide donne « Aucun fichier fourni. ». Sinon, le type MIME doit être `image/jpeg`, `image/png` ou `image/webp` (« Le fichier doit être une image JPEG, PNG ou WEBP. »), l'extension doit correspondre au type (`.jpg` ou `.jpeg`, `.png`, `.webp`, sans tenir compte de la casse : « L'extension du fichier ne correspond pas à son format. ») et la taille ne doit pas dépasser 5 Mo (« L'image ne doit pas dépasser 5 Mo. »). Toutes ces erreurs sont des 400 sous la clé `File`.
+- **Listes du catalogue** (`GET /api/chains`, `GET /api/charms`, anonymes) : paginées et triées par id. Avec `favoritesFirst=true`, les favoris de l'utilisateur connecté passent en tête, puis les autres produits, chaque groupe trié par id. Le tri s'applique après les filtres et avant la pagination. Le paramètre est ignoré pour un appel anonyme (sans token, ou avec un token invalide ou expiré), qui garde l'ordre habituel.
 
 ### Authentification et autorisation
 

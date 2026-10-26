@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using JewelryShop.API.Tests.Fakes;
 using JewelryShop.Common.Enums;
 using JewelryShop.Features.Chains.Commands;
@@ -12,7 +13,36 @@ public class ChainsControllerTests
     private readonly FakeSender _sender = new();
     private readonly ChainsController _controller = new();
 
-    public ChainsControllerTests() => _sender.AttachTo(_controller);
+    public ChainsControllerTests() => _sender.AttachTo(_controller, userId: 42);
+
+    [Fact]
+    public async Task Demande_les_favoris_de_l_utilisateur_connecte_en_premier()
+    {
+        await _controller.GetAll(null, null, null, favoritesFirst: true);
+
+        var sent = Assert.IsType<GetChainsQuery>(_sender.LastRequest);
+        Assert.Equal(42, sent.FavoritesFirstForUserId);
+    }
+
+    [Fact]
+    public async Task Ignore_les_favoris_en_premier_pour_un_appel_anonyme()
+    {
+        _controller.ControllerContext.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity());
+
+        await _controller.GetAll(null, null, null, favoritesFirst: true);
+
+        var sent = Assert.IsType<GetChainsQuery>(_sender.LastRequest);
+        Assert.Null(sent.FavoritesFirstForUserId);
+    }
+
+    [Fact]
+    public async Task Ne_demande_pas_les_favoris_en_premier_sans_le_parametre()
+    {
+        await _controller.GetAll(null, null, null);
+
+        var sent = Assert.IsType<GetChainsQuery>(_sender.LastRequest);
+        Assert.Null(sent.FavoritesFirstForUserId);
+    }
 
     [Fact]
     public async Task Demande_les_chaines_sans_champs_admin_pour_un_utilisateur()
