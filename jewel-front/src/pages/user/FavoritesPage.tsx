@@ -6,7 +6,7 @@ import { Alert } from '../../components/ui/Alert';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Button } from '../../components/ui/Button';
 import { ProductCard } from '../../features/products/ProductCard';
-import { userPaths } from '../../features/products/productConfig';
+import { PRODUCT_CONFIG, userPaths } from '../../features/products/productConfig';
 import { useFavoritesStore } from '../../stores/context';
 import type { CharmDto, ChainDto } from '../../api/products';
 import type { ProductKind } from '../../stores/ProductAdminStore';
@@ -51,7 +51,7 @@ export const FavoritesPage = observer(function FavoritesPage() {
               to={userPaths.detail(kind === 'charm' ? 'charms' : 'chains', product.id)}
               name={product.name}
               color={product.color}
-              price={product.price}
+              priceLabel={PRODUCT_CONFIG[kind].favoritePrice(product)?.label}
               imageUrl={product.imageUrl}
               favorite={{ kind, productId: product.id }}
             />

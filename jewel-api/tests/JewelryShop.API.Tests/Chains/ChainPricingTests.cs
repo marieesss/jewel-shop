@@ -38,4 +38,26 @@ public class ChainPricingTests
     {
         Assert.Equal(expected, ChainPricing.RollLengthCm(lengthCm));
     }
+
+    [Theory]
+    [InlineData(10, 45, 2, 6.50)]
+    [InlineData(10, 81, 2, 10.10)]
+    [InlineData(39.90, 45, 0, 17.96)]
+    [InlineData(0, 50, 3, 3.00)]
+    public void Calcule_le_prix_d_une_longueur_fermoir_compris(
+        decimal pricePerMeter, int lengthCm, decimal claspPrice, decimal expected)
+    {
+        Assert.Equal(expected, ChainPricing.PriceFor(pricePerMeter, lengthCm, claspPrice));
+    }
+
+    [Theory]
+    [InlineData(0.5, 1, 0.00)]
+    [InlineData(1.5, 1, 0.02)]
+    [InlineData(10.05, 50, 5.02)]
+    [InlineData(10.15, 50, 5.08)]
+    public void Arrondit_au_pair_le_prix_d_une_longueur_au_demi_centime(
+        decimal pricePerMeter, int lengthCm, decimal expected)
+    {
+        Assert.Equal(expected, ChainPricing.PriceFor(pricePerMeter, lengthCm, 0m));
+    }
 }

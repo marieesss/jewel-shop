@@ -17,6 +17,7 @@ public class CharmRepository : Repository<Charm>, ICharmRepository
         decimal? maxPrice,
         int page,
         int pageSize,
+        long? favoritesFirstForUserId,
         CancellationToken cancellationToken = default)
     {
         var query = DbSet.AsNoTracking().AsQueryable();
@@ -33,7 +34,9 @@ public class CharmRepository : Repository<Charm>, ICharmRepository
         if (maxPrice.HasValue)
             query = query.Where(c => c.Price <= maxPrice.Value);
 
-        query = query.OrderBy(c => c.Id);
+        query = favoritesFirstForUserId is { } userId
+            ? query.OrderByDescending(c => c.Favorites.Any(f => f.UserId == userId)).ThenBy(c => c.Id)
+            : query.OrderBy(c => c.Id);
 
         var total = await query.CountAsync(cancellationToken);
         var items = await query

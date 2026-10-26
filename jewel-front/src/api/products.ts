@@ -57,7 +57,8 @@ export interface CharmDto {
   description: string;
   color: string;
   imageUrl: string | null;
-  url: string | null;
+  /** Lien fournisseur, réservé à l'admin : absent des réponses destinées aux clients (#93). */
+  url?: string | null;
   cost: number;
   price: number;
   stock: number;
@@ -115,17 +116,32 @@ export interface ChainDto {
   description: string;
   color: string;
   imageUrl: string | null;
-  url: string | null;
-  /** Ancien format : vides pour une chaîne créée avec les prix au mètre. */
+  /** Lien fournisseur, réservé à l'admin : absent des réponses destinées aux clients (#93). */
+  url?: string | null;
+  /** Ancien format : vides pour une chaîne créée avec les prix au mètre. Coût réservé à l'admin (#93). */
   cost?: number | null;
   price?: number | null;
   length?: number | null;
-  costPerMeter: number | null;
+  /** Réservé à l'admin (#93). */
+  costPerMeter?: number | null;
   pricePerMeter: number | null;
-  claspCost: number;
+  /** Réservé à l'admin (#93). */
+  claspCost?: number;
   claspPrice: number;
   /** Longueur restante de tous les rouleaux, en cm. */
   stockCm: number;
+  /** Toutes les longueurs de référence, triées. `null` pour une chaîne incluse dans un favori. */
+  availableLengths?: ChainLengthPriceDto[] | null;
+  /** Plus petit prix des longueurs disponibles, `null` s'il n'y en a aucune ou dans un favori. */
+  fromPrice?: number | null;
+}
+
+/** Prix et disponibilité d'une longueur de référence pour une chaîne. */
+export interface ChainLengthPriceDto {
+  lengthCm: number;
+  label: string;
+  price: number | null;
+  available: boolean;
 }
 
 export interface UpdateChainPayload {

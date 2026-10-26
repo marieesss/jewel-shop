@@ -1,7 +1,9 @@
+using System.Security.Claims;
 using JewelryShop.API.Tests.Fakes;
 using JewelryShop.Common.Enums;
 using JewelryShop.Features.Chains.Commands;
 using JewelryShop.Features.Chains.Controllers;
+using JewelryShop.Features.Chains.Queries;
 using Microsoft.AspNetCore.Http;
 
 namespace JewelryShop.API.Tests.Chains;
@@ -11,7 +13,72 @@ public class ChainsControllerTests
     private readonly FakeSender _sender = new();
     private readonly ChainsController _controller = new();
 
-    public ChainsControllerTests() => _sender.AttachTo(_controller);
+    public ChainsControllerTests() => _sender.AttachTo(_controller, userId: 42);
+
+    [Fact]
+    public async Task Demande_les_favoris_de_l_utilisateur_connecte_en_premier()
+    {
+        await _controller.GetAll(null, null, null, favoritesFirst: true);
+
+        var sent = Assert.IsType<GetChainsQuery>(_sender.LastRequest);
+        Assert.Equal(42, sent.FavoritesFirstForUserId);
+    }
+
+    [Fact]
+    public async Task Ignore_les_favoris_en_premier_pour_un_appel_anonyme()
+    {
+        _controller.ControllerContext.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity());
+
+        await _controller.GetAll(null, null, null, favoritesFirst: true);
+
+        var sent = Assert.IsType<GetChainsQuery>(_sender.LastRequest);
+        Assert.Null(sent.FavoritesFirstForUserId);
+    }
+
+    [Fact]
+    public async Task Ne_demande_pas_les_favoris_en_premier_sans_le_parametre()
+    {
+        await _controller.GetAll(null, null, null);
+
+        var sent = Assert.IsType<GetChainsQuery>(_sender.LastRequest);
+        Assert.Null(sent.FavoritesFirstForUserId);
+    }
+
+    [Fact]
+    public async Task Demande_les_chaines_sans_champs_admin_pour_un_utilisateur()
+    {
+        await _controller.GetAll(null, null, null, ct: CancellationToken.None);
+
+        Assert.Equal(new GetChainsQuery(null, null, null, 1, 20, IncludeAdminFields: false), _sender.LastRequest);
+    }
+
+    [Fact]
+    public async Task Demande_les_chaines_avec_les_champs_admin_pour_un_admin()
+    {
+        _sender.AttachTo(_controller, role: UserRole.Admin);
+
+        await _controller.GetAll(null, null, null, ct: CancellationToken.None);
+
+        Assert.Equal(new GetChainsQuery(null, null, null, 1, 20, IncludeAdminFields: true), _sender.LastRequest);
+    }
+
+    [Fact]
+    public async Task Demande_le_detail_sans_champs_admin_pour_un_utilisateur()
+    {
+        await _controller.GetById(7, CancellationToken.None);
+
+        Assert.Equal(new GetChainByIdQuery(7, IncludeAdminFields: false), _sender.LastRequest);
+    }
+
+    [Fact]
+    public async Task Demande_le_detail_avec_les_champs_admin_pour_un_admin()
+    {
+        _sender.AttachTo(_controller, role: UserRole.Admin);
+
+        await _controller.GetById(7, CancellationToken.None);
+
+        Assert.Equal(new GetChainByIdQuery(7, IncludeAdminFields: true), _sender.LastRequest);
+    }
 
     [Fact]
     public async Task Met_a_jour_la_chaine_de_la_route_et_non_celle_du_corps()

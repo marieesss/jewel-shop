@@ -9,6 +9,7 @@ import { Pagination } from '../../components/ui/Pagination';
 import { useAsync } from '../../hooks/useAsync';
 import { PRODUCT_CONFIG, adminPaths } from '../../features/products/productConfig';
 import { ProductCard } from '../../features/products/ProductCard';
+import { formatOptionalPrice } from '../../lib/format';
 import type { ProductKind } from '../../stores/ProductAdminStore';
 
 const PAGE_SIZE = 12;
@@ -58,7 +59,7 @@ export function ProductListPage({ kind }: ProductListPageProps) {
                 to={adminPaths.detail(config.slug, product.id)}
                 name={product.name}
                 color={product.color}
-                price={product.price}
+                priceLabel={formatOptionalPrice(product.price)}
                 imageUrl={product.imageUrl}
               />
             ))}

@@ -3,6 +3,8 @@ global using JewelryShop.Common.Enums;
 global using JewelryShop.Features.Auth.Common;
 global using JewelryShop.Features.Auth.Entities;
 global using JewelryShop.Features.Auth.Repositories;
+global using JewelryShop.Features.ChainLengths.Entities;
+global using JewelryShop.Features.ChainLengths.Repositories;
 global using JewelryShop.Features.Chains.Entities;
 global using JewelryShop.Features.Chains.Repositories;
 global using JewelryShop.Features.Charms.Entities;

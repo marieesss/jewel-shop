@@ -24,7 +24,7 @@ public class CreateChainTests
         var response = await admin.PostAsJsonAsync(ChainsApi.Path, ChainsApi.LegacyBody(ChainsApi.UniqueName()));
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-        var chain = await response.Content.ReadFromJsonAsync<ChainDto>();
+        var chain = await response.Content.ReadFromJsonAsync<AdminChainDto>();
         Assert.NotNull(chain);
         Assert.Equal(20m, chain.Cost);
         Assert.Equal(50m, chain.Price);
@@ -45,7 +45,7 @@ public class CreateChainTests
         var response = await admin.PostAsJsonAsync(ChainsApi.Path, ChainsApi.MeterBody(ChainsApi.UniqueName()));
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-        var chain = await response.Content.ReadFromJsonAsync<ChainDto>();
+        var chain = await response.Content.ReadFromJsonAsync<AdminChainDto>();
         Assert.NotNull(chain);
         Assert.Null(chain.Cost);
         Assert.Null(chain.Price);

@@ -89,17 +89,21 @@ export function UserProductListPage({ kind }: Props) {
           {!loading && !error && data && data.items.length > 0 && (
             <>
               <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
-                {data.items.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    to={userPaths.detail(config.slug, product.id)}
-                    name={product.name}
-                    color={product.color}
-                    price={product.price}
-                    imageUrl={product.imageUrl}
-                    favorite={{ kind, productId: product.id }}
-                  />
-                ))}
+                {data.items.map((product) => {
+                  const price = config.cardPrice(product);
+                  return (
+                    <ProductCard
+                      key={product.id}
+                      to={userPaths.detail(config.slug, product.id)}
+                      name={product.name}
+                      color={product.color}
+                      priceLabel={price.label}
+                      unavailable={price.unavailable}
+                      imageUrl={product.imageUrl}
+                      favorite={{ kind, productId: product.id }}
+                    />
+                  );
+                })}
               </div>
 
               <Pagination

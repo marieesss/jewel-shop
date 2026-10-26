@@ -55,6 +55,18 @@ export function UsersIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+export function RulerIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base(props)}>
+      <rect x="1.5" y="6" width="15" height="6" rx="1.5" />
+      <path d="M4.5 6V8.5" />
+      <path d="M7.5 6V9.5" />
+      <path d="M10.5 6V8.5" />
+      <path d="M13.5 6V9.5" />
+    </svg>
+  );
+}
+
 export function LogoutIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg {...base(props)}>
