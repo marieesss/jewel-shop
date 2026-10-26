@@ -19,7 +19,7 @@ public class CreateChainLengthCommandHandler : IRequestHandler<CreateChainLength
         var length = new ChainLength { LengthCm = request.LengthCm, Label = request.Label.Trim() };
 
         await _lengths.AddAsync(length, cancellationToken);
-        await _lengths.SaveChangesAsync(cancellationToken);
+        await _lengths.SaveChangesOrConflictAsync(cancellationToken);
 
         return length.ToDto();
     }

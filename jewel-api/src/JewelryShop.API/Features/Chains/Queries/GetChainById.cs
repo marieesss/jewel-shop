@@ -20,6 +20,6 @@ public class GetChainByIdQueryHandler : IRequestHandler<GetChainByIdQuery, Chain
         var chain = await _chains.GetByIdWithRollsAsync(request.Id, cancellationToken)
             ?? throw new NotFoundException("Chaîne", request.Id);
 
-        return chain.ToDto(await _lengths.GetAllOrderedAsync(cancellationToken));
+        return chain.ToDto(request.IncludeAdminFields, await _lengths.GetAllOrderedAsync(cancellationToken));
     }
 }

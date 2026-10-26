@@ -1,5 +1,11 @@
 import type { ReactNode } from 'react';
-import { DashboardIcon, GemIcon, ChainIcon, UsersIcon } from '../../components/icons-admin';
+import {
+  DashboardIcon,
+  GemIcon,
+  ChainIcon,
+  RulerIcon,
+  UsersIcon,
+} from '../../components/icons-admin';
 
 export interface AdminNavItem {
   to: string;
@@ -18,5 +24,6 @@ export const adminNavItems: AdminNavItem[] = [
   { to: '/admin/products/new', label: 'Créer un produit', icon: <GemIcon /> },
   { to: '/admin/products/charms', label: 'Breloques', icon: <GemIcon /> },
   { to: '/admin/products/chains', label: 'Chaînes', icon: <ChainIcon /> },
+  { to: '/admin/chain-lengths', label: 'Longueurs', icon: <RulerIcon /> },
   { to: '/admin/users', label: 'Utilisateurs', icon: <UsersIcon /> },
 ];

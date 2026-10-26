@@ -80,6 +80,6 @@ public class ChainLengthCommandValidatorTests
     {
         var result = _updateValidator.Validate(new UpdateChainLengthCommand(0, 45, "Princesse"));
 
-        ValidationAssert.HasError(result, nameof(UpdateChainLengthCommand.Id), "Identifiant invalide.");
+        ValidationAssert.HasError(result, nameof(UpdateChainLengthCommand.Id), ChainLengthMessages.InvalidId);
     }
 }

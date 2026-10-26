@@ -25,7 +25,7 @@ public class GetChainsQueryHandler : IRequestHandler<GetChainsQuery, PagedResult
             request.FavoritesFirstForUserId, cancellationToken);
 
         var lengths = await _lengths.GetAllOrderedAsync(cancellationToken);
-        var dtos = items.Select(c => c.ToDto(lengths)).ToList();
+        var dtos = items.Select(c => c.ToDto(request.IncludeAdminFields, lengths)).ToList();
         return new PagedResult<ChainDto>(dtos, total, page, pageSize);
     }
 }

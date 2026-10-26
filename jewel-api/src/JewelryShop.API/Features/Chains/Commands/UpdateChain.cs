@@ -4,7 +4,7 @@ using MediatR;
 
 namespace JewelryShop.Features.Chains.Commands;
 
-public class UpdateChainCommandHandler : IRequestHandler<UpdateChainCommand, ChainDto>
+public class UpdateChainCommandHandler : IRequestHandler<UpdateChainCommand, AdminChainDto>
 {
     private readonly IChainRepository _chains;
     private readonly IChainLengthRepository _lengths;
@@ -15,7 +15,7 @@ public class UpdateChainCommandHandler : IRequestHandler<UpdateChainCommand, Cha
         _lengths = lengths;
     }
 
-    public async Task<ChainDto> Handle(UpdateChainCommand request, CancellationToken cancellationToken)
+    public async Task<AdminChainDto> Handle(UpdateChainCommand request, CancellationToken cancellationToken)
     {
         var chain = await _chains.GetByIdWithRollsAsync(request.Id, cancellationToken)
             ?? throw new NotFoundException("Chaîne", request.Id);
@@ -29,6 +29,6 @@ public class UpdateChainCommandHandler : IRequestHandler<UpdateChainCommand, Cha
         _chains.Update(chain);
         await _chains.SaveChangesAsync(cancellationToken);
 
-        return chain.ToDto(await _lengths.GetAllOrderedAsync(cancellationToken));
+        return chain.ToAdminDto(await _lengths.GetAllOrderedAsync(cancellationToken));
     }
 }
