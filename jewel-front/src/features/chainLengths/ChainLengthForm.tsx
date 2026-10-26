@@ -1,5 +1,10 @@
 import { useState, type FormEvent } from 'react';
-import { createChainLength, updateChainLength, type ChainLength } from '../../api/chainLengths';
+import {
+  createChainLength,
+  updateChainLength,
+  type ChainLength,
+  type ChainLengthInput,
+} from '../../api/chainLengths';
 import { Alert } from '../../components/ui/Alert';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
@@ -47,7 +52,7 @@ export function ChainLengthForm({
   const setField = (field: ChainLengthField) => (value: string) =>
     setValues((current) => ({ ...current, [field]: value }));
 
-  const save = (input: ReturnType<typeof toChainLengthInput>) =>
+  const save = (input: ChainLengthInput) =>
     length ? updateChainLength(length.id, input) : createChainLength(input);
 
   const handleSubmit = async (e: FormEvent) => {
