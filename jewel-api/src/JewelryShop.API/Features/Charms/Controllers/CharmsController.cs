@@ -27,7 +27,7 @@ public class CharmsController : ApiControllerBase
         ProductColor? colorEnum = Enum.TryParse<ProductColor>(color, ignoreCase: true, out var c) ? c : null;
         var favoritesFirstForUserId = favoritesFirst ? GetUserIdOrNull() : null;
         var query = new GetCharmsQuery(
-            colorEnum, inStockOnly, minPrice, maxPrice, page, pageSize, favoritesFirstForUserId);
+            colorEnum, inStockOnly, minPrice, maxPrice, page, pageSize, IsAdmin, favoritesFirstForUserId);
         var result = await Sender.Send(query, ct);
         return Ok(result);
     }

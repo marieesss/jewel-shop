@@ -11,5 +11,5 @@ public record GetCharmsQuery(
     decimal? MaxPrice,
     int Page = 1,
     int PageSize = 20,
-    long? FavoritesFirstForUserId = null,
-    bool IncludeAdminFields = false) : IRequest<PagedResult<CharmDto>>;
+    bool IncludeAdminFields = false,
+    long? FavoritesFirstForUserId = null) : IRequest<PagedResult<CharmDto>>;
