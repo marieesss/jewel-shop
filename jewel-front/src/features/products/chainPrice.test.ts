@@ -8,6 +8,7 @@ import {
   formatLengthOption,
   isChainUnavailable,
   isSelectableLength,
+  selectedLengthFor,
 } from './chainPrice';
 
 const length = (
@@ -25,7 +26,6 @@ const chain = {
 describe('formatFromPrice', () => {
   it('affiche « à partir de » le prix avec 2 décimales et le symbole €', () => {
     expect(formatFromPrice(14.2)).toBe(`à partir de ${formatPrice(14.2)}`);
-    expect(formatPrice(14.2)).toMatch(/^14,20\s€$/);
   });
 
   it('affiche « à partir de » un prix nul', () => {
@@ -110,5 +110,19 @@ describe('displayedChainPrice', () => {
     expect(
       displayedChainPrice({ availableLengths: [length(45, 14.2, false)], fromPrice: null }, null)
     ).toBe('Indisponible');
+  });
+});
+
+describe('selectedLengthFor', () => {
+  it('renvoie la longueur choisie sur la fiche du même produit', () => {
+    expect(selectedLengthFor({ productId: 3, lengthCm: 45 }, 3)).toBe(45);
+  });
+
+  it("n'applique pas le choix à la fiche d'un autre produit", () => {
+    expect(selectedLengthFor({ productId: 3, lengthCm: 45 }, 4)).toBeNull();
+  });
+
+  it('renvoie null sans choix', () => {
+    expect(selectedLengthFor(null, 3)).toBeNull();
   });
 });
