@@ -1,6 +1,9 @@
 import type { ChainDto, CreateChainPayload, UpdateChainPayload } from '../../api/products';
 import {
+  COST_MESSAGE,
+  PRICE_MESSAGE,
   toNumber,
+  validateAmount,
   validateCommon,
   type FieldErrors,
   type ProductCommonValues,
@@ -19,8 +22,6 @@ export interface ChainSpecificValues {
 export type ChainField = keyof ProductCommonValues | keyof ChainSpecificValues;
 export type ChainErrors = FieldErrors<ChainField>;
 
-export const COST_MESSAGE = 'Le coût doit être positif.';
-export const PRICE_MESSAGE = 'Le prix doit être positif.';
 export const INITIAL_ROLL_LENGTH_MESSAGE = 'La longueur du rouleau doit être supérieure à 0.';
 
 const METER_PRICE_REQUIRED_MESSAGES = {
@@ -56,13 +57,6 @@ export function chainSpecificFromProduct(chain: ChainDto): ChainSpecificValues {
     claspPrice: toInput(chain.claspPrice),
     initialRollLengthCm: '',
   };
-}
-
-function validateAmount(raw: string, requiredMessage: string, negativeMessage: string) {
-  const amount = toNumber(raw);
-  if (Number.isNaN(amount)) return requiredMessage;
-  if (amount < 0) return negativeMessage;
-  return undefined;
 }
 
 function validateInitialRollLength(raw: string) {
