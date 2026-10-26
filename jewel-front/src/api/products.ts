@@ -131,6 +131,18 @@ export interface ChainDto {
   claspPrice?: number;
   /** Longueur restante de tous les rouleaux, en cm. */
   stockCm?: number;
+  /** Toutes les longueurs de référence, triées. `null` pour une chaîne incluse dans un favori. */
+  availableLengths?: ChainLengthPriceDto[] | null;
+  /** Plus petit prix des longueurs disponibles, `null` s'il n'y en a aucune ou dans un favori. */
+  fromPrice?: number | null;
+}
+
+/** Prix et disponibilité d'une longueur de référence pour une chaîne. */
+export interface ChainLengthPriceDto {
+  lengthCm: number;
+  label: string;
+  price: number | null;
+  available: boolean;
 }
 
 export interface CreateChainPayload {
