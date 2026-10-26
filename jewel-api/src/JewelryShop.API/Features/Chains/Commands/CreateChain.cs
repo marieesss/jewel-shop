@@ -4,7 +4,7 @@ using MediatR;
 
 namespace JewelryShop.Features.Chains.Commands;
 
-public class CreateChainCommandHandler : IRequestHandler<CreateChainCommand, ChainDto>
+public class CreateChainCommandHandler : IRequestHandler<CreateChainCommand, AdminChainDto>
 {
     private readonly IChainRepository _chains;
     private readonly IChainLengthRepository _lengths;
@@ -17,7 +17,7 @@ public class CreateChainCommandHandler : IRequestHandler<CreateChainCommand, Cha
         _timeProvider = timeProvider;
     }
 
-    public async Task<ChainDto> Handle(CreateChainCommand request, CancellationToken cancellationToken)
+    public async Task<AdminChainDto> Handle(CreateChainCommand request, CancellationToken cancellationToken)
     {
         var chain = new Chain
         {
@@ -35,7 +35,7 @@ public class CreateChainCommandHandler : IRequestHandler<CreateChainCommand, Cha
         await _chains.AddAsync(chain, cancellationToken);
         await _chains.SaveChangesAsync(cancellationToken);
 
-        return chain.ToDto(await _lengths.GetAllOrderedAsync(cancellationToken));
+        return chain.ToAdminDto();
     }
 
     // À l'ancien format, la longueur saisie est celle de l'unique rouleau, comme pour les chaînes

@@ -4,13 +4,13 @@ using MediatR;
 
 namespace JewelryShop.Features.Charms.Commands;
 
-public class UpdateCharmCommandHandler : IRequestHandler<UpdateCharmCommand, CharmDto>
+public class UpdateCharmCommandHandler : IRequestHandler<UpdateCharmCommand, AdminCharmDto>
 {
     private readonly ICharmRepository _charms;
 
     public UpdateCharmCommandHandler(ICharmRepository charms) => _charms = charms;
 
-    public async Task<CharmDto> Handle(UpdateCharmCommand request, CancellationToken cancellationToken)
+    public async Task<AdminCharmDto> Handle(UpdateCharmCommand request, CancellationToken cancellationToken)
     {
         var charm = await _charms.GetByIdAsync(request.Id, cancellationToken)
             ?? throw new NotFoundException("Breloque", request.Id);
@@ -26,6 +26,6 @@ public class UpdateCharmCommandHandler : IRequestHandler<UpdateCharmCommand, Cha
         _charms.Update(charm);
         await _charms.SaveChangesAsync(cancellationToken);
 
-        return charm.ToDto();
+        return charm.ToAdminDto();
     }
 }
