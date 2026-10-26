@@ -6,12 +6,20 @@ import { Alert } from '../../components/ui/Alert';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Button } from '../../components/ui/Button';
 import { ProductCard } from '../../features/products/ProductCard';
-import { userPaths } from '../../features/products/productConfig';
+import { PRODUCT_CONFIG, userPaths } from '../../features/products/productConfig';
 import { useFavoritesStore } from '../../stores/context';
 import type { CharmDto, ChainDto } from '../../api/products';
 import type { ProductKind } from '../../stores/ProductAdminStore';
 
 type FavItem = { kind: ProductKind; product: CharmDto | ChainDto };
+
+/**
+ * Les chaînes d'un favori n'ont pas leurs prix par longueur (`fromPrice` à `null`) :
+ * leur carte n'affiche pas de prix plutôt qu'un « Indisponible » faux.
+ */
+function favoritePriceLabel(kind: ProductKind, product: CharmDto | ChainDto): string | undefined {
+  return kind === 'charm' ? PRODUCT_CONFIG.charm.cardPrice(product).label : undefined;
+}
 
 /** Liste des favoris de l'utilisateur. */
 export const FavoritesPage = observer(function FavoritesPage() {
@@ -51,7 +59,7 @@ export const FavoritesPage = observer(function FavoritesPage() {
               to={userPaths.detail(kind === 'charm' ? 'charms' : 'chains', product.id)}
               name={product.name}
               color={product.color}
-              price={product.price}
+              priceLabel={favoritePriceLabel(kind, product)}
               imageUrl={product.imageUrl}
               favorite={{ kind, productId: product.id }}
             />

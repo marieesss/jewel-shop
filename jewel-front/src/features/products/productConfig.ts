@@ -8,6 +8,8 @@ import {
   type PagedResult,
   type ProductListParams,
 } from '../../api/products';
+import { formatPrice } from '../../lib/format';
+import { formatFromPrice, isChainUnavailable } from './chainPrice';
 import type { ProductKind } from '../../stores/ProductAdminStore';
 
 export type ProductDto = CharmDto | ChainDto;
@@ -16,6 +18,11 @@ export type ProductSlug = 'charms' | 'chains';
 interface SpecificField {
   label: string;
   value: string;
+}
+
+export interface CardPrice {
+  label: string;
+  unavailable: boolean;
 }
 
 export interface ProductKindConfig {
@@ -29,6 +36,8 @@ export interface ProductKindConfig {
   fetchById: (id: number) => Promise<ProductDto>;
   /** Champ propre au type (stock pour la breloque, longueur pour la chaîne). */
   specificField: (product: ProductDto) => SpecificField;
+  /** Prix de la carte du catalogue client (« à partir de » pour la chaîne). */
+  cardPrice: (product: ProductDto) => CardPrice;
 }
 
 export const PRODUCT_CONFIG: Record<ProductKind, ProductKindConfig> = {
@@ -41,6 +50,7 @@ export const PRODUCT_CONFIG: Record<ProductKind, ProductKindConfig> = {
     fetchList: getCharms,
     fetchById: getCharmById,
     specificField: (p) => ({ label: 'Stock', value: String((p as CharmDto).stock) }),
+    cardPrice: (p) => ({ label: formatPrice((p as CharmDto).price), unavailable: false }),
   },
   chain: {
     kind: 'chain',
@@ -51,6 +61,10 @@ export const PRODUCT_CONFIG: Record<ProductKind, ProductKindConfig> = {
     fetchList: getChains,
     fetchById: getChainById,
     specificField: (p) => ({ label: 'Longueur', value: `${(p as ChainDto).length} cm` }),
+    cardPrice: (p) => ({
+      label: formatFromPrice((p as ChainDto).fromPrice),
+      unavailable: isChainUnavailable(p as ChainDto),
+    }),
   },
 };
 
