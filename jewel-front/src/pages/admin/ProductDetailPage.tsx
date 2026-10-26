@@ -9,7 +9,6 @@ import { useAsync } from '../../hooks/useAsync';
 import { PRODUCT_CONFIG, adminPaths } from '../../features/products/productConfig';
 import { ProductImage } from '../../features/products/ProductImage';
 import { colorLabel, colorTone } from '../../api/products';
-import { formatOptionalPrice } from '../../lib/format';
 import type { ProductKind } from '../../stores/ProductAdminStore';
 
 interface ProductDetailPageProps {
@@ -53,7 +52,7 @@ export function ProductDetailPage({ kind }: ProductDetailPageProps) {
             </div>
 
             <p className="mb-4 font-display text-xl font-medium text-fuchsia">
-              {formatOptionalPrice(data.price)}
+              {config.adminPrice(data)}
             </p>
 
             <Link to={adminPaths.edit(config.slug, data.id)} className="mb-5 inline-block">

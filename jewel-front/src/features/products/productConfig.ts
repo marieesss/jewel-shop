@@ -38,6 +38,8 @@ export interface ProductKindConfig {
   specificField: (product: ProductDto) => DetailField;
   /** Champs de la fiche admin propres au type (stock et prix). */
   adminFields: (product: ProductDto) => DetailField[];
+  /** Prix affiché dans la liste admin et l'en-tête de la fiche admin (prix au mètre pour la chaîne). */
+  adminPrice: (product: ProductDto) => string;
   /** Prix de la carte du catalogue client (« à partir de » pour la chaîne). */
   cardPrice: (product: ProductDto) => CardPrice;
   /**
@@ -78,6 +80,7 @@ export const PRODUCT_CONFIG: Record<ProductKind, ProductKindConfig> = {
     fetchById: getCharmById,
     specificField: (p) => ({ label: 'Stock', value: String((p as CharmDto).stock) }),
     adminFields: (p) => charmAdminFields(p as CharmDto),
+    adminPrice: (p) => formatPrice((p as CharmDto).price),
     cardPrice: (p) => ({ label: formatPrice((p as CharmDto).price), unavailable: false }),
     favoritePrice: (p) => ({ label: formatPrice((p as CharmDto).price), unavailable: false }),
     detailPrice: (p) => formatPrice((p as CharmDto).price),
@@ -92,6 +95,7 @@ export const PRODUCT_CONFIG: Record<ProductKind, ProductKindConfig> = {
     fetchById: getChainById,
     specificField: (p) => ({ label: 'Longueur', value: formatLengthCm((p as ChainDto).length) }),
     adminFields: (p) => chainAdminFields(p as ChainDto),
+    adminPrice: (p) => formatOptionalPrice((p as ChainDto).pricePerMeter),
     cardPrice: (p) => ({
       label: formatFromPrice((p as ChainDto).fromPrice),
       unavailable: isChainUnavailable(p as ChainDto),

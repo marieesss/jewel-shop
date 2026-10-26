@@ -37,6 +37,16 @@ describe('fiche admin d’une chaîne', () => {
   });
 });
 
+describe('prix admin', () => {
+  it('affiche le prix au mètre d’une chaîne au nouveau format, sans price', () => {
+    expect(PRODUCT_CONFIG.chain.adminPrice(newFormatChain)).toBe(formatPrice(20));
+  });
+
+  it('affiche « — » pour une chaîne sans prix au mètre', () => {
+    expect(PRODUCT_CONFIG.chain.adminPrice({ ...newFormatChain, pricePerMeter: null })).toBe('—');
+  });
+});
+
 describe('fiche client d’une chaîne', () => {
   it('affiche « — » pour une chaîne sans longueur', () => {
     expect(PRODUCT_CONFIG.chain.specificField(newFormatChain)).toEqual({
