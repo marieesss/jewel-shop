@@ -8,14 +8,14 @@ import {
   type PagedResult,
   type ProductListParams,
 } from '../../api/products';
-import { formatPrice } from '../../lib/format';
 import { displayedChainPrice, formatFromPrice, isChainUnavailable } from './chainPrice';
 import type { ProductKind } from '../../stores/ProductAdminStore';
+import { formatLengthCm, formatOptionalPrice, formatPrice } from '../../lib/format';
 
 export type ProductDto = CharmDto | ChainDto;
 export type ProductSlug = 'charms' | 'chains';
 
-interface SpecificField {
+export interface DetailField {
   label: string;
   value: string;
 }
@@ -35,7 +35,11 @@ export interface ProductKindConfig {
   fetchList: (params: ProductListParams) => Promise<PagedResult<ProductDto>>;
   fetchById: (id: number) => Promise<ProductDto>;
   /** Champ propre au type (stock pour la breloque, longueur pour la chaîne). */
-  specificField: (product: ProductDto) => SpecificField;
+  specificField: (product: ProductDto) => DetailField;
+  /** Champs de la fiche admin propres au type (stock et prix). */
+  adminFields: (product: ProductDto) => DetailField[];
+  /** Prix affiché dans la liste admin et l'en-tête de la fiche admin (prix au mètre pour la chaîne). */
+  adminPrice: (product: ProductDto) => string;
   /** Prix de la carte du catalogue client (« à partir de » pour la chaîne). */
   cardPrice: (product: ProductDto) => CardPrice;
   /**
@@ -45,6 +49,24 @@ export interface ProductKindConfig {
   favoritePrice: (product: ProductDto) => CardPrice | undefined;
   /** Prix de la fiche client, selon la longueur choisie (chaîne uniquement). */
   detailPrice: (product: ProductDto, selectedLengthCm: number | null) => string;
+}
+
+function charmAdminFields(charm: CharmDto): DetailField[] {
+  return [
+    { label: 'Stock', value: String(charm.stock) },
+    { label: 'Coût', value: formatPrice(charm.cost) },
+    { label: 'Prix', value: formatPrice(charm.price) },
+  ];
+}
+
+function chainAdminFields(chain: ChainDto): DetailField[] {
+  return [
+    { label: 'Stock total', value: formatLengthCm(chain.stockCm) },
+    { label: 'Coût au mètre', value: formatOptionalPrice(chain.costPerMeter) },
+    { label: 'Prix au mètre', value: formatOptionalPrice(chain.pricePerMeter) },
+    { label: 'Coût du fermoir', value: formatOptionalPrice(chain.claspCost) },
+    { label: 'Prix du fermoir', value: formatPrice(chain.claspPrice) },
+  ];
 }
 
 export const PRODUCT_CONFIG: Record<ProductKind, ProductKindConfig> = {
@@ -57,6 +79,8 @@ export const PRODUCT_CONFIG: Record<ProductKind, ProductKindConfig> = {
     fetchList: getCharms,
     fetchById: getCharmById,
     specificField: (p) => ({ label: 'Stock', value: String((p as CharmDto).stock) }),
+    adminFields: (p) => charmAdminFields(p as CharmDto),
+    adminPrice: (p) => formatPrice((p as CharmDto).price),
     cardPrice: (p) => ({ label: formatPrice((p as CharmDto).price), unavailable: false }),
     favoritePrice: (p) => ({ label: formatPrice((p as CharmDto).price), unavailable: false }),
     detailPrice: (p) => formatPrice((p as CharmDto).price),
@@ -69,7 +93,9 @@ export const PRODUCT_CONFIG: Record<ProductKind, ProductKindConfig> = {
     hasStock: false,
     fetchList: getChains,
     fetchById: getChainById,
-    specificField: (p) => ({ label: 'Longueur', value: `${(p as ChainDto).length} cm` }),
+    specificField: (p) => ({ label: 'Longueur', value: formatLengthCm((p as ChainDto).length) }),
+    adminFields: (p) => chainAdminFields(p as ChainDto),
+    adminPrice: (p) => formatOptionalPrice((p as ChainDto).pricePerMeter),
     cardPrice: (p) => ({
       label: formatFromPrice((p as ChainDto).fromPrice),
       unavailable: isChainUnavailable(p as ChainDto),

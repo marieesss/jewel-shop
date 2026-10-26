@@ -118,19 +118,18 @@ export interface ChainDto {
   imageUrl: string | null;
   /** Lien fournisseur, réservé à l'admin : absent des réponses destinées aux clients (#93). */
   url?: string | null;
-  /**
-   * Ancien format. L'API les renvoie vides pour une chaîne créée avec les prix au mètre,
-   * ce que ce front ne fait pas encore : ils restent typés comme toujours remplis.
-   */
-  cost: number;
-  price: number;
-  length: number;
+  /** Ancien format : vides pour une chaîne créée avec les prix au mètre. Coût réservé à l'admin (#93). */
+  cost?: number | null;
+  price?: number | null;
+  length?: number | null;
+  /** Réservé à l'admin (#93). */
   costPerMeter?: number | null;
-  pricePerMeter?: number | null;
+  pricePerMeter: number | null;
+  /** Réservé à l'admin (#93). */
   claspCost?: number;
-  claspPrice?: number;
+  claspPrice: number;
   /** Longueur restante de tous les rouleaux, en cm. */
-  stockCm?: number;
+  stockCm: number;
   /** Toutes les longueurs de référence, triées. `null` pour une chaîne incluse dans un favori. */
   availableLengths?: ChainLengthPriceDto[] | null;
   /** Plus petit prix des longueurs disponibles, `null` s'il n'y en a aucune ou dans un favori. */
@@ -145,14 +144,20 @@ export interface ChainLengthPriceDto {
   available: boolean;
 }
 
-export interface CreateChainPayload {
+export interface UpdateChainPayload {
   name: string;
   description: string;
   color: ProductColor;
-  cost: number;
-  price: number;
-  length: number;
   url?: string | null;
+  costPerMeter: number;
+  pricePerMeter: number;
+  claspCost: number;
+  claspPrice: number;
+}
+
+export interface CreateChainPayload extends UpdateChainPayload {
+  /** Longueur du premier rouleau, en cm entiers. */
+  initialRollLengthCm: number;
 }
 
 /** POST /api/chains (Admin) → 201 ChainDto */
@@ -177,7 +182,7 @@ export async function getChainById(id: number): Promise<ChainDto> {
 }
 
 /** PUT /api/chains/{id} (Admin) → ChainDto */
-export async function updateChain(id: number, payload: CreateChainPayload): Promise<ChainDto> {
+export async function updateChain(id: number, payload: UpdateChainPayload): Promise<ChainDto> {
   const { data } = await api.put<ChainDto>(`/api/chains/${id}`, {
     ...payload,
     color: COLOR_TO_VALUE[payload.color],

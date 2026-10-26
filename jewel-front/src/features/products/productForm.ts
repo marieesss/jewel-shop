@@ -47,9 +47,31 @@ export function toNumber(raw: string): number {
   return Number(normalized);
 }
 
+export interface RequiredPriceMessages {
+  cost: string;
+  price: string;
+}
+
+export const COST_MESSAGE = 'Le coût doit être positif.';
+export const PRICE_MESSAGE = 'Le prix doit être positif.';
+
+/** Valide un montant obligatoire et positif ; renvoie le message d'erreur, ou `undefined`. */
+export function validateAmount(raw: string, requiredMessage: string, negativeMessage: string) {
+  const amount = toNumber(raw);
+  if (Number.isNaN(amount)) return requiredMessage;
+  if (amount < 0) return negativeMessage;
+  return undefined;
+}
+
+const DEFAULT_REQUIRED_PRICE_MESSAGES: RequiredPriceMessages = {
+  cost: 'Coût requis.',
+  price: 'Prix requis.',
+};
+
 /** Valide les champs communs (miroir des FluentValidation côté back). */
 export function validateCommon(
-  values: ProductCommonValues
+  values: ProductCommonValues,
+  requiredPriceMessages: RequiredPriceMessages = DEFAULT_REQUIRED_PRICE_MESSAGES
 ): FieldErrors<keyof ProductCommonValues> {
   const errors: FieldErrors<keyof ProductCommonValues> = {};
 
@@ -60,13 +82,11 @@ export function validateCommon(
 
   if (values.url.trim().length > 500) errors.url = '500 caractères maximum.';
 
-  const cost = toNumber(values.cost);
-  if (Number.isNaN(cost)) errors.cost = 'Coût requis.';
-  else if (cost < 0) errors.cost = 'Le coût doit être positif.';
+  const costError = validateAmount(values.cost, requiredPriceMessages.cost, COST_MESSAGE);
+  if (costError) errors.cost = costError;
 
-  const price = toNumber(values.price);
-  if (Number.isNaN(price)) errors.price = 'Prix requis.';
-  else if (price < 0) errors.price = 'Le prix doit être positif.';
+  const priceError = validateAmount(values.price, requiredPriceMessages.price, PRICE_MESSAGE);
+  if (priceError) errors.price = priceError;
 
   return errors;
 }
