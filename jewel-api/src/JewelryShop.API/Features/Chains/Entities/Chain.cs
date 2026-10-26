@@ -23,6 +23,18 @@ public class Chain : BaseEntity
 
     public int StockCm => Rolls.Sum(r => r.RemainingLengthCm);
 
+    public int LongestRollCm => Rolls.Count == 0 ? 0 : Rolls.Max(r => r.RemainingLengthCm);
+
+    /// <summary>Prix de la longueur demandée, fermoir compris, ou null sans prix au mètre.</summary>
+    public decimal? PriceFor(int lengthCm) =>
+        PricePerMeter is { } pricePerMeter ? ChainPricing.PriceFor(pricePerMeter, lengthCm, ClaspPrice) : null;
+
+    /// <summary>
+    /// Vrai si la longueur peut être vendue : la chaîne a un prix au mètre et un seul rouleau la couvre,
+    /// car deux bouts de chaîne ne s'assemblent pas.
+    /// </summary>
+    public bool CanSell(int lengthCm) => PricePerMeter.HasValue && LongestRollCm >= lengthCm;
+
     /// <summary>
     /// Enregistre les prix saisis. Au nouveau format, les anciennes colonnes ne sont pas touchées ;
     /// à l'ancien, les prix au mètre en sont déduits. Un fermoir absent garde sa valeur.

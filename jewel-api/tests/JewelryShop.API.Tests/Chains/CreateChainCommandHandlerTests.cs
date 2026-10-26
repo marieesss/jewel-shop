@@ -12,7 +12,7 @@ public class CreateChainCommandHandlerTests
     private readonly CreateChainCommandHandler _handler;
 
     public CreateChainCommandHandlerTests() =>
-        _handler = new CreateChainCommandHandler(_chains, new FakeTimeProvider(_now));
+        _handler = new CreateChainCommandHandler(_chains, new FakeChainLengthRepository(), new FakeTimeProvider(_now));
 
     private static CreateChainCommand LegacyCommand(decimal length = 300m) =>
         new("Gourmette", "Maille fine", ProductColor.Gold, Cost: 12m, Price: 30m, Length: length);

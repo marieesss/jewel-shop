@@ -7,4 +7,5 @@ public static class ChainLengthMessages
     public const string LengthOutOfRange = "La longueur doit être comprise entre 10 et 200 cm.";
     public const string LabelRequired = "Le libellé est requis.";
     public const string LabelTooLong = "50 caractères maximum.";
+    public const string InvalidId = "Identifiant invalide.";
 }

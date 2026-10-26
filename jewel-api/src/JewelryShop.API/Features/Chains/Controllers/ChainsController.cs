@@ -25,7 +25,7 @@ public class ChainsController : ApiControllerBase
     {
         ProductColor? colorEnum = Enum.TryParse<ProductColor>(color, ignoreCase: true, out var c) ? c : null;
         var favoritesFirstForUserId = favoritesFirst ? GetUserIdOrNull() : null;
-        var query = new GetChainsQuery(colorEnum, minPrice, maxPrice, page, pageSize, favoritesFirstForUserId);
+        var query = new GetChainsQuery(colorEnum, minPrice, maxPrice, page, pageSize, IsAdmin, favoritesFirstForUserId);
         var result = await Sender.Send(query, ct);
         return Ok(result);
     }
@@ -36,7 +36,7 @@ public class ChainsController : ApiControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(long id, CancellationToken ct)
     {
-        var result = await Sender.Send(new GetChainByIdQuery(id), ct);
+        var result = await Sender.Send(new GetChainByIdQuery(id, IsAdmin), ct);
         return Ok(result);
     }
 
