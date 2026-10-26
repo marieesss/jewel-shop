@@ -45,6 +45,42 @@ public class ChainsControllerTests
     }
 
     [Fact]
+    public async Task Demande_les_chaines_sans_champs_admin_pour_un_utilisateur()
+    {
+        await _controller.GetAll(null, null, null, ct: CancellationToken.None);
+
+        Assert.Equal(new GetChainsQuery(null, null, null, 1, 20, IncludeAdminFields: false), _sender.LastRequest);
+    }
+
+    [Fact]
+    public async Task Demande_les_chaines_avec_les_champs_admin_pour_un_admin()
+    {
+        _sender.AttachTo(_controller, role: UserRole.Admin);
+
+        await _controller.GetAll(null, null, null, ct: CancellationToken.None);
+
+        Assert.Equal(new GetChainsQuery(null, null, null, 1, 20, IncludeAdminFields: true), _sender.LastRequest);
+    }
+
+    [Fact]
+    public async Task Demande_le_detail_sans_champs_admin_pour_un_utilisateur()
+    {
+        await _controller.GetById(7, CancellationToken.None);
+
+        Assert.Equal(new GetChainByIdQuery(7, IncludeAdminFields: false), _sender.LastRequest);
+    }
+
+    [Fact]
+    public async Task Demande_le_detail_avec_les_champs_admin_pour_un_admin()
+    {
+        _sender.AttachTo(_controller, role: UserRole.Admin);
+
+        await _controller.GetById(7, CancellationToken.None);
+
+        Assert.Equal(new GetChainByIdQuery(7, IncludeAdminFields: true), _sender.LastRequest);
+    }
+
+    [Fact]
     public async Task Met_a_jour_la_chaine_de_la_route_et_non_celle_du_corps()
     {
         var body = new UpdateChainCommand(99, "Forçat", "", ProductColor.Gold, 5, 20, 45);

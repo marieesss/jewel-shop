@@ -11,6 +11,8 @@ public static class ChainsApi
 {
     public const string Path = "/api/chains";
 
+    public const string SupplierUrl = "https://fournisseur.example/chaine";
+
     /// <summary>Crée un compte du rôle demandé, s'y connecte et renvoie un client qui envoie son JWT.</summary>
     public static async Task<HttpClient> CreateClientAsAsync(this JewelryShopApiFactory api, UserRole role)
     {
@@ -43,15 +45,20 @@ public static class ChainsApi
         PricePerMeter = 10m,
         ClaspCost = 1.5m,
         ClaspPrice = 3m,
-        InitialRollLengthCm = 250
+        InitialRollLengthCm = 250,
+        Url = SupplierUrl
     };
 
-    public static async Task<ChainDto> CreateChainAsync(this HttpClient admin, object body)
+    public static async Task<AdminChainDto> CreateChainAsync(this HttpClient admin, object body)
     {
         var response = await admin.PostAsJsonAsync(Path, body);
         response.EnsureSuccessStatusCode();
-        return (await response.Content.ReadFromJsonAsync<ChainDto>())!;
+        return (await response.Content.ReadFromJsonAsync<AdminChainDto>())!;
     }
+
+    /// <summary>La même chaîne telle qu'un client la reçoit, sans lien ni coûts.</summary>
+    public static ChainDto ToPublic(this AdminChainDto c) => new(
+        c.Id, c.Name, c.Description, c.Color, c.ImageUrl, c.Price, c.Length, c.PricePerMeter, c.ClaspPrice, c.StockCm);
 
     public static string UniqueName() => $"Chaîne {Guid.NewGuid():N}";
 }
