@@ -34,17 +34,18 @@ public static class ChainsApi
         Length = length
     };
 
-    public static object MeterBody(string name, ProductColor color = ProductColor.Gold) => new
-    {
-        Name = name,
-        Description = "Maille fine",
-        Color = color,
-        CostPerMeter = 4m,
-        PricePerMeter = 10m,
-        ClaspCost = 1.5m,
-        ClaspPrice = 3m,
-        InitialRollLengthCm = 250
-    };
+    public static object MeterBody(
+        string name, ProductColor color = ProductColor.Gold, decimal claspPrice = 3m, int initialRollLengthCm = 250) => new
+        {
+            Name = name,
+            Description = "Maille fine",
+            Color = color,
+            CostPerMeter = 4m,
+            PricePerMeter = 10m,
+            ClaspCost = 1.5m,
+            ClaspPrice = claspPrice,
+            InitialRollLengthCm = initialRollLengthCm
+        };
 
     public static async Task<ChainDto> CreateChainAsync(this HttpClient admin, object body)
     {

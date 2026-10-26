@@ -27,8 +27,36 @@ public class GetChainsTests
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var page = await response.Content.ReadFromJsonAsync<PagedResult<ChainDto>>();
         Assert.NotNull(page);
-        Assert.Equal(legacy, Assert.Single(page.Items, c => c.Id == legacy.Id));
-        Assert.Equal(meter, Assert.Single(page.Items, c => c.Id == meter.Id));
+        AssertSameChain(legacy, Assert.Single(page.Items, c => c.Id == legacy.Id));
+        AssertSameChain(meter, Assert.Single(page.Items, c => c.Id == meter.Id));
+    }
+
+    [Fact]
+    public async Task Renvoie_le_prix_et_la_disponibilite_des_longueurs_dans_le_detail()
+    {
+        var admin = await _api.CreateClientAsAsync(UserRole.Admin);
+        var created = await admin.CreateChainAsync(
+            ChainsApi.MeterBody(ChainsApi.UniqueName(), claspPrice: 2m, initialRollLengthCm: 100));
+
+        var chain = await _api.CreateApiClient().GetFromJsonAsync<ChainDto>($"{ChainsApi.Path}/{created.Id}");
+
+        Assert.Equal(new ChainLengthPriceDto(45, "Princesse", 6.50m, true), LengthOf(chain!, 45));
+        Assert.Equal(new ChainLengthPriceDto(81, "Sautoir", 10.10m, true), LengthOf(chain!, 81));
+        Assert.Equal(chain!.AvailableLengths!.OrderBy(l => l.LengthCm), chain.AvailableLengths!);
+    }
+
+    [Fact]
+    public async Task Renvoie_les_longueurs_indisponibles_et_le_prix_a_partir_de_dans_la_liste()
+    {
+        var admin = await _api.CreateClientAsAsync(UserRole.Admin);
+        var created = await admin.CreateChainAsync(
+            ChainsApi.MeterBody(ChainsApi.UniqueName(), claspPrice: 2m, initialRollLengthCm: 50));
+
+        var chain = Assert.Single(await GetItemsAsync(""), c => c.Id == created.Id);
+
+        Assert.True(LengthOf(chain, 50).Available);
+        Assert.False(LengthOf(chain, 55).Available);
+        Assert.Equal(chain.AvailableLengths!.Where(l => l.Available).Min(l => l.Price), chain.FromPrice);
     }
 
     [Fact]
@@ -113,6 +141,16 @@ public class GetChainsTests
 
         Assert.Equal(ids.Order(), ids);
     }
+
+    // Un record compare ses listes par référence : les longueurs sont comparées à part, élément par élément.
+    private static void AssertSameChain(ChainDto expected, ChainDto actual)
+    {
+        Assert.Equal(expected with { AvailableLengths = null }, actual with { AvailableLengths = null });
+        Assert.Equal(expected.AvailableLengths!, actual.AvailableLengths!);
+    }
+
+    private static ChainLengthPriceDto LengthOf(ChainDto chain, int lengthCm) =>
+        Assert.Single(chain.AvailableLengths!, l => l.LengthCm == lengthCm);
 
     private static async Task<IReadOnlyList<long>> GetIdsAsync(HttpClient client, string query)
     {
