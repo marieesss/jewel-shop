@@ -3,11 +3,16 @@ using JewelryShop.Common.Exceptions;
 using JewelryShop.Features.ChainLengths.Commands;
 using JewelryShop.Features.ChainLengths.Common;
 using JewelryShop.Features.ChainLengths.Entities;
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace JewelryShop.API.Tests.ChainLengths;
 
 public class ChainLengthCommandHandlerTests
 {
+    private static DbUpdateException UniqueViolation()
+        => new("Violation d'unicité.", new PostgresException("duplicate key", "ERROR", "ERROR", PostgresErrorCodes.UniqueViolation));
+
     private readonly FakeChainLengthRepository _lengths = new();
     private readonly ChainLength _princesse = new() { Id = 3, LengthCm = 45, Label = "Princesse" };
     private readonly ChainLength _miLong = new() { Id = 4, LengthCm = 50, Label = "Mi-long" };
@@ -39,6 +44,40 @@ public class ChainLengthCommandHandlerTests
         Assert.Equal(ChainLengthMessages.AlreadyExists, error.Message);
         Assert.Equal(2, _lengths.All.Count);
         Assert.Equal(0, _lengths.SaveChangesCount);
+    }
+
+    [Fact]
+    public async Task Renvoie_un_conflit_si_deux_creations_simultanees_violent_l_unicite()
+    {
+        _lengths.SaveChangesError = UniqueViolation();
+        var handler = new CreateChainLengthCommandHandler(_lengths);
+
+        var error = await Assert.ThrowsAsync<ConflictException>(
+            () => handler.Handle(new CreateChainLengthCommand(48, "Princesse longue"), CancellationToken.None));
+
+        Assert.Equal(ChainLengthMessages.AlreadyExists, error.Message);
+    }
+
+    [Fact]
+    public async Task Renvoie_un_conflit_si_deux_modifications_simultanees_violent_l_unicite()
+    {
+        _lengths.SaveChangesError = UniqueViolation();
+        var handler = new UpdateChainLengthCommandHandler(_lengths);
+
+        var error = await Assert.ThrowsAsync<ConflictException>(
+            () => handler.Handle(new UpdateChainLengthCommand(3, 46, "Princesse"), CancellationToken.None));
+
+        Assert.Equal(ChainLengthMessages.AlreadyExists, error.Message);
+    }
+
+    [Fact]
+    public async Task Laisse_remonter_les_autres_erreurs_d_enregistrement()
+    {
+        _lengths.SaveChangesError = new DbUpdateException("Autre erreur.");
+        var handler = new CreateChainLengthCommandHandler(_lengths);
+
+        await Assert.ThrowsAsync<DbUpdateException>(
+            () => handler.Handle(new CreateChainLengthCommand(48, "Princesse longue"), CancellationToken.None));
     }
 
     [Fact]

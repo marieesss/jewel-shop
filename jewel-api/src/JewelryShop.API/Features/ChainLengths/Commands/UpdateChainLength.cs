@@ -23,7 +23,7 @@ public class UpdateChainLengthCommandHandler : IRequestHandler<UpdateChainLength
         length.Label = request.Label.Trim();
 
         _lengths.Update(length);
-        await _lengths.SaveChangesAsync(cancellationToken);
+        await _lengths.SaveChangesOrConflictAsync(cancellationToken);
 
         return length.ToDto();
     }
