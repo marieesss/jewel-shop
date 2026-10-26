@@ -35,7 +35,7 @@ public class CreateChainCommandHandler : IRequestHandler<CreateChainCommand, Adm
         await _chains.AddAsync(chain, cancellationToken);
         await _chains.SaveChangesAsync(cancellationToken);
 
-        return chain.ToAdminDto();
+        return chain.ToAdminDto(await _lengths.GetAllOrderedAsync(cancellationToken));
     }
 
     // À l'ancien format, la longueur saisie est celle de l'unique rouleau, comme pour les chaînes

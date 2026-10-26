@@ -74,14 +74,21 @@ public static class ChainMappingExtensions
         includeAdminFields ? c.ToAdminDto() : c.ToDto();
 
     /// <summary>Ajoute au DTO le prix et la disponibilité de chaque longueur de référence.</summary>
-    public static ChainDto ToDto(this Chain c, IEnumerable<ChainLength> lengths)
+    public static ChainDto ToDto(this Chain c, bool includeAdminFields, IEnumerable<ChainLength> lengths) =>
+        c.ToDto(includeAdminFields).WithLengths(c, lengths);
+
+    /// <summary>Variante admin de <see cref="ToDto(Chain, bool, IEnumerable{ChainLength})"/>, avec les champs admin.</summary>
+    public static AdminChainDto ToAdminDto(this Chain c, IEnumerable<ChainLength> lengths) =>
+        c.ToAdminDto().WithLengths(c, lengths);
+
+    private static T WithLengths<T>(this T dto, Chain c, IEnumerable<ChainLength> lengths) where T : ChainDto
     {
         var lengthPrices = lengths
             .OrderBy(l => l.LengthCm)
             .Select(l => new ChainLengthPriceDto(l.LengthCm, l.Label, c.PriceFor(l.LengthCm), c.CanSell(l.LengthCm)))
             .ToList();
 
-        return c.ToDto() with
+        return dto with
         {
             AvailableLengths = lengthPrices,
             FromPrice = lengthPrices.Where(l => l.Available).Min(l => l.Price)

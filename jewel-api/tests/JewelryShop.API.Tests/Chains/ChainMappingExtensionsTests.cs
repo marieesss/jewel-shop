@@ -36,7 +36,7 @@ public class ChainMappingExtensionsTests
     [Fact]
     public void Calcule_le_prix_de_chaque_longueur_fermoir_compris()
     {
-        var dto = ChainWithRolls(10m, 100).ToDto(_referenceLengths);
+        var dto = ChainWithRolls(10m, 100).ToDto(false, _referenceLengths);
 
         Assert.Equal(new ChainLengthPriceDto(45, "Princesse", 6.50m, true), LengthOf(dto, 45));
         Assert.Equal(new ChainLengthPriceDto(81, "Sautoir", 10.10m, true), LengthOf(dto, 81));
@@ -45,7 +45,7 @@ public class ChainMappingExtensionsTests
     [Fact]
     public void Renvoie_toutes_les_longueurs_de_reference_triees()
     {
-        var dto = ChainWithRolls(10m, 100).ToDto(_referenceLengths);
+        var dto = ChainWithRolls(10m, 100).ToDto(false, _referenceLengths);
 
         Assert.Equal([38, 42, 45, 50, 55, 60, 65, 70, 81], dto.AvailableLengths!.Select(l => l.LengthCm));
     }
@@ -53,7 +53,7 @@ public class ChainMappingExtensionsTests
     [Fact]
     public void Rend_disponibles_les_longueurs_couvertes_par_un_rouleau_seulement()
     {
-        var dto = ChainWithRolls(10m, 50).ToDto(_referenceLengths);
+        var dto = ChainWithRolls(10m, 50).ToDto(false, _referenceLengths);
 
         Assert.Equal([38, 42, 45, 50], dto.AvailableLengths!.Where(l => l.Available).Select(l => l.LengthCm));
         Assert.Equal([55, 60, 65, 70, 81], dto.AvailableLengths!.Where(l => !l.Available).Select(l => l.LengthCm));
@@ -62,7 +62,7 @@ public class ChainMappingExtensionsTests
     [Fact]
     public void N_additionne_pas_deux_rouleaux_pour_couvrir_une_longueur()
     {
-        var dto = ChainWithRolls(10m, 40, 40).ToDto(_referenceLengths);
+        var dto = ChainWithRolls(10m, 40, 40).ToDto(false, _referenceLengths);
 
         Assert.True(LengthOf(dto, 38).Available);
         Assert.False(LengthOf(dto, 42).Available);
@@ -71,7 +71,7 @@ public class ChainMappingExtensionsTests
     [Fact]
     public void Rend_toutes_les_longueurs_indisponibles_sans_rouleau()
     {
-        var dto = ChainWithRolls(10m).ToDto(_referenceLengths);
+        var dto = ChainWithRolls(10m).ToDto(false, _referenceLengths);
 
         Assert.All(dto.AvailableLengths!, l => Assert.False(l.Available));
         Assert.Null(dto.FromPrice);
@@ -80,7 +80,7 @@ public class ChainMappingExtensionsTests
     [Fact]
     public void Renvoie_le_prix_de_la_moins_chere_des_longueurs_disponibles()
     {
-        var dto = ChainWithRolls(10m, 30, 60).ToDto(_referenceLengths);
+        var dto = ChainWithRolls(10m, 30, 60).ToDto(false, _referenceLengths);
 
         Assert.Equal(5.80m, dto.FromPrice);
     }
@@ -90,7 +90,7 @@ public class ChainMappingExtensionsTests
     {
         var lengths = new[] { new ChainLength { Id = 1, LengthCm = 38, Label = "Ras du cou" } };
 
-        var dto = ChainWithRolls(10m, 20).ToDto(lengths);
+        var dto = ChainWithRolls(10m, 20).ToDto(false, lengths);
 
         Assert.Equal(5.80m, LengthOf(dto, 38).Price);
         Assert.Null(dto.FromPrice);
@@ -99,7 +99,7 @@ public class ChainMappingExtensionsTests
     [Fact]
     public void Ne_vend_aucune_longueur_d_une_chaine_sans_prix_au_metre()
     {
-        var dto = ChainWithRolls(null, 100).ToDto(_referenceLengths);
+        var dto = ChainWithRolls(null, 100).ToDto(false, _referenceLengths);
 
         Assert.All(dto.AvailableLengths!, l =>
         {

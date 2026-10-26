@@ -9,7 +9,11 @@ public class UpdateChainCommandHandler : IRequestHandler<UpdateChainCommand, Adm
     private readonly IChainRepository _chains;
     private readonly IChainLengthRepository _lengths;
 
-    public UpdateChainCommandHandler(IChainRepository chains) => _chains = chains;
+    public UpdateChainCommandHandler(IChainRepository chains, IChainLengthRepository lengths)
+    {
+        _chains = chains;
+        _lengths = lengths;
+    }
 
     public async Task<AdminChainDto> Handle(UpdateChainCommand request, CancellationToken cancellationToken)
     {
@@ -25,6 +29,6 @@ public class UpdateChainCommandHandler : IRequestHandler<UpdateChainCommand, Adm
         _chains.Update(chain);
         await _chains.SaveChangesAsync(cancellationToken);
 
-        return chain.ToAdminDto();
+        return chain.ToAdminDto(await _lengths.GetAllOrderedAsync(cancellationToken));
     }
 }
