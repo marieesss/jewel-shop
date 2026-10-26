@@ -20,6 +20,9 @@ public class AppDbContext : DbContext
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
     public DbSet<Invitation> Invitations => Set<Invitation>();
+    public DbSet<Tag> Tags => Set<Tag>();
+    public DbSet<ChainTag> ChainTags => Set<ChainTag>();
+    public DbSet<CharmTag> CharmTags => Set<CharmTag>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
