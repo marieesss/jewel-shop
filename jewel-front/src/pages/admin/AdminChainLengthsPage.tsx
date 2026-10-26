@@ -36,6 +36,11 @@ export function AdminChainLengthsPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleCancel = () => {
+    clearActionMessages();
+    setEditing(null);
+  };
+
   const handleDelete = async (length: ChainLength) => {
     if (!window.confirm(deleteConfirmationMessage(length))) return;
 
@@ -60,8 +65,9 @@ export function AdminChainLengthsPage() {
       <ChainLengthForm
         key={editing?.id ?? 'new'}
         length={editing ?? undefined}
+        onSubmitStart={clearActionMessages}
         onSaved={handleSaved}
-        onCancel={() => setEditing(null)}
+        onCancel={handleCancel}
       />
 
       {actionError && <Alert className="mb-4">{actionError}</Alert>}

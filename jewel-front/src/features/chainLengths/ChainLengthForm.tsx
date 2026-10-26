@@ -24,12 +24,19 @@ import {
 interface ChainLengthFormProps {
   /** Longueur à modifier ; absente ⇒ création. */
   length?: ChainLength;
+  /** Appelé au début de chaque envoi, pour effacer les messages de l'action précédente. */
+  onSubmitStart?: () => void;
   onSaved: (successMessage: string) => void;
   onCancel?: () => void;
 }
 
 /** Formulaire de création ou de modification d'une longueur de chaîne (admin). */
-export function ChainLengthForm({ length, onSaved, onCancel }: ChainLengthFormProps) {
+export function ChainLengthForm({
+  length,
+  onSubmitStart,
+  onSaved,
+  onCancel,
+}: ChainLengthFormProps) {
   const isEdit = Boolean(length);
   const [values, setValues] = useState<ChainLengthFormValues>(
     length ? chainLengthFormFrom(length) : emptyChainLengthForm
@@ -45,6 +52,7 @@ export function ChainLengthForm({ length, onSaved, onCancel }: ChainLengthFormPr
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    onSubmitStart?.();
 
     const fieldErrors = validateChainLengthForm(values);
     setErrors({ fields: fieldErrors, form: null });
