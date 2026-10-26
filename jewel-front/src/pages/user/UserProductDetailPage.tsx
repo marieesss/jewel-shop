@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Spinner } from '../../components/ui/Spinner';
 import { Alert } from '../../components/ui/Alert';
@@ -9,8 +10,9 @@ import { PRODUCT_CONFIG, userPaths } from '../../features/products/productConfig
 import { ProductImage } from '../../features/products/ProductImage';
 import { FavoriteButton } from '../../features/favorites/FavoriteButton';
 import { FavoriteErrorAlert } from '../../features/favorites/FavoriteErrorAlert';
-import { colorLabel, colorTone } from '../../api/products';
-import { formatPrice } from '../../lib/format';
+import { ChainLengthPicker } from '../../features/products/ChainLengthPicker';
+import { selectedLengthFor, type LengthSelection } from '../../features/products/chainPrice';
+import { colorLabel, colorTone, type ChainDto } from '../../api/products';
 import type { ProductKind } from '../../stores/ProductAdminStore';
 
 interface Props {
@@ -24,6 +26,12 @@ export function UserProductDetailPage({ kind }: Props) {
   const productId = Number(id);
 
   const { data, loading, error } = useAsync(() => config.fetchById(productId), [kind, productId]);
+  // Le choix est rattaché au produit : passer à une autre fiche repart sans longueur choisie.
+  const [selection, setSelection] = useState<LengthSelection | null>(null);
+  const selectedLengthCm = selectedLengthFor(selection, productId);
+  const isChain = kind === 'chain';
+
+  const priceLabel = data && config.detailPrice(data, selectedLengthCm);
 
   return (
     <div className="mx-auto w-full max-w-[760px]">
@@ -55,9 +63,15 @@ export function UserProductDetailPage({ kind }: Props) {
               <Badge tone={colorTone(data.color)}>{colorLabel(data.color)}</Badge>
             </div>
 
-            <p className="mb-4 font-display text-xl font-medium text-fuchsia">
-              {formatPrice(data.price)}
-            </p>
+            <p className="mb-4 font-display text-xl font-medium text-fuchsia">{priceLabel}</p>
+
+            {isChain && (
+              <ChainLengthPicker
+                lengths={(data as ChainDto).availableLengths ?? []}
+                selectedLengthCm={selectedLengthCm}
+                onSelect={(lengthCm) => setSelection({ productId, lengthCm })}
+              />
+            )}
 
             <div className="mb-5">
               <FavoriteButton kind={kind} productId={data.id} variant="inline" />
@@ -71,10 +85,12 @@ export function UserProductDetailPage({ kind }: Props) {
 
             <Card className="px-5 py-2">
               <DetailRow label="Couleur">{colorLabel(data.color)}</DetailRow>
-              <DetailRow label={config.specificField(data).label}>
-                {config.specificField(data).value}
-              </DetailRow>
-              <DetailRow label="Prix">{formatPrice(data.price)}</DetailRow>
+              {!isChain && (
+                <DetailRow label={config.specificField(data).label}>
+                  {config.specificField(data).value}
+                </DetailRow>
+              )}
+              <DetailRow label="Prix">{priceLabel}</DetailRow>
             </Card>
           </div>
         </div>
