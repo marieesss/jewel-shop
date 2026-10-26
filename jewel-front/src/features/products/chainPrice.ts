@@ -36,6 +36,19 @@ export function findSelectedLength(
   return length && isSelectableLength(length) ? length : null;
 }
 
+/** Choix de longueur d'une fiche : rattaché à son produit, il ne suit pas une autre fiche. */
+export interface LengthSelection {
+  productId: number;
+  lengthCm: number;
+}
+
+export function selectedLengthFor(
+  selection: LengthSelection | null,
+  productId: number
+): number | null {
+  return selection?.productId === productId ? selection.lengthCm : null;
+}
+
 /** Prix affiché sur la fiche : celui de la longueur choisie, sinon « à partir de ». */
 export function displayedChainPrice(chain: ChainPricing, selectedLengthCm: number | null): string {
   const selected = findSelectedLength(chain, selectedLengthCm);

@@ -11,23 +11,12 @@ import { ProductImage } from '../../features/products/ProductImage';
 import { FavoriteButton } from '../../features/favorites/FavoriteButton';
 import { FavoriteErrorAlert } from '../../features/favorites/FavoriteErrorAlert';
 import { ChainLengthPicker } from '../../features/products/ChainLengthPicker';
-import { displayedChainPrice } from '../../features/products/chainPrice';
-import { colorLabel, colorTone, type ChainDto, type CharmDto } from '../../api/products';
-import { formatPrice } from '../../lib/format';
+import { selectedLengthFor, type LengthSelection } from '../../features/products/chainPrice';
+import { colorLabel, colorTone, type ChainDto } from '../../api/products';
 import type { ProductKind } from '../../stores/ProductAdminStore';
-import type { ProductDto } from '../../features/products/productConfig';
 
 interface Props {
   kind: ProductKind;
-}
-
-interface LengthSelection {
-  productId: number;
-  lengthCm: number;
-}
-
-function asChain(kind: ProductKind, product: ProductDto): ChainDto | null {
-  return kind === 'chain' ? (product as ChainDto) : null;
 }
 
 /** Détail produit côté utilisateur, avec ajout/retrait des favoris. */
@@ -39,12 +28,10 @@ export function UserProductDetailPage({ kind }: Props) {
   const { data, loading, error } = useAsync(() => config.fetchById(productId), [kind, productId]);
   // Le choix est rattaché au produit : passer à une autre fiche repart sans longueur choisie.
   const [selection, setSelection] = useState<LengthSelection | null>(null);
-  const selectedLengthCm = selection?.productId === productId ? selection.lengthCm : null;
+  const selectedLengthCm = selectedLengthFor(selection, productId);
+  const isChain = kind === 'chain';
 
-  const chain = data ? asChain(kind, data) : null;
-  const priceLabel = chain
-    ? displayedChainPrice(chain, selectedLengthCm)
-    : data && formatPrice((data as CharmDto).price);
+  const priceLabel = data && config.detailPrice(data, selectedLengthCm);
 
   return (
     <div className="mx-auto w-full max-w-[760px]">
@@ -78,9 +65,9 @@ export function UserProductDetailPage({ kind }: Props) {
 
             <p className="mb-4 font-display text-xl font-medium text-fuchsia">{priceLabel}</p>
 
-            {chain && (
+            {isChain && (
               <ChainLengthPicker
-                lengths={chain.availableLengths ?? []}
+                lengths={(data as ChainDto).availableLengths ?? []}
                 selectedLengthCm={selectedLengthCm}
                 onSelect={(lengthCm) => setSelection({ productId, lengthCm })}
               />
@@ -98,7 +85,7 @@ export function UserProductDetailPage({ kind }: Props) {
 
             <Card className="px-5 py-2">
               <DetailRow label="Couleur">{colorLabel(data.color)}</DetailRow>
-              {!chain && (
+              {!isChain && (
                 <DetailRow label={config.specificField(data).label}>
                   {config.specificField(data).value}
                 </DetailRow>
