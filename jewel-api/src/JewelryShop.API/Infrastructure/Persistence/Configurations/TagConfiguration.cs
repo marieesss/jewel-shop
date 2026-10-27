@@ -32,12 +32,12 @@ public class TagConfiguration : IEntityTypeConfiguration<Tag>
         builder.HasIndex(t => new { t.Category, t.Slug }).IsUnique();
 
         builder.HasMany(t => t.ChainTags)
-            .WithOne()
+            .WithOne(ct => ct.Tag)
             .HasForeignKey(ct => ct.TagId)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasMany(t => t.CharmTags)
-            .WithOne()
+            .WithOne(ct => ct.Tag)
             .HasForeignKey(ct => ct.TagId)
             .OnDelete(DeleteBehavior.Cascade);
     }

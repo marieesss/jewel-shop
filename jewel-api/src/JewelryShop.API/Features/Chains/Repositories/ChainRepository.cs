@@ -10,9 +10,8 @@ public class ChainRepository : Repository<Chain>, IChainRepository
     {
     }
 
-    public async Task<Chain?> GetByIdWithRollsAsync(long id, CancellationToken cancellationToken = default)
-        => await DbSet
-            .Include(c => c.Rolls)
+    public async Task<Chain?> GetByIdWithRollsAndTagsAsync(long id, CancellationToken cancellationToken = default)
+        => await WithRollsAndTags(DbSet)
             .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
 
     public async Task<(IReadOnlyList<Chain> Items, int TotalCount)> GetPagedAsync(
@@ -24,7 +23,7 @@ public class ChainRepository : Repository<Chain>, IChainRepository
         long? favoritesFirstForUserId,
         CancellationToken cancellationToken = default)
     {
-        var query = DbSet.AsNoTracking().Include(c => c.Rolls).AsQueryable();
+        var query = WithRollsAndTags(DbSet.AsNoTracking());
 
         if (color.HasValue)
             query = query.Where(c => c.Color == color.Value);
@@ -47,4 +46,12 @@ public class ChainRepository : Repository<Chain>, IChainRepository
 
         return (items, total);
     }
+
+    // Deux collections incluses dans une seule requête multiplieraient les lignes (rouleaux × tags) :
+    // chacune est chargée par sa propre requête, une fois pour toute la page.
+    private static IQueryable<Chain> WithRollsAndTags(IQueryable<Chain> chains)
+        => chains
+            .Include(c => c.Rolls)
+            .Include(c => c.ChainTags).ThenInclude(ct => ct.Tag)
+            .AsSplitQuery();
 }

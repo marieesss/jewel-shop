@@ -12,7 +12,7 @@ public class UpdateCharmCommandHandler : IRequestHandler<UpdateCharmCommand, Adm
 
     public async Task<AdminCharmDto> Handle(UpdateCharmCommand request, CancellationToken cancellationToken)
     {
-        var charm = await _charms.GetByIdAsync(request.Id, cancellationToken)
+        var charm = await _charms.GetByIdWithTagsAsync(request.Id, cancellationToken)
             ?? throw new NotFoundException("Breloque", request.Id);
 
         charm.Name = request.Name.Trim();
@@ -26,6 +26,6 @@ public class UpdateCharmCommandHandler : IRequestHandler<UpdateCharmCommand, Adm
         _charms.Update(charm);
         await _charms.SaveChangesAsync(cancellationToken);
 
-        return charm.ToAdminDto();
+        return charm.ToAdminDtoWithTags();
     }
 }

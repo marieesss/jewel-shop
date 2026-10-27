@@ -6,7 +6,7 @@ namespace JewelryShop.API.Tests.Fakes;
 
 public class FakeChainRepository : InMemoryRepository<Chain>, IChainRepository
 {
-    public Task<Chain?> GetByIdWithRollsAsync(long id, CancellationToken cancellationToken = default)
+    public Task<Chain?> GetByIdWithRollsAndTagsAsync(long id, CancellationToken cancellationToken = default)
         => GetByIdAsync(id, cancellationToken);
 
     public long? LastFavoritesFirstForUserId { get; private set; }

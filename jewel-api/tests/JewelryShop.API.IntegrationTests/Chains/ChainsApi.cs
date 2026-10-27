@@ -60,7 +60,7 @@ public static class ChainsApi
     /// <summary>La même chaîne telle qu'un client la reçoit, sans lien ni coûts.</summary>
     public static ChainDto ToPublic(this AdminChainDto c) => new(
         c.Id, c.Name, c.Description, c.Color, c.ImageUrl, c.Price, c.Length, c.PricePerMeter, c.ClaspPrice, c.StockCm,
-        c.AvailableLengths, c.FromPrice);
+        c.AvailableLengths, c.FromPrice, c.Tags);
 
     public static string UniqueName() => $"Chaîne {Guid.NewGuid():N}";
 }

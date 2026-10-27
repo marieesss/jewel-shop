@@ -1,4 +1,6 @@
 using System.Text.Json.Serialization;
+using JewelryShop.Features.Tags.Common;
+using JewelryShop.Features.Tags.DTOs;
 
 namespace JewelryShop.Features.Chains.DTOs;
 
@@ -18,7 +20,8 @@ public record ChainDto(
     decimal ClaspPrice,
     int StockCm,
     IReadOnlyList<ChainLengthPriceDto>? AvailableLengths = null,
-    decimal? FromPrice = null);
+    decimal? FromPrice = null,
+    IReadOnlyList<TagDto>? Tags = null);
 
 public record ChainLengthPriceDto(int LengthCm, string Label, decimal? Price, bool Available);
 
@@ -73,13 +76,19 @@ public static class ChainMappingExtensions
     public static ChainDto ToDto(this Chain c, bool includeAdminFields) =>
         includeAdminFields ? c.ToAdminDto() : c.ToDto();
 
-    /// <summary>Ajoute au DTO le prix et la disponibilité de chaque longueur de référence.</summary>
+    /// <summary>
+    /// DTO du catalogue : ajoute le prix et la disponibilité de chaque longueur de référence, et les tags
+    /// de la chaîne, qui doivent être chargés avec elle.
+    /// </summary>
     public static ChainDto ToDto(this Chain c, bool includeAdminFields, IEnumerable<ChainLength> lengths) =>
-        c.ToDto(includeAdminFields).WithLengths(c, lengths);
+        c.ToDto(includeAdminFields).WithLengths(c, lengths).WithTags(c);
 
     /// <summary>Variante admin de <see cref="ToDto(Chain, bool, IEnumerable{ChainLength})"/>, avec les champs admin.</summary>
     public static AdminChainDto ToAdminDto(this Chain c, IEnumerable<ChainLength> lengths) =>
-        c.ToAdminDto().WithLengths(c, lengths);
+        c.ToAdminDto().WithLengths(c, lengths).WithTags(c);
+
+    private static T WithTags<T>(this T dto, Chain c) where T : ChainDto =>
+        dto with { Tags = c.ChainTags.ToTagDtos() };
 
     private static T WithLengths<T>(this T dto, Chain c, IEnumerable<ChainLength> lengths) where T : ChainDto
     {

@@ -25,6 +25,6 @@ public class CreateCharmCommandHandler : IRequestHandler<CreateCharmCommand, Adm
         await _charms.AddAsync(charm, cancellationToken);
         await _charms.SaveChangesAsync(cancellationToken);
 
-        return charm.ToAdminDto();
+        return charm.ToAdminDtoWithTags();
     }
 }

@@ -15,7 +15,7 @@ public class CharmTagConfiguration : IEntityTypeConfiguration<CharmTag>
         builder.Property(ct => ct.TagId).HasColumnName("tag_id");
 
         builder.HasOne<Charm>()
-            .WithMany()
+            .WithMany(c => c.CharmTags)
             .HasForeignKey(ct => ct.CharmId)
             .OnDelete(DeleteBehavior.Cascade);
     }

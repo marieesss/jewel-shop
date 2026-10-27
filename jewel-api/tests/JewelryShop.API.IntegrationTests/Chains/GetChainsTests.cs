@@ -145,8 +145,9 @@ public class GetChainsTests
     // Un record compare ses listes par référence : les longueurs sont comparées à part, élément par élément.
     private static void AssertSameChain(ChainDto expected, ChainDto actual)
     {
-        Assert.Equal(expected with { AvailableLengths = null }, actual with { AvailableLengths = null });
+        Assert.Equal(expected with { AvailableLengths = null, Tags = null }, actual with { AvailableLengths = null, Tags = null });
         Assert.Equal(expected.AvailableLengths!, actual.AvailableLengths!);
+        Assert.Equal(expected.Tags!, actual.Tags!);
     }
 
     private static ChainLengthPriceDto LengthOf(ChainDto chain, int lengthCm) =>

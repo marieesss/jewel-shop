@@ -47,7 +47,8 @@ public class GetChainByIdQueryHandlerTests
         var dto = await _handler.Handle(new GetChainByIdQuery(7), CancellationToken.None);
 
         Assert.IsType<ChainDto>(dto);
-        Assert.Equal(new ChainDto(7, "Forçat", "", "Gold", null, 30m, 300m, 10m, 3m, 300), dto with { AvailableLengths = null });
+        Assert.Equal(new ChainDto(7, "Forçat", "", "Gold", null, 30m, 300m, 10m, 3m, 300), dto with { AvailableLengths = null, Tags = null });
+        Assert.Empty(dto.Tags!);
     }
 
     [Fact]

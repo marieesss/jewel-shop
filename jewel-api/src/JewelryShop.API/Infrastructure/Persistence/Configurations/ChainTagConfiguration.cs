@@ -15,7 +15,7 @@ public class ChainTagConfiguration : IEntityTypeConfiguration<ChainTag>
         builder.Property(ct => ct.TagId).HasColumnName("tag_id");
 
         builder.HasOne<Chain>()
-            .WithMany()
+            .WithMany(c => c.ChainTags)
             .HasForeignKey(ct => ct.ChainId)
             .OnDelete(DeleteBehavior.Cascade);
     }
