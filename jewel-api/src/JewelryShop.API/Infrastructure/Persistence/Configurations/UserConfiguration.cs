@@ -54,6 +54,26 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasColumnType("timestamp")
             .HasConversion(_nullableUtcConverter);
 
+        builder.Property(u => u.Phone)
+            .HasColumnName("phone")
+            .HasMaxLength(20);
+
+        builder.Property(u => u.AddressLine1)
+            .HasColumnName("address_line1")
+            .HasMaxLength(255);
+
+        builder.Property(u => u.AddressLine2)
+            .HasColumnName("address_line2")
+            .HasMaxLength(255);
+
+        builder.Property(u => u.PostalCode)
+            .HasColumnName("postal_code")
+            .HasMaxLength(5);
+
+        builder.Property(u => u.City)
+            .HasColumnName("city")
+            .HasMaxLength(100);
+
         builder.HasIndex(u => u.Email).IsUnique();
 
         builder.HasMany(u => u.Favorites)
