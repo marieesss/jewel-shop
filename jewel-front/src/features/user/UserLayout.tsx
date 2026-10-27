@@ -2,7 +2,13 @@ import { useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 import { Link, Outlet } from 'react-router-dom';
 import { useAuthStore, useFavoritesStore } from '../../stores/context';
-import { GemIcon, ChainIcon, HeartIcon, LogoutIcon } from '../../components/icons-admin';
+import {
+  GemIcon,
+  ChainIcon,
+  HeartIcon,
+  LogoutIcon,
+  ProfileIcon,
+} from '../../components/icons-admin';
 import { NavbarLink } from './NavbarLink';
 
 /** Gabarit de la zone utilisateur : barre de navigation horizontale + contenu. */
@@ -35,6 +41,11 @@ export const UserLayout = observer(function UserLayout() {
           <NavbarLink to="/charms" label="Breloques" icon={<GemIcon width={16} height={16} />} />
           <NavbarLink to="/chains" label="Chaînes" icon={<ChainIcon width={16} height={16} />} />
           <NavbarLink to="/favorites" label="Favoris" icon={<HeartIcon width={16} height={16} />} />
+          <NavbarLink
+            to="/profile"
+            label="Mon profil"
+            icon={<ProfileIcon width={16} height={16} />}
+          />
         </nav>
 
         <div className="ml-auto flex items-center gap-3">
