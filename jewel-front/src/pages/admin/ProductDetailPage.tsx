@@ -9,6 +9,7 @@ import { useAsync } from '../../hooks/useAsync';
 import { PRODUCT_CONFIG, adminPaths } from '../../features/products/productConfig';
 import { ProductImage } from '../../features/products/ProductImage';
 import { colorLabel, colorTone } from '../../api/products';
+import { MISSING_VALUE } from '../../lib/format';
 import type { ProductKind } from '../../stores/ProductAdminStore';
 
 interface ProductDetailPageProps {
@@ -75,6 +76,17 @@ export function ProductDetailPage({ kind }: ProductDetailPageProps) {
                   {field.value}
                 </DetailRow>
               ))}
+              <DetailRow label="Tags">
+                {data.tags && data.tags.length > 0 ? (
+                  <span className="inline-flex flex-wrap justify-end gap-1.5">
+                    {data.tags.map((tag) => (
+                      <Badge key={tag.id}>{tag.name}</Badge>
+                    ))}
+                  </span>
+                ) : (
+                  <span className="text-slate">{MISSING_VALUE}</span>
+                )}
+              </DetailRow>
               <DetailRow label="Lien">
                 {data.url ? (
                   <a
