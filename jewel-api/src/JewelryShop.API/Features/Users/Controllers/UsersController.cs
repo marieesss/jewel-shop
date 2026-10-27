@@ -1,3 +1,4 @@
+using JewelryShop.Features.Users.Commands;
 using JewelryShop.Features.Users.DTOs;
 using JewelryShop.Features.Users.Queries;
 using Microsoft.AspNetCore.Authorization;
@@ -16,6 +17,17 @@ public class UsersController : ApiControllerBase
     public async Task<IActionResult> GetMe(CancellationToken ct)
     {
         var result = await Sender.Send(new GetMyProfileQuery(GetUserId()), ct);
+        return Ok(result);
+    }
+
+    /// <summary>Enregistre l'adresse de livraison et le téléphone de l'utilisateur connecté.</summary>
+    [HttpPut("me/address")]
+    [ProducesResponseType(typeof(ProfileDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> UpdateMyAddress([FromBody] UpdateMyAddressCommand command, CancellationToken ct)
+    {
+        var result = await Sender.Send(command with { UserId = GetUserId() }, ct);
         return Ok(result);
     }
 }
