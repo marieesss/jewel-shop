@@ -1,4 +1,5 @@
 import type { ProductColor } from '../../api/products';
+import type { TagDto } from '../../api/tags';
 
 /** Champs communs aux deux types de produit (breloque & chaîne). */
 export interface ProductCommonValues {
@@ -8,6 +9,7 @@ export interface ProductCommonValues {
   url: string;
   cost: string;
   price: string;
+  tagIds: number[];
 }
 
 export const emptyProductCommon: ProductCommonValues = {
@@ -17,6 +19,7 @@ export const emptyProductCommon: ProductCommonValues = {
   url: '',
   cost: '',
   price: '',
+  tagIds: [],
 };
 
 export type FieldErrors<T extends string> = Partial<Record<T, string>>;
@@ -29,6 +32,7 @@ export function commonFromProduct(p: {
   url?: string | null;
   cost: number;
   price: number;
+  tags?: TagDto[] | null;
 }): ProductCommonValues {
   return {
     name: p.name,
@@ -37,7 +41,13 @@ export function commonFromProduct(p: {
     url: p.url ?? '',
     cost: String(p.cost),
     price: String(p.price),
+    tagIds: tagIdsOf(p.tags),
   };
+}
+
+/** Ids des tags d'un produit, pour pré-remplir la sélection (aucun tag si la réponse n'en a pas). */
+export function tagIdsOf(tags: TagDto[] | null | undefined): number[] {
+  return tags?.map((tag) => tag.id) ?? [];
 }
 
 /** Convertit une saisie (avec virgule éventuelle) en nombre, ou NaN si vide/invalide. */

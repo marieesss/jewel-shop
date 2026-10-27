@@ -1,4 +1,5 @@
 import { api } from './client';
+import type { TagDto } from './tags';
 
 /* ── Couleurs produit (enum back ProductColor : Gold=0, Silver=1) ──
    L'API ne dispose pas de JsonStringEnumConverter : la couleur doit être
@@ -62,6 +63,8 @@ export interface CharmDto {
   cost: number;
   price: number;
   stock: number;
+  /** Triés par catégorie puis par nom. `null` pour une breloque incluse dans un favori ou une création. */
+  tags?: TagDto[] | null;
 }
 
 export interface CreateCharmPayload {
@@ -72,6 +75,8 @@ export interface CreateCharmPayload {
   price: number;
   stock: number;
   url?: string | null;
+  /** Remplace tous les tags de la breloque (`[]` les retire). */
+  tagIds: number[];
 }
 
 /** POST /api/charms (Admin) → 201 CharmDto */
@@ -134,6 +139,8 @@ export interface ChainDto {
   availableLengths?: ChainLengthPriceDto[] | null;
   /** Plus petit prix des longueurs disponibles, `null` s'il n'y en a aucune ou dans un favori. */
   fromPrice?: number | null;
+  /** Triés par catégorie puis par nom. `null` pour une chaîne incluse dans un favori ou une création. */
+  tags?: TagDto[] | null;
 }
 
 /** Prix et disponibilité d'une longueur de référence pour une chaîne. */
@@ -153,6 +160,8 @@ export interface UpdateChainPayload {
   pricePerMeter: number;
   claspCost: number;
   claspPrice: number;
+  /** Remplace tous les tags de la chaîne (`[]` les retire). */
+  tagIds: number[];
 }
 
 export interface CreateChainPayload extends UpdateChainPayload {

@@ -4,6 +4,7 @@ import { useProductAdminStore } from '../../stores/context';
 import { TextField } from '../../components/ui/TextField';
 import { ImageUpload } from '../../components/ui/ImageUpload';
 import { ProductFormShell } from './ProductFormShell';
+import { toCharmPayload } from './charmFormValues';
 import {
   commonFromProduct,
   emptyProductCommon,
@@ -56,15 +57,7 @@ export const CharmForm = observer(function CharmForm({ product, onSuccess }: Cha
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0 || imageError) return;
 
-    const payload = {
-      name: common.name.trim(),
-      description: common.description.trim(),
-      color: common.color,
-      url: common.url.trim() || null,
-      cost: toNumber(common.cost),
-      price: toNumber(common.price),
-      stock: stockNum,
-    };
+    const payload = toCharmPayload(common, stockNum);
 
     const ok =
       isEdit && product
