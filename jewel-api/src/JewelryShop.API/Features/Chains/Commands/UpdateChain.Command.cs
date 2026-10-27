@@ -16,4 +16,5 @@ public record UpdateChainCommand(
     decimal? CostPerMeter = null,
     decimal? PricePerMeter = null,
     decimal? ClaspCost = null,
-    decimal? ClaspPrice = null) : IRequest<AdminChainDto>, IChainPrices;
+    decimal? ClaspPrice = null,
+    long[]? TagIds = null) : IRequest<AdminChainDto>, IChainPrices;

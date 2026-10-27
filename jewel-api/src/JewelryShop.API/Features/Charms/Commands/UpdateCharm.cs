@@ -1,5 +1,6 @@
 using JewelryShop.Common.Exceptions;
 using JewelryShop.Features.Charms.DTOs;
+using JewelryShop.Features.Tags.Common;
 using MediatR;
 
 namespace JewelryShop.Features.Charms.Commands;
@@ -7,8 +8,13 @@ namespace JewelryShop.Features.Charms.Commands;
 public class UpdateCharmCommandHandler : IRequestHandler<UpdateCharmCommand, AdminCharmDto>
 {
     private readonly ICharmRepository _charms;
+    private readonly ITagRepository _tags;
 
-    public UpdateCharmCommandHandler(ICharmRepository charms) => _charms = charms;
+    public UpdateCharmCommandHandler(ICharmRepository charms, ITagRepository tags)
+    {
+        _charms = charms;
+        _tags = tags;
+    }
 
     public async Task<AdminCharmDto> Handle(UpdateCharmCommand request, CancellationToken cancellationToken)
     {
@@ -22,6 +28,10 @@ public class UpdateCharmCommandHandler : IRequestHandler<UpdateCharmCommand, Adm
         charm.Price = request.Price;
         charm.Stock = request.Stock;
         charm.Url = string.IsNullOrWhiteSpace(request.Url) ? null : request.Url.Trim();
+
+        // Le front en production n'envoie pas tagIds : son absence laisse les tags tels quels.
+        if (request.TagIds is { } tagIds)
+            charm.ReplaceTags(await _tags.GetForProductAsync(tagIds, nameof(request.TagIds), cancellationToken));
 
         _charms.Update(charm);
         await _charms.SaveChangesAsync(cancellationToken);

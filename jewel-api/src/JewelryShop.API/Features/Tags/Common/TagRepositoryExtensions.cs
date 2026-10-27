@@ -1,3 +1,4 @@
+using FluentValidation.Results;
 using JewelryShop.Common.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
@@ -19,6 +20,20 @@ public static class TagRepositoryExtensions
         throw new ConflictException(string.Equals(existing.Name, name, StringComparison.OrdinalIgnoreCase)
             ? TagMessages.AlreadyExists(name)
             : TagMessages.TooCloseTo(existing.Name));
+    }
+
+    /// <summary>
+    /// Les tags demandés pour un article, sans doublon. Un id inconnu donne une erreur de validation
+    /// « Tag introuvable. » sous la clé <paramref name="propertyName"/>.
+    /// </summary>
+    public static async Task<IReadOnlyList<Tag>> GetForProductAsync(this ITagRepository tags, IEnumerable<long> ids, string propertyName, CancellationToken cancellationToken)
+    {
+        var distinctIds = ids.Distinct().ToList();
+        var found = await tags.GetByIdsAsync(distinctIds, cancellationToken);
+        if (found.Count != distinctIds.Count)
+            throw new ValidationException([new ValidationFailure(propertyName, TagMessages.NotFound)]);
+
+        return found;
     }
 
     // Le contrôle EnsureNameIsAvailableAsync n'est pas atomique : deux requêtes simultanées peuvent
