@@ -78,4 +78,16 @@ public class AdminTagsControllerTests
         Assert.Equal(new DeleteTagCommand(7), _sender.LastRequest);
         Assert.IsType<NoContentResult>(response);
     }
+
+    [Fact]
+    public async Task Fusionne_le_tag_de_la_route_et_repond_200_avec_le_tag_cible()
+    {
+        var dto = new TagDto(3, "Mer", "mer", "Theme");
+        _sender.Response = dto;
+
+        var response = await _controller.Merge(7, new MergeTagCommand(0, 3), CancellationToken.None);
+
+        Assert.Equal(new MergeTagCommand(7, 3), _sender.LastRequest);
+        Assert.Same(dto, Assert.IsType<OkObjectResult>(response).Value);
+    }
 }

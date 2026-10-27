@@ -2,6 +2,7 @@ using JewelryShop.API.Tests.Fakes;
 using JewelryShop.Common.Exceptions;
 using JewelryShop.Features.Tags.Commands;
 using JewelryShop.Features.Tags.Common;
+using JewelryShop.Features.Tags.DTOs;
 using JewelryShop.Features.Tags.Entities;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
@@ -208,5 +209,56 @@ public class TagCommandHandlerTests
 
         Assert.Equal(3, _tags.All.Count);
         Assert.Equal(0, _tags.SaveChangesCount);
+    }
+
+    [Fact]
+    public async Task Fusionne_un_tag_dans_le_tag_cible_et_renvoie_le_tag_cible()
+    {
+        _tags.Seed(Tag(4, "Plage", TagCategory.Theme));
+        var handler = new MergeTagCommandHandler(_tags);
+
+        var dto = await handler.Handle(new MergeTagCommand(4, 1), CancellationToken.None);
+
+        Assert.Equal((4L, 1L), Assert.Single(_tags.Merges));
+        Assert.DoesNotContain(_tags.All, t => t.Id == 4);
+        Assert.Equal(new TagDto(1, "Mer", "mer", "Theme"), dto);
+    }
+
+    [Fact]
+    public async Task Refuse_de_fusionner_un_tag_inconnu()
+    {
+        var handler = new MergeTagCommandHandler(_tags);
+
+        var error = await Assert.ThrowsAsync<NotFoundException>(
+            () => handler.Handle(new MergeTagCommand(99, 1), CancellationToken.None));
+
+        Assert.Contains("#99", error.Message);
+        Assert.Empty(_tags.Merges);
+    }
+
+    [Fact]
+    public async Task Refuse_de_fusionner_dans_un_tag_cible_inconnu()
+    {
+        var handler = new MergeTagCommandHandler(_tags);
+
+        var error = await Assert.ThrowsAsync<NotFoundException>(
+            () => handler.Handle(new MergeTagCommand(1, 99), CancellationToken.None));
+
+        Assert.Contains("#99", error.Message);
+        Assert.Empty(_tags.Merges);
+        Assert.Equal(3, _tags.All.Count);
+    }
+
+    [Fact]
+    public async Task Renvoie_une_erreur_introuvable_si_le_tag_cible_est_supprime_pendant_la_fusion()
+    {
+        _tags.Seed(Tag(4, "Plage", TagCategory.Theme));
+        _tags.MergeError = new PostgresException("violates foreign key", "ERROR", "ERROR", PostgresErrorCodes.ForeignKeyViolation);
+        var handler = new MergeTagCommandHandler(_tags);
+
+        var error = await Assert.ThrowsAsync<NotFoundException>(
+            () => handler.Handle(new MergeTagCommand(4, 1), CancellationToken.None));
+
+        Assert.Contains("#1", error.Message);
     }
 }
