@@ -201,6 +201,7 @@ public static class Startup
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
         services.AddScoped<IInvitationRepository, InvitationRepository>();
+        services.AddScoped<ITagRepository, TagRepository>();
     }
 
     private static void AddApplication(IServiceCollection services)
