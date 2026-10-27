@@ -3,6 +3,7 @@ import { TextArea } from '../../components/ui/TextArea';
 import { Select } from '../../components/ui/Select';
 import { PRODUCT_COLORS, PRODUCT_COLOR_LABELS, type ProductColor } from '../../api/products';
 import type { FieldErrors, ProductCommonValues } from './productForm';
+import { TagPicker } from './TagPicker';
 
 interface Props {
   values: ProductCommonValues;
@@ -94,6 +95,12 @@ export function ProductCommonFields({
           />
         </div>
       </div>
+
+      <TagPicker
+        selectedIds={values.tagIds}
+        onChange={(tagIds) => onChange({ tagIds })}
+        error={errors.tagIds}
+      />
     </>
   );
 }
