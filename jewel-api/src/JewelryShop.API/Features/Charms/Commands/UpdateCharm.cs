@@ -29,12 +29,10 @@ public class UpdateCharmCommandHandler : IRequestHandler<UpdateCharmCommand, Adm
         charm.Stock = request.Stock;
         charm.Url = string.IsNullOrWhiteSpace(request.Url) ? null : request.Url.Trim();
 
-        // Le front en production n'envoie pas tagIds : son absence laisse les tags tels quels.
-        if (request.TagIds is { } tagIds)
-            charm.ReplaceTags(await _tags.GetForProductAsync(tagIds, nameof(request.TagIds), cancellationToken));
+        await _tags.ApplyToProductAsync(request.TagIds, charm.ReplaceTags, cancellationToken);
 
         _charms.Update(charm);
-        await _charms.SaveChangesAsync(cancellationToken);
+        await _charms.SaveChangesOrTagNotFoundAsync(cancellationToken);
 
         return charm.ToAdminDtoWithTags();
     }

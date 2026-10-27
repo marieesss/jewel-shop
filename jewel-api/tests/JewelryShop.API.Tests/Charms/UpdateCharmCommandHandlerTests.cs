@@ -3,6 +3,7 @@ using JewelryShop.Common.Enums;
 using JewelryShop.Common.Exceptions;
 using JewelryShop.Features.Charms.Commands;
 using JewelryShop.Features.Charms.Entities;
+using Microsoft.EntityFrameworkCore;
 using static JewelryShop.API.Tests.Tags.TagFixtures;
 
 namespace JewelryShop.API.Tests.Charms;
@@ -65,5 +66,25 @@ public class UpdateCharmCommandHandlerTests
         Assert.Equal(["Tag introuvable."], exception.Errors[nameof(UpdateCharmCommand.TagIds)]);
         Assert.Equal([3L], _charm.CharmTags.Select(ct => ct.TagId));
         Assert.Equal(0, _charms.SaveChangesCount);
+    }
+
+    [Fact]
+    public async Task Renvoie_tag_introuvable_si_le_tag_est_supprime_pendant_l_enregistrement_breloque()
+    {
+        _charms.SaveChangesError = ForeignKeyViolation();
+
+        var exception = await Assert.ThrowsAsync<ValidationException>(
+            () => _handler.Handle(Command([1]), CancellationToken.None));
+
+        Assert.Equal(["Tag introuvable."], exception.Errors[nameof(UpdateCharmCommand.TagIds)]);
+    }
+
+    [Fact]
+    public async Task Laisse_remonter_les_autres_erreurs_d_enregistrement_breloque()
+    {
+        _charms.SaveChangesError = new DbUpdateException("Autre erreur.");
+
+        await Assert.ThrowsAsync<DbUpdateException>(
+            () => _handler.Handle(Command([1]), CancellationToken.None));
     }
 }

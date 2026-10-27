@@ -26,18 +26,19 @@ public static class ChainsApi
     }
 
     /// <summary>Corps envoyé par le front en production : prix et coût totaux pour une longueur.</summary>
-    public static object LegacyBody(string name, decimal cost = 20m, decimal price = 50m, decimal length = 500m) => new
+    public static object LegacyBody(string name, decimal cost = 20m, decimal price = 50m, decimal length = 500m, long[]? tagIds = null) => new
     {
         Name = name,
         Description = "Maille fine",
         Color = ProductColor.Gold,
         Cost = cost,
         Price = price,
-        Length = length
+        Length = length,
+        TagIds = tagIds
     };
 
     public static object MeterBody(
-        string name, ProductColor color = ProductColor.Gold, decimal claspPrice = 3m, int initialRollLengthCm = 250) => new
+        string name, ProductColor color = ProductColor.Gold, decimal claspPrice = 3m, int initialRollLengthCm = 250, long[]? tagIds = null) => new
         {
             Name = name,
             Description = "Maille fine",
@@ -47,7 +48,8 @@ public static class ChainsApi
             ClaspCost = 1.5m,
             ClaspPrice = claspPrice,
             InitialRollLengthCm = initialRollLengthCm,
-            Url = SupplierUrl
+            Url = SupplierUrl,
+            TagIds = tagIds
         };
 
     public static async Task<AdminChainDto> CreateChainAsync(this HttpClient admin, object body)

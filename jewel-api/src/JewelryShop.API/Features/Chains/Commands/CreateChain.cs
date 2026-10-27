@@ -35,11 +35,10 @@ public class CreateChainCommandHandler : IRequestHandler<CreateChainCommand, Adm
         if (rollLengthCm > 0)
             chain.AddRoll(rollLengthCm, _timeProvider.GetUtcNow().UtcDateTime);
 
-        if (request.TagIds is { } tagIds)
-            chain.ReplaceTags(await _tags.GetForProductAsync(tagIds, nameof(request.TagIds), cancellationToken));
+        await _tags.ApplyToProductAsync(request.TagIds, chain.ReplaceTags, cancellationToken);
 
         await _chains.AddAsync(chain, cancellationToken);
-        await _chains.SaveChangesAsync(cancellationToken);
+        await _chains.SaveChangesOrTagNotFoundAsync(cancellationToken);
 
         return chain.ToAdminDto(await _lengths.GetAllOrderedAsync(cancellationToken));
     }

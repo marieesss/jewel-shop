@@ -28,11 +28,10 @@ public class CreateCharmCommandHandler : IRequestHandler<CreateCharmCommand, Adm
             Url = string.IsNullOrWhiteSpace(request.Url) ? null : request.Url.Trim()
         };
 
-        if (request.TagIds is { } tagIds)
-            charm.ReplaceTags(await _tags.GetForProductAsync(tagIds, nameof(request.TagIds), cancellationToken));
+        await _tags.ApplyToProductAsync(request.TagIds, charm.ReplaceTags, cancellationToken);
 
         await _charms.AddAsync(charm, cancellationToken);
-        await _charms.SaveChangesAsync(cancellationToken);
+        await _charms.SaveChangesOrTagNotFoundAsync(cancellationToken);
 
         return charm.ToAdminDtoWithTags();
     }

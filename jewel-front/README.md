@@ -39,16 +39,16 @@ L'API doit tourner en parallèle sur http://localhost:5030 : voir [`CONTRIBUTING
 
 ## Structure de `src/`
 
-| Dossier          | Rôle                                                                               |
-| ---------------- | ---------------------------------------------------------------------------------- |
-| `api/`           | Client axios, intercepteurs d'authentification, appels HTTP et types des DTO       |
-| `stores/`        | État MobX (`AuthStore`, `ProductAdminStore`, `FavoritesStore`) et hooks d'accès    |
-| `routes/`        | Guards des routes protégées (`ProtectedRoute`, `AdminRoute`)                       |
-| `pages/`         | Pages routées : `AuthPage`, espace client (`user/`) et admin (`admin/`)            |
-| `features/`      | Composants métier par domaine (`admin`, `auth`, `products`, `favorites`, `user`)   |
-| `components/ui/` | Composants génériques, sans appel API (`Button`, `TextField`, `Pagination`…)       |
-| `hooks/`         | Hooks partagés (`useAsync`)                                                        |
-| `lib/`           | Utilitaires (`cn`, formatage, redirection après connexion, règles du mot de passe) |
+| Dossier          | Rôle                                                                                        |
+| ---------------- | ------------------------------------------------------------------------------------------- |
+| `api/`           | Client axios, intercepteurs d'authentification, appels HTTP et types des DTO                |
+| `stores/`        | État MobX (`AuthStore`, `ProductAdminStore`, `FavoritesStore`) et hooks d'accès             |
+| `routes/`        | Guards des routes protégées (`ProtectedRoute`, `AdminRoute`)                                |
+| `pages/`         | Pages routées : `AuthPage`, espace client (`user/`) et admin (`admin/`)                     |
+| `features/`      | Composants métier par domaine (`admin`, `auth`, `products`, `favorites`, `profile`, `user`) |
+| `components/ui/` | Composants génériques, sans appel API (`Button`, `TextField`, `Pagination`…)                |
+| `hooks/`         | Hooks partagés (`useAsync`)                                                                 |
+| `lib/`           | Utilitaires (`cn`, formatage, redirection après connexion, règles du mot de passe)          |
 
 Les routes sont déclarées dans `src/App.tsx`.
 

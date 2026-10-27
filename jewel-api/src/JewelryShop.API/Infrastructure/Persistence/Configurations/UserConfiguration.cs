@@ -1,3 +1,4 @@
+using JewelryShop.Features.Users.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
@@ -53,6 +54,26 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasColumnName("created_at")
             .HasColumnType("timestamp")
             .HasConversion(_nullableUtcConverter);
+
+        builder.Property(u => u.Phone)
+            .HasColumnName("phone")
+            .HasMaxLength(UserAddressRules.PhoneMaxLength);
+
+        builder.Property(u => u.AddressLine1)
+            .HasColumnName("address_line1")
+            .HasMaxLength(UserAddressRules.AddressLineMaxLength);
+
+        builder.Property(u => u.AddressLine2)
+            .HasColumnName("address_line2")
+            .HasMaxLength(UserAddressRules.AddressLineMaxLength);
+
+        builder.Property(u => u.PostalCode)
+            .HasColumnName("postal_code")
+            .HasMaxLength(UserAddressRules.PostalCodeLength);
+
+        builder.Property(u => u.City)
+            .HasColumnName("city")
+            .HasMaxLength(UserAddressRules.CityMaxLength);
 
         builder.HasIndex(u => u.Email).IsUnique();
 

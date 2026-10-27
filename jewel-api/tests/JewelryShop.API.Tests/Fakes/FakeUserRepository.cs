@@ -5,6 +5,9 @@ namespace JewelryShop.API.Tests.Fakes;
 
 public class FakeUserRepository : InMemoryRepository<User>, IUserRepository
 {
+    public Task<User?> GetByIdAsNoTrackingAsync(long id, CancellationToken cancellationToken = default)
+        => GetByIdAsync(id, cancellationToken);
+
     public Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
         => Task.FromResult(Entities.FirstOrDefault(u => u.Email == email));
 
