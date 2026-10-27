@@ -4,6 +4,7 @@ using JewelryShop.Common.Exceptions;
 using JewelryShop.Features.Chains.Commands;
 using JewelryShop.Features.Chains.Entities;
 using JewelryShop.Features.Tags.Entities;
+using Microsoft.EntityFrameworkCore;
 using static JewelryShop.API.Tests.Tags.TagFixtures;
 
 namespace JewelryShop.API.Tests.Chains;
@@ -138,5 +139,27 @@ public class UpdateChainCommandHandlerTests
         Assert.Equal(["Tag introuvable."], exception.Errors[nameof(UpdateChainCommand.TagIds)]);
         Assert.Empty(_chain.ChainTags);
         Assert.Equal(0, _chains.SaveChangesCount);
+    }
+
+    [Fact]
+    public async Task Renvoie_tag_introuvable_si_le_tag_est_supprime_pendant_l_enregistrement_chaine()
+    {
+        _tags.Seed(Tag(1, "Mer"));
+        _chains.SaveChangesError = ForeignKeyViolation();
+
+        var exception = await Assert.ThrowsAsync<ValidationException>(
+            () => _handler.Handle(LegacyCommand() with { TagIds = [1] }, CancellationToken.None));
+
+        Assert.Equal(["Tag introuvable."], exception.Errors[nameof(UpdateChainCommand.TagIds)]);
+    }
+
+    [Fact]
+    public async Task Laisse_remonter_les_autres_erreurs_d_enregistrement_chaine()
+    {
+        _tags.Seed(Tag(1, "Mer"));
+        _chains.SaveChangesError = new DbUpdateException("Autre erreur.");
+
+        await Assert.ThrowsAsync<DbUpdateException>(
+            () => _handler.Handle(LegacyCommand() with { TagIds = [1] }, CancellationToken.None));
     }
 }

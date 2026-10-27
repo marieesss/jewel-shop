@@ -9,6 +9,8 @@ public class InMemoryRepository<T> : IRepository<T> where T : BaseEntity
 
     public int SaveChangesCount { get; private set; }
 
+    public Exception? SaveChangesError { get; set; }
+
     public IReadOnlyList<T> All => Entities;
 
     public void Seed(params T[] entities) => Entities.AddRange(entities);
@@ -33,6 +35,9 @@ public class InMemoryRepository<T> : IRepository<T> where T : BaseEntity
 
     public virtual Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+        if (SaveChangesError is not null)
+            return Task.FromException<int>(SaveChangesError);
+
         SaveChangesCount++;
         return Task.FromResult(1);
     }

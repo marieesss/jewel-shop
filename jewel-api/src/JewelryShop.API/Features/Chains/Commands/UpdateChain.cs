@@ -29,12 +29,10 @@ public class UpdateChainCommandHandler : IRequestHandler<UpdateChainCommand, Adm
         chain.ApplyPrices(request);
         chain.Url = string.IsNullOrWhiteSpace(request.Url) ? null : request.Url.Trim();
 
-        // Le front en production n'envoie pas tagIds : son absence laisse les tags tels quels.
-        if (request.TagIds is { } tagIds)
-            chain.ReplaceTags(await _tags.GetForProductAsync(tagIds, nameof(request.TagIds), cancellationToken));
+        await _tags.ApplyToProductAsync(request.TagIds, chain.ReplaceTags, cancellationToken);
 
         _chains.Update(chain);
-        await _chains.SaveChangesAsync(cancellationToken);
+        await _chains.SaveChangesOrTagNotFoundAsync(cancellationToken);
 
         return chain.ToAdminDto(await _lengths.GetAllOrderedAsync(cancellationToken));
     }
