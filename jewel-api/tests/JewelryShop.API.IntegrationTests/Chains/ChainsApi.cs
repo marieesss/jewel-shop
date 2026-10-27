@@ -26,18 +26,19 @@ public static class ChainsApi
     }
 
     /// <summary>Corps envoyé par le front en production : prix et coût totaux pour une longueur.</summary>
-    public static object LegacyBody(string name, decimal cost = 20m, decimal price = 50m, decimal length = 500m) => new
+    public static object LegacyBody(string name, decimal cost = 20m, decimal price = 50m, decimal length = 500m, long[]? tagIds = null) => new
     {
         Name = name,
         Description = "Maille fine",
         Color = ProductColor.Gold,
         Cost = cost,
         Price = price,
-        Length = length
+        Length = length,
+        TagIds = tagIds
     };
 
     public static object MeterBody(
-        string name, ProductColor color = ProductColor.Gold, decimal claspPrice = 3m, int initialRollLengthCm = 250) => new
+        string name, ProductColor color = ProductColor.Gold, decimal claspPrice = 3m, int initialRollLengthCm = 250, long[]? tagIds = null) => new
         {
             Name = name,
             Description = "Maille fine",
@@ -47,7 +48,8 @@ public static class ChainsApi
             ClaspCost = 1.5m,
             ClaspPrice = claspPrice,
             InitialRollLengthCm = initialRollLengthCm,
-            Url = SupplierUrl
+            Url = SupplierUrl,
+            TagIds = tagIds
         };
 
     public static async Task<AdminChainDto> CreateChainAsync(this HttpClient admin, object body)
@@ -60,7 +62,7 @@ public static class ChainsApi
     /// <summary>La même chaîne telle qu'un client la reçoit, sans lien ni coûts.</summary>
     public static ChainDto ToPublic(this AdminChainDto c) => new(
         c.Id, c.Name, c.Description, c.Color, c.ImageUrl, c.Price, c.Length, c.PricePerMeter, c.ClaspPrice, c.StockCm,
-        c.AvailableLengths, c.FromPrice);
+        c.AvailableLengths, c.FromPrice, c.Tags);
 
     public static string UniqueName() => $"Chaîne {Guid.NewGuid():N}";
 }

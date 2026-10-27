@@ -1,6 +1,7 @@
 using FluentValidation;
 using JewelryShop.Features.Chains.Commands;
 using JewelryShop.Features.Chains.Common;
+using JewelryShop.Features.Tags.Common;
 
 namespace JewelryShop.Features.Chains.Validators;
 
@@ -24,5 +25,6 @@ public class CreateChainCommandValidator : AbstractValidator<CreateChainCommand>
             .When(x => x.UsesMeterPrices());
         RuleFor(x => x.Url)
             .MaximumLength(500).WithMessage("500 caractères maximum.");
+        this.RuleForTagIds(x => x.TagIds);
     }
 }

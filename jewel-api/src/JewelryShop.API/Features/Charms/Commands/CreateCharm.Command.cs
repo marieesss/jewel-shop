@@ -10,4 +10,5 @@ public record CreateCharmCommand(
     decimal Cost,
     decimal Price,
     int Stock,
-    string? Url = null) : IRequest<AdminCharmDto>;
+    string? Url = null,
+    long[]? TagIds = null) : IRequest<AdminCharmDto>;

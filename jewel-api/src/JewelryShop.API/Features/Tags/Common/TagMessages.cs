@@ -8,6 +8,7 @@ public static class TagMessages
     public const string NameWithoutLetterOrDigit = "Le nom doit contenir au moins une lettre ou un chiffre.";
     public const string InvalidCategory = "Catégorie invalide.";
     public const string InvalidId = "Identifiant invalide.";
+    public const string NotFound = "Tag introuvable.";
 
     public static string AlreadyExists(string name) => $"Le tag « {name} » existe déjà dans cette catégorie.";
 

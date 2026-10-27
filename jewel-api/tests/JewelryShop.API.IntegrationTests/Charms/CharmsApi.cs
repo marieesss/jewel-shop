@@ -13,7 +13,7 @@ public static class CharmsApi
     /// <summary>Seul l'id est lu : l'ordre des listes ne dépend pas des autres champs du DTO.</summary>
     public record ListedCharm(long Id);
 
-    public static object Body(string name) => new
+    public static object Body(string name, long[]? tagIds = null) => new
     {
         Name = name,
         Description = "Argent massif",
@@ -21,7 +21,8 @@ public static class CharmsApi
         Cost = 2m,
         Price = 8m,
         Stock = 10,
-        Url = SupplierUrl
+        Url = SupplierUrl,
+        TagIds = tagIds
     };
 
     public static string UniqueName() => $"Breloque {Guid.NewGuid():N}";

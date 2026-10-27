@@ -1,5 +1,6 @@
 using JewelryShop.Features.Chains.Common;
 using JewelryShop.Features.Chains.DTOs;
+using JewelryShop.Features.Tags.Common;
 using MediatR;
 
 namespace JewelryShop.Features.Chains.Commands;
@@ -8,12 +9,14 @@ public class CreateChainCommandHandler : IRequestHandler<CreateChainCommand, Adm
 {
     private readonly IChainRepository _chains;
     private readonly IChainLengthRepository _lengths;
+    private readonly ITagRepository _tags;
     private readonly TimeProvider _timeProvider;
 
-    public CreateChainCommandHandler(IChainRepository chains, IChainLengthRepository lengths, TimeProvider timeProvider)
+    public CreateChainCommandHandler(IChainRepository chains, IChainLengthRepository lengths, ITagRepository tags, TimeProvider timeProvider)
     {
         _chains = chains;
         _lengths = lengths;
+        _tags = tags;
         _timeProvider = timeProvider;
     }
 
@@ -32,8 +35,10 @@ public class CreateChainCommandHandler : IRequestHandler<CreateChainCommand, Adm
         if (rollLengthCm > 0)
             chain.AddRoll(rollLengthCm, _timeProvider.GetUtcNow().UtcDateTime);
 
+        await _tags.ApplyToProductAsync(request.TagIds, chain.ReplaceTags, cancellationToken);
+
         await _chains.AddAsync(chain, cancellationToken);
-        await _chains.SaveChangesAsync(cancellationToken);
+        await _chains.SaveChangesOrTagNotFoundAsync(cancellationToken);
 
         return chain.ToAdminDto(await _lengths.GetAllOrderedAsync(cancellationToken));
     }

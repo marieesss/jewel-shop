@@ -1,4 +1,5 @@
 using JewelryShop.Features.Charms.DTOs;
+using JewelryShop.Features.Tags.Common;
 using MediatR;
 
 namespace JewelryShop.Features.Charms.Commands;
@@ -6,8 +7,13 @@ namespace JewelryShop.Features.Charms.Commands;
 public class CreateCharmCommandHandler : IRequestHandler<CreateCharmCommand, AdminCharmDto>
 {
     private readonly ICharmRepository _charms;
+    private readonly ITagRepository _tags;
 
-    public CreateCharmCommandHandler(ICharmRepository charms) => _charms = charms;
+    public CreateCharmCommandHandler(ICharmRepository charms, ITagRepository tags)
+    {
+        _charms = charms;
+        _tags = tags;
+    }
 
     public async Task<AdminCharmDto> Handle(CreateCharmCommand request, CancellationToken cancellationToken)
     {
@@ -22,9 +28,11 @@ public class CreateCharmCommandHandler : IRequestHandler<CreateCharmCommand, Adm
             Url = string.IsNullOrWhiteSpace(request.Url) ? null : request.Url.Trim()
         };
 
-        await _charms.AddAsync(charm, cancellationToken);
-        await _charms.SaveChangesAsync(cancellationToken);
+        await _tags.ApplyToProductAsync(request.TagIds, charm.ReplaceTags, cancellationToken);
 
-        return charm.ToAdminDto();
+        await _charms.AddAsync(charm, cancellationToken);
+        await _charms.SaveChangesOrTagNotFoundAsync(cancellationToken);
+
+        return charm.ToAdminDtoWithTags();
     }
 }

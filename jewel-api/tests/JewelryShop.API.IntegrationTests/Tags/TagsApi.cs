@@ -41,7 +41,7 @@ public static class TagsApi
         });
 
     /// <summary>
-    /// Associe des chaînes et des breloques à un tag directement en base : l'association par l'API arrive avec #101.
+    /// Associe des chaînes et des breloques à un tag directement en base, sans passer par l'API.
     /// </summary>
     public static Task TagProductsAsync(this JewelryShopApiFactory api, long tagId, IEnumerable<long> chainIds, IEnumerable<long>? charmIds = null)
         => api.SeedAsync(async services =>
