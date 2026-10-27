@@ -48,6 +48,22 @@ public class AdminTagsController : ApiControllerBase
         return Ok(result);
     }
 
+    /// <summary>
+    /// Fusionne le tag dans <c>targetTagId</c> : ses chaînes et ses breloques passent sur le tag cible, puis il est supprimé.
+    /// Renvoie le tag cible. [Admin]
+    /// </summary>
+    [HttpPost("{id:long}/merge")]
+    [ProducesResponseType(typeof(TagDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Merge(long id, [FromBody] MergeTagCommand command, CancellationToken ct)
+    {
+        var result = await Sender.Send(command with { Id = id }, ct);
+        return Ok(result);
+    }
+
     /// <summary>Supprime un tag et ses associations ; les chaînes et les breloques restent. [Admin]</summary>
     [HttpDelete("{id:long}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
