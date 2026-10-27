@@ -1,4 +1,6 @@
 using System.Text.Json.Serialization;
+using JewelryShop.Features.Tags.Common;
+using JewelryShop.Features.Tags.DTOs;
 
 namespace JewelryShop.Features.Charms.DTOs;
 
@@ -13,7 +15,8 @@ public record CharmDto(
     string Color,
     string? ImageUrl,
     decimal Price,
-    int Stock);
+    int Stock,
+    IReadOnlyList<TagDto>? Tags = null);
 
 /// <summary>Breloque vue par un admin : ajoute le lien fournisseur et le coût d'achat.</summary>
 public record AdminCharmDto(
@@ -50,6 +53,13 @@ public static class CharmMappingExtensions
         c.Url,
         c.Cost);
 
+    /// <summary>DTO du catalogue : ajoute les tags de la breloque, qui doivent être chargés avec elle.</summary>
     public static CharmDto ToDto(this Charm c, bool includeAdminFields) =>
-        includeAdminFields ? c.ToAdminDto() : c.ToDto();
+        (includeAdminFields ? c.ToAdminDto() : c.ToDto()).WithTags(c);
+
+    /// <summary>Variante admin de <see cref="ToDto(Charm, bool)"/>, renvoyée par la création et la modification.</summary>
+    public static AdminCharmDto ToAdminDtoWithTags(this Charm c) => c.ToAdminDto().WithTags(c);
+
+    private static T WithTags<T>(this T dto, Charm c) where T : CharmDto =>
+        dto with { Tags = c.CharmTags.ToTagDtos() };
 }

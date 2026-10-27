@@ -8,6 +8,9 @@ public class FakeCharmRepository : InMemoryRepository<Charm>, ICharmRepository
 {
     public long? LastFavoritesFirstForUserId { get; private set; }
 
+    public Task<Charm?> GetByIdWithTagsAsync(long id, CancellationToken cancellationToken = default)
+        => GetByIdAsync(id, cancellationToken);
+
     /// <summary>Renvoie les breloques semées sans filtrer ni trier : le tri est fait par EF.</summary>
     public Task<(IReadOnlyList<Charm> Items, int TotalCount)> GetPagedAsync(
         ProductColor? color,

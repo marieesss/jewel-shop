@@ -1,5 +1,6 @@
 using FluentValidation;
 using JewelryShop.Features.Charms.Commands;
+using JewelryShop.Features.Tags.Common;
 
 namespace JewelryShop.Features.Charms.Validators;
 
@@ -24,5 +25,6 @@ public class UpdateCharmCommandValidator : AbstractValidator<UpdateCharmCommand>
             .GreaterThanOrEqualTo(0).WithMessage("Le stock doit être positif.");
         RuleFor(x => x.Url)
             .MaximumLength(500).WithMessage("500 caractères maximum.");
+        this.RuleForTagIds(x => x.TagIds);
     }
 }

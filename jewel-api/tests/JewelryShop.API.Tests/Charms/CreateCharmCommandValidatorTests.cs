@@ -94,4 +94,23 @@ public class CreateCharmCommandValidatorTests
 
         ValidationAssert.HasError(result, nameof(CreateCharmCommand.Url), "500 caractères maximum.");
     }
+
+    [Fact]
+    public void Accepte_des_tags_sans_maximum_ou_une_liste_vide()
+    {
+        var many = Enumerable.Range(1, 500).Select(i => (long)i).ToArray();
+
+        Assert.True(_validator.Validate(ValidCommand() with { TagIds = many }).IsValid);
+        Assert.True(_validator.Validate(ValidCommand() with { TagIds = [] }).IsValid);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-3)]
+    public void Refuse_un_id_de_tag_invalide(long tagId)
+    {
+        var result = _validator.Validate(ValidCommand() with { TagIds = [1, tagId] });
+
+        ValidationAssert.HasError(result, "TagIds[1]", "Identifiant invalide.");
+    }
 }

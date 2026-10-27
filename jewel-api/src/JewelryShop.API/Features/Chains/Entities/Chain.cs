@@ -1,4 +1,5 @@
 using JewelryShop.Features.Chains.Common;
+using JewelryShop.Features.Tags.Common;
 
 namespace JewelryShop.Features.Chains.Entities;
 
@@ -20,6 +21,7 @@ public class Chain : BaseEntity
     public ICollection<ChainRoll> Rolls { get; set; } = new List<ChainRoll>();
     public ICollection<Favorite> Favorites { get; set; } = new List<Favorite>();
     public ICollection<Creation> Creations { get; set; } = new List<Creation>();
+    public ICollection<ChainTag> ChainTags { get; set; } = new List<ChainTag>();
 
     public int StockCm => Rolls.Sum(r => r.RemainingLengthCm);
 
@@ -62,4 +64,7 @@ public class Chain : BaseEntity
     }
 
     public void AddRoll(int lengthCm, DateTime now) => Rolls.Add(ChainRoll.Create(lengthCm, now));
+
+    public void ReplaceTags(IReadOnlyCollection<Tag> tags) =>
+        ChainTags.ReplaceWith(tags, tag => new ChainTag { ChainId = Id, TagId = tag.Id, Tag = tag });
 }

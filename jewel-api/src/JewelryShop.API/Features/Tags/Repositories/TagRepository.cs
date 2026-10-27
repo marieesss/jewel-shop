@@ -27,6 +27,9 @@ public class TagRepository : Repository<Tag>, ITagRepository
         return usages.OrderByCategoryThenName(u => u.Tag).ToList();
     }
 
+    public async Task<IReadOnlyList<Tag>> GetByIdsAsync(IReadOnlyCollection<long> ids, CancellationToken cancellationToken = default)
+        => await DbSet.Where(t => ids.Contains(t.Id)).ToListAsync(cancellationToken);
+
     public Task<Tag?> FindConflictingAsync(TagCategory category, string name, string slug, long? excludedId = null, CancellationToken cancellationToken = default)
     {
         var loweredName = name.ToLower();

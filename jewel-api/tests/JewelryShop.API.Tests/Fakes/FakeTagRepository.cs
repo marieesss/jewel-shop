@@ -6,8 +6,6 @@ namespace JewelryShop.API.Tests.Fakes;
 
 public class FakeTagRepository : InMemoryRepository<Tag>, ITagRepository
 {
-    public Exception? SaveChangesError { get; set; }
-
     public Task<IReadOnlyList<Tag>> GetAllOrderedAsync(CancellationToken cancellationToken = default)
         => Task.FromResult<IReadOnlyList<Tag>>(Entities.OrderByCategoryThenName(t => t).ToList());
 
@@ -37,6 +35,6 @@ public class FakeTagRepository : InMemoryRepository<Tag>, ITagRepository
         return Task.CompletedTask;
     }
 
-    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-        => SaveChangesError is null ? base.SaveChangesAsync(cancellationToken) : Task.FromException<int>(SaveChangesError);
+    public Task<IReadOnlyList<Tag>> GetByIdsAsync(IReadOnlyCollection<long> ids, CancellationToken cancellationToken = default)
+        => Task.FromResult<IReadOnlyList<Tag>>(Entities.Where(t => ids.Contains(t.Id)).ToList());
 }

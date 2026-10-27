@@ -11,6 +11,11 @@ public interface ITagRepository : IRepository<Tag>
     Task<IReadOnlyList<TagUsage>> GetAllWithUsageAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Les tags de ces ids qui existent, suivis par le contexte : ils peuvent être associés à un article enregistré ensuite.
+    /// </summary>
+    Task<IReadOnlyList<Tag>> GetByIdsAsync(IReadOnlyCollection<long> ids, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Un autre tag que <paramref name="excludedId"/> de la catégorie dont le nom (sans tenir compte de la casse)
     /// ou le slug est déjà pris, ou null.
     /// </summary>

@@ -1,3 +1,5 @@
+using JewelryShop.Features.Tags.Common;
+
 namespace JewelryShop.Features.Charms.Entities;
 
 public class Charm : BaseEntity
@@ -13,4 +15,8 @@ public class Charm : BaseEntity
 
     public ICollection<Favorite> Favorites { get; set; } = new List<Favorite>();
     public ICollection<CreationItem> CreationItems { get; set; } = new List<CreationItem>();
+    public ICollection<CharmTag> CharmTags { get; set; } = new List<CharmTag>();
+
+    public void ReplaceTags(IReadOnlyCollection<Tag> tags) =>
+        CharmTags.ReplaceWith(tags, tag => new CharmTag { CharmId = Id, TagId = tag.Id, Tag = tag });
 }

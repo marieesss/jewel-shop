@@ -9,6 +9,7 @@ public static class TagMessages
     public const string InvalidCategory = "Catégorie invalide.";
     public const string InvalidId = "Identifiant invalide.";
     public const string CannotMergeWithItself = "Un tag ne peut pas être fusionné avec lui-même.";
+    public const string NotFound = "Tag introuvable.";
 
     public static string AlreadyExists(string name) => $"Le tag « {name} » existe déjà dans cette catégorie.";
 

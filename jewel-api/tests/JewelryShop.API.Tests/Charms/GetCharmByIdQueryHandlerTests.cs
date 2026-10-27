@@ -36,7 +36,8 @@ public class GetCharmByIdQueryHandlerTests
         var dto = await _handler.Handle(new GetCharmByIdQuery(7), CancellationToken.None);
 
         Assert.IsType<CharmDto>(dto);
-        Assert.Equal(new CharmDto(7, "Trèfle", "", "Silver", null, 8m, 10), dto);
+        Assert.Equal(new CharmDto(7, "Trèfle", "", "Silver", null, 8m, 10), dto with { Tags = null });
+        Assert.Empty(dto.Tags!);
     }
 
     [Fact]

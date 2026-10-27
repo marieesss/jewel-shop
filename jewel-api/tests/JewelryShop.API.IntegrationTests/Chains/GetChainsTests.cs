@@ -1,10 +1,12 @@
 using System.Net;
 using System.Net.Http.Json;
 using JewelryShop.API.IntegrationTests.Infrastructure;
+using JewelryShop.API.IntegrationTests.Tags;
 using JewelryShop.Common;
 using JewelryShop.Common.Enums;
 using JewelryShop.Features.Chains.DTOs;
 using JewelryShop.Features.Favorites.DTOs;
+using JewelryShop.Features.Tags.Entities;
 
 namespace JewelryShop.API.IntegrationTests.Chains;
 
@@ -142,11 +144,35 @@ public class GetChainsTests
         Assert.Equal(ids.Order(), ids);
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData("favoritesFirst=true")]
+    public async Task Renvoie_les_tags_de_chaque_chaine_dans_la_liste_paginee(string query)
+    {
+        var admin = await _api.CreateClientAsAsync(UserRole.Admin);
+        var color = await _api.SeedTagAsync(TagsApi.UniqueName(), TagCategory.Color);
+        var theme = await _api.SeedTagAsync(TagsApi.UniqueName());
+        var tagged = await admin.CreateChainAsync(ChainsApi.MeterBody(ChainsApi.UniqueName(), tagIds: [color, theme]));
+        var partlyTagged = await admin.CreateChainAsync(ChainsApi.MeterBody(ChainsApi.UniqueName(), tagIds: [color]));
+        var untagged = await admin.CreateChainAsync(ChainsApi.MeterBody(ChainsApi.UniqueName()));
+        var user = await _api.CreateClientAsAsync(UserRole.User);
+        (await user.PostAsJsonAsync("/api/favorites", new { ChainId = untagged.Id })).EnsureSuccessStatusCode();
+
+        var listed = await GetAllPagesAsync(user, query);
+
+        // Chaque chaîne apparaît une fois, avec ses seuls tags, malgré le chargement des rouleaux et des tags.
+        Assert.Equal([theme, color], Assert.Single(listed, c => c.Id == tagged.Id).Tags!.Select(t => t.Id));
+        Assert.Equal([color], Assert.Single(listed, c => c.Id == partlyTagged.Id).Tags!.Select(t => t.Id));
+        Assert.Empty(Assert.Single(listed, c => c.Id == untagged.Id).Tags!);
+        Assert.Equal(["Theme", "Color"], listed.Single(c => c.Id == tagged.Id).Tags!.Select(t => t.Category));
+    }
+
     // Un record compare ses listes par référence : les longueurs sont comparées à part, élément par élément.
     private static void AssertSameChain(ChainDto expected, ChainDto actual)
     {
-        Assert.Equal(expected with { AvailableLengths = null }, actual with { AvailableLengths = null });
+        Assert.Equal(expected with { AvailableLengths = null, Tags = null }, actual with { AvailableLengths = null, Tags = null });
         Assert.Equal(expected.AvailableLengths!, actual.AvailableLengths!);
+        Assert.Equal(expected.Tags!, actual.Tags!);
     }
 
     private static ChainLengthPriceDto LengthOf(ChainDto chain, int lengthCm) =>
@@ -156,6 +182,21 @@ public class GetChainsTests
     {
         var page = await client.GetFromJsonAsync<PagedResult<ChainDto>>($"{ChainsApi.Path}?{query}");
         return page!.Items.Select(c => c.Id).ToList();
+    }
+
+    /// <summary>Parcourt toutes les pages de la liste (20 par page), pour retrouver des chaînes quelle que soit la taille du catalogue.</summary>
+    private static async Task<IReadOnlyList<ChainDto>> GetAllPagesAsync(HttpClient client, string query)
+    {
+        var items = new List<ChainDto>();
+        PagedResult<ChainDto>? page;
+        var number = 1;
+        do
+        {
+            page = await client.GetFromJsonAsync<PagedResult<ChainDto>>($"{ChainsApi.Path}?pageSize=20&page={number++}&{query}");
+            items.AddRange(page!.Items);
+        } while (page.HasNext);
+
+        return items;
     }
 
     private async Task<IReadOnlyList<ChainDto>> GetItemsAsync(string query)

@@ -10,6 +10,9 @@ public class CharmRepository : Repository<Charm>, ICharmRepository
     {
     }
 
+    public async Task<Charm?> GetByIdWithTagsAsync(long id, CancellationToken cancellationToken = default)
+        => await WithTags(DbSet).FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+
     public async Task<(IReadOnlyList<Charm> Items, int TotalCount)> GetPagedAsync(
         ProductColor? color,
         bool? inStockOnly,
@@ -20,7 +23,7 @@ public class CharmRepository : Repository<Charm>, ICharmRepository
         long? favoritesFirstForUserId,
         CancellationToken cancellationToken = default)
     {
-        var query = DbSet.AsNoTracking().AsQueryable();
+        var query = WithTags(DbSet.AsNoTracking());
 
         if (color.HasValue)
             query = query.Where(c => c.Color == color.Value);
@@ -46,4 +49,7 @@ public class CharmRepository : Repository<Charm>, ICharmRepository
 
         return (items, total);
     }
+
+    private static IQueryable<Charm> WithTags(IQueryable<Charm> charms)
+        => charms.Include(c => c.CharmTags).ThenInclude(ct => ct.Tag);
 }
