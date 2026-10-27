@@ -8,6 +8,7 @@ public class TagCommandValidatorTests
 {
     private readonly CreateTagCommandValidator _createValidator = new();
     private readonly RenameTagCommandValidator _renameValidator = new();
+    private readonly MergeTagCommandValidator _mergeValidator = new();
 
     [Theory]
     [InlineData("Mer", "Theme")]
@@ -99,5 +100,41 @@ public class TagCommandValidatorTests
         var result = _renameValidator.Validate(new RenameTagCommand(id, "Océan"));
 
         ValidationAssert.HasError(result, nameof(RenameTagCommand.Id), TagMessages.InvalidId);
+    }
+
+    [Fact]
+    public void Accepte_une_fusion_valide()
+    {
+        var result = _mergeValidator.Validate(new MergeTagCommand(1, 2));
+
+        Assert.True(result.IsValid);
+    }
+
+    [Fact]
+    public void Refuse_de_fusionner_un_tag_avec_lui_meme()
+    {
+        var result = _mergeValidator.Validate(new MergeTagCommand(3, 3));
+
+        ValidationAssert.HasError(result, nameof(MergeTagCommand.TargetTagId), TagMessages.CannotMergeWithItself);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void Refuse_un_identifiant_de_tag_source_invalide(long id)
+    {
+        var result = _mergeValidator.Validate(new MergeTagCommand(id, 2));
+
+        ValidationAssert.HasError(result, nameof(MergeTagCommand.Id), TagMessages.InvalidId);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void Refuse_un_identifiant_de_tag_cible_invalide(long targetTagId)
+    {
+        var result = _mergeValidator.Validate(new MergeTagCommand(2, targetTagId));
+
+        ValidationAssert.HasError(result, nameof(MergeTagCommand.TargetTagId), TagMessages.InvalidId);
     }
 }

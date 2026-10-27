@@ -23,6 +23,15 @@ public class FakeTagRepository : InMemoryRepository<Tag>, ITagRepository
             && t.Id != excludedId
             && (string.Equals(t.Name, name, StringComparison.OrdinalIgnoreCase) || t.Slug == slug)));
 
+    public List<(long SourceId, long TargetId)> Merges { get; } = new();
+
+    public Task MergeIntoAsync(long sourceId, long targetId, CancellationToken cancellationToken = default)
+    {
+        Merges.Add((sourceId, targetId));
+        Entities.RemoveAll(t => t.Id == sourceId);
+        return Task.CompletedTask;
+    }
+
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         => SaveChangesError is null ? base.SaveChangesAsync(cancellationToken) : Task.FromException<int>(SaveChangesError);
 }

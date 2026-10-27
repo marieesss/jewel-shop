@@ -15,4 +15,10 @@ public interface ITagRepository : IRepository<Tag>
     /// ou le slug est déjà pris, ou null.
     /// </summary>
     Task<Tag?> FindConflictingAsync(TagCategory category, string name, string slug, long? excludedId = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Dans une seule transaction, reporte les chaînes et les breloques du tag <paramref name="sourceId"/> sur
+    /// <paramref name="targetId"/> (un article qui porte déjà le tag cible le garde une seule fois), puis supprime le tag source.
+    /// </summary>
+    Task MergeIntoAsync(long sourceId, long targetId, CancellationToken cancellationToken = default);
 }

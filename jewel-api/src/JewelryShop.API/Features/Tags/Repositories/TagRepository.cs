@@ -35,4 +35,28 @@ public class TagRepository : Repository<Tag>, ITagRepository
             t => t.Category == category && t.Id != excludedId && (t.Name.ToLower() == loweredName || t.Slug == slug),
             cancellationToken);
     }
+
+    public Task MergeIntoAsync(long sourceId, long targetId, CancellationToken cancellationToken = default)
+    {
+        // EnableRetryOnFailure interdit une transaction ouverte à la main hors de la stratégie d'exécution.
+        var strategy = Context.Database.CreateExecutionStrategy();
+        return strategy.ExecuteAsync(async () =>
+        {
+            await using var transaction = await Context.Database.BeginTransactionAsync(cancellationToken);
+
+            await Context.Database.ExecuteSqlAsync($"""
+                INSERT INTO chain_tags (chain_id, tag_id)
+                SELECT chain_id, {targetId} FROM chain_tags WHERE tag_id = {sourceId}
+                ON CONFLICT DO NOTHING
+                """, cancellationToken);
+            await Context.Database.ExecuteSqlAsync($"""
+                INSERT INTO charm_tags (charm_id, tag_id)
+                SELECT charm_id, {targetId} FROM charm_tags WHERE tag_id = {sourceId}
+                ON CONFLICT DO NOTHING
+                """, cancellationToken);
+            await Context.Database.ExecuteSqlAsync($"DELETE FROM tags WHERE id = {sourceId}", cancellationToken);
+
+            await transaction.CommitAsync(cancellationToken);
+        });
+    }
 }
