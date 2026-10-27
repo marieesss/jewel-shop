@@ -2,6 +2,7 @@ using JewelryShop.Common.Exceptions;
 using JewelryShop.Features.Tags.Common;
 using JewelryShop.Features.Tags.DTOs;
 using MediatR;
+using Npgsql;
 
 namespace JewelryShop.Features.Tags.Commands;
 
@@ -18,7 +19,15 @@ public class MergeTagCommandHandler : IRequestHandler<MergeTagCommand, TagDto>
         var target = await _tags.GetByIdAsync(request.TargetTagId, cancellationToken)
             ?? throw new NotFoundException(TagMessages.EntityName, request.TargetTagId);
 
-        await _tags.MergeIntoAsync(request.Id, target.Id, cancellationToken);
+        // Le tag cible peut être supprimé entre la lecture et la fusion : l'insertion des liaisons viole alors la clé étrangère.
+        try
+        {
+            await _tags.MergeIntoAsync(request.Id, target.Id, cancellationToken);
+        }
+        catch (PostgresException error) when (error.SqlState == PostgresErrorCodes.ForeignKeyViolation)
+        {
+            throw new NotFoundException(TagMessages.EntityName, request.TargetTagId);
+        }
 
         return target.ToDto();
     }

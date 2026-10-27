@@ -25,8 +25,13 @@ public class FakeTagRepository : InMemoryRepository<Tag>, ITagRepository
 
     public List<(long SourceId, long TargetId)> Merges { get; } = new();
 
+    public Exception? MergeError { get; set; }
+
     public Task MergeIntoAsync(long sourceId, long targetId, CancellationToken cancellationToken = default)
     {
+        if (MergeError is not null)
+            return Task.FromException(MergeError);
+
         Merges.Add((sourceId, targetId));
         Entities.RemoveAll(t => t.Id == sourceId);
         return Task.CompletedTask;

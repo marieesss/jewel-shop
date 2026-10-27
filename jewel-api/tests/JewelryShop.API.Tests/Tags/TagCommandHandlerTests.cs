@@ -248,4 +248,17 @@ public class TagCommandHandlerTests
         Assert.Empty(_tags.Merges);
         Assert.Equal(3, _tags.All.Count);
     }
+
+    [Fact]
+    public async Task Renvoie_une_erreur_introuvable_si_le_tag_cible_est_supprime_pendant_la_fusion()
+    {
+        _tags.Seed(Tag(4, "Plage", TagCategory.Theme));
+        _tags.MergeError = new PostgresException("violates foreign key", "ERROR", "ERROR", PostgresErrorCodes.ForeignKeyViolation);
+        var handler = new MergeTagCommandHandler(_tags);
+
+        var error = await Assert.ThrowsAsync<NotFoundException>(
+            () => handler.Handle(new MergeTagCommand(4, 1), CancellationToken.None));
+
+        Assert.Contains("#1", error.Message);
+    }
 }
