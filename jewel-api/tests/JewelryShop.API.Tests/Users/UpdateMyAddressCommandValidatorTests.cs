@@ -75,6 +75,8 @@ public class UpdateMyAddressCommandValidatorTests
     [InlineData("750011")]
     [InlineData("75 011")]
     [InlineData("2A004")]
+    [InlineData("75011\n")]
+    [InlineData("٧٥٠١١")]
     [InlineData("")]
     [InlineData(null)]
     public void Refuse_un_code_postal_qui_n_a_pas_5_chiffres(string? postalCode)
@@ -137,6 +139,7 @@ public class UpdateMyAddressCommandValidatorTests
     [InlineData("061234567")]
     [InlineData("06123456789")]
     [InlineData("0012345678")]
+    [InlineData("0612345678\n")]
     [InlineData("06 12 34 56 78")]
     [InlineData("+330612345678")]
     [InlineData("+3261234567")]
