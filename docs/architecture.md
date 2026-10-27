@@ -233,7 +233,7 @@ src/
 ├── stores/       # MobX : AuthStore, ProductAdminStore, FavoritesStore, RootStore + hooks d'accès
 ├── routes/       # guards.tsx : ProtectedRoute, AdminRoute
 ├── pages/        # pages routées : AuthPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage, user/, admin/
-├── features/     # composants métier : admin/, auth/, chainLengths/, products/, favorites/, user/, users/
+├── features/     # composants métier : admin/, auth/, chainLengths/, products/, favorites/, profile/, user/, users/
 ├── components/ui # composants génériques (Button, TextField, Pagination…)
 ├── hooks/        # useAsync
 └── lib/          # cn, format, returnUrl (redirection après connexion), sessionExpired (message à la connexion),
@@ -241,10 +241,11 @@ src/
                   # passwordReset (messages et erreur de lien), loginMessage (confirmation à la connexion),
                   # invitation (message et erreurs d'invitation), invitationEmail (règles de l'email d'invitation, identiques au back),
                   # invitationActions (statuts filtrables, actions permises par statut et leurs messages),
-                  # imageFile (règles des images uploadées, identiques au back)
+                  # imageFile (règles des images uploadées, identiques au back),
+                  # addressForm (règles de l'adresse de livraison et du téléphone, identiques au back)
 ```
 
-- Routage déclaré dans `App.tsx`. `/login`, `/register`, `/forgot-password` et `/reset-password` sont publics. L'espace client (`/charms`, `/chains`, `/favorites`) exige une session. `/admin/...` exige le rôle `Admin`.
+- Routage déclaré dans `App.tsx`. `/login`, `/register`, `/forgot-password` et `/reset-password` sont publics. L'espace client (`/charms`, `/chains`, `/favorites`, `/profile`) exige une session. `/profile` (« Mon profil ») affiche les informations du compte en lecture seule et enregistre l'adresse de livraison en France et le téléphone (`GET /api/users/me`, `PUT /api/users/me/address`). `/admin/...` exige le rôle `Admin`.
 - **Stockage du token** : l'access token (JWT), l'identifiant et le rôle sont gardés **en mémoire** dans `AuthStore`, jamais dans `localStorage` ni `sessionStorage`. Le refresh token reste dans son cookie `httpOnly`, illisible par le JavaScript. L'ancien token `jewelryshop_token` est retiré de `localStorage` au démarrage.
   - **Au chargement**, `AuthStore.restoreSession()` appelle `POST /api/auth/refresh`. Tant que la restauration n'est pas finie (`initializing`), `ProtectedRoute` et `AdminRoute` affichent un `Spinner` au lieu de rediriger. Un échec laisse le visiteur déconnecté, sans message.
   - **Sur un 401** (hors `login`, `register`, `refresh` et `logout`), l'intercepteur de `api/authInterceptors.ts` rafraîchit la session puis rejoue la requête une seule fois. Une requête partie avec un token déjà renouvelé est rejouée sans nouveau refresh.

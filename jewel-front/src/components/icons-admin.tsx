@@ -94,3 +94,12 @@ export function HeartIcon({ filled, ...props }: SVGProps<SVGSVGElement> & { fill
     </svg>
   );
 }
+
+export function ProfileIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base(props)}>
+      <circle cx="9" cy="6" r="3" />
+      <path d="M3 16C3 12.7 5.7 11 9 11C12.3 11 15 12.7 15 16" />
+    </svg>
+  );
+}
