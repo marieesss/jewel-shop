@@ -26,7 +26,7 @@ public class ProductTagsTests
         var color = await _api.SeedTagAsync(TagsApi.UniqueName(), TagCategory.Color);
         var created = await admin.CreateChainAsync(ChainsApi.MeterBody(ChainsApi.UniqueName()));
 
-        var response = await admin.PutAsJsonAsync($"{ChainsApi.Path}/{created.Id}", WithTags(ChainsApi.MeterBody(created.Name), [color, theme]));
+        var response = await admin.PutAsJsonAsync($"{ChainsApi.Path}/{created.Id}", ChainsApi.MeterBody(created.Name, tagIds: [color, theme]));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var updated = await response.Content.ReadFromJsonAsync<AdminChainDto>();
@@ -40,7 +40,7 @@ public class ProductTagsTests
     {
         var admin = await _api.CreateClientAsAsync(UserRole.Admin);
         var tag = await _api.SeedTagAsync(TagsApi.UniqueName());
-        var created = await admin.CreateChainAsync(WithTags(ChainsApi.MeterBody(ChainsApi.UniqueName()), [tag]));
+        var created = await admin.CreateChainAsync(ChainsApi.MeterBody(ChainsApi.UniqueName(), tagIds: [tag]));
 
         var response = await admin.PutAsJsonAsync($"{ChainsApi.Path}/{created.Id}", ChainsApi.LegacyBody(created.Name));
 
@@ -56,10 +56,10 @@ public class ProductTagsTests
     {
         var admin = await _api.CreateClientAsAsync(UserRole.Admin);
         var tag = await _api.SeedTagAsync(TagsApi.UniqueName());
-        var created = await admin.CreateCharmAsync(WithTags(CharmsApi.Body(CharmsApi.UniqueName()), [tag]));
+        var created = await admin.CreateCharmAsync(CharmsApi.Body(CharmsApi.UniqueName(), [tag]));
         Assert.Equal([tag], created.Tags!.Select(t => t.Id));
 
-        var response = await admin.PutAsJsonAsync($"{CharmsApi.Path}/{created.Id}", WithTags(CharmsApi.Body(created.Name), []));
+        var response = await admin.PutAsJsonAsync($"{CharmsApi.Path}/{created.Id}", CharmsApi.Body(created.Name, []));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var updated = await response.Content.ReadFromJsonAsync<AdminCharmDto>();
@@ -74,7 +74,7 @@ public class ProductTagsTests
         var admin = await _api.CreateClientAsAsync(UserRole.Admin);
         var created = await admin.CreateChainAsync(ChainsApi.MeterBody(ChainsApi.UniqueName()));
 
-        var response = await admin.PutAsJsonAsync($"{ChainsApi.Path}/{created.Id}", WithTags(ChainsApi.MeterBody(created.Name), [long.MaxValue]));
+        var response = await admin.PutAsJsonAsync($"{ChainsApi.Path}/{created.Id}", ChainsApi.MeterBody(created.Name, tagIds: [long.MaxValue]));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var error = await response.Content.ReadFromJsonAsync<ApiError>();
@@ -107,13 +107,5 @@ public class ProductTagsTests
         var charm = Assert.Single(page!.Items, c => c.Id == created.Id);
         Assert.Equal([theme, color], charm.Tags!.Select(t => t.Id));
         Assert.Equal(["Theme", "Color"], charm.Tags!.Select(t => t.Category));
-    }
-
-    /// <summary>Ajoute tagIds à un corps de chaîne ou de breloque.</summary>
-    private static Dictionary<string, object?> WithTags(object body, long[] tagIds)
-    {
-        var fields = body.GetType().GetProperties().ToDictionary(p => p.Name, p => p.GetValue(body));
-        fields["TagIds"] = tagIds;
-        return fields;
     }
 }
