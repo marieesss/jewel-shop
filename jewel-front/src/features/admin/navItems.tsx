@@ -4,6 +4,7 @@ import {
   GemIcon,
   ChainIcon,
   RulerIcon,
+  TagIcon,
   UsersIcon,
 } from '../../components/icons-admin';
 
@@ -25,5 +26,6 @@ export const adminNavItems: AdminNavItem[] = [
   { to: '/admin/products/charms', label: 'Breloques', icon: <GemIcon /> },
   { to: '/admin/products/chains', label: 'Chaînes', icon: <ChainIcon /> },
   { to: '/admin/chain-lengths', label: 'Longueurs', icon: <RulerIcon /> },
+  { to: '/admin/tags', label: 'Tags', icon: <TagIcon /> },
   { to: '/admin/users', label: 'Utilisateurs', icon: <UsersIcon /> },
 ];
