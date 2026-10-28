@@ -26,6 +26,10 @@ public class JewelryShopApiFactory : WebApplicationFactory<Program>, IAsyncLifet
     private readonly PostgreSqlContainer _database = new PostgreSqlBuilder(PostgresImage)
         .Build();
 
+    // L'hôte de test tourne en Development : l'API crée ce compte admin au démarrage, comme en local.
+    public const string DevAdminEmail = "admin-dev@integration.test";
+    public const string DevAdminPassword = "AdminDev123!";
+
     public FakeEmailSender EmailSender { get; } = new();
 
     public async Task InitializeAsync()
@@ -72,6 +76,8 @@ public class JewelryShopApiFactory : WebApplicationFactory<Program>, IAsyncLifet
         builder.UseSetting("Jwt:Audience", "JewelryShop");
         builder.UseSetting("Jwt:AccessTokenMinutes", "15");
         builder.UseSetting("Email:Enabled", "false");
+        builder.UseSetting("DevAdmin:Email", DevAdminEmail);
+        builder.UseSetting("DevAdmin:Password", DevAdminPassword);
 
         builder.ConfigureTestServices(services =>
         {

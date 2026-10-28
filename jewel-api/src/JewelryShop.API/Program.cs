@@ -1,6 +1,7 @@
 using DotNetEnv;
 using EvolveDb;
 using JewelryShop.API;
+using JewelryShop.Features.Auth.Seeding;
 using Npgsql.EntityFrameworkCore.PostgreSQL;
 
 var envPath = Path.Combine(Directory.GetCurrentDirectory(), ".env");
@@ -39,6 +40,8 @@ if (args.Contains("--migrate"))
 if (app.Configuration.GetValue("Database:MigrateOnStartup", defaultValue: true))
     RunMigrations(app);
 
+await SeedDevAdminAsync(app);
+
 app.ConfigurePipeline();
 app.Run();
 
@@ -74,6 +77,12 @@ static void RunMigrations(WebApplication app)
         logger.LogCritical(ex, "[Evolve] Migration échouée — l'application ne peut pas démarrer.");
         throw;
     }
+}
+
+static async Task SeedDevAdminAsync(WebApplication app)
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    await scope.ServiceProvider.GetRequiredService<DevAdminSeeder>().SeedAsync();
 }
 
 // Rend accessible aux tests d'intégration la classe générée par les top-level statements

@@ -6,6 +6,7 @@ using JewelryShop.Common.Behaviors;
 using JewelryShop.Common.Interfaces;
 using JewelryShop.Common.Persistence;
 using JewelryShop.Features.Auth.Jobs;
+using JewelryShop.Features.Auth.Seeding;
 using JewelryShop.Features.Emails.Jobs;
 using JewelryShop.Features.Invitations.Jobs;
 using JewelryShop.Infrastructure.Email;
@@ -227,6 +228,8 @@ public static class Startup
         services.AddSingleton<IEmailTemplateRenderer, ScribanEmailTemplateRenderer>();
         services.AddSingleton(TimeProvider.System);
         services.AddScoped<IEmailQueue, EmailQueue>();
+        services.Configure<DevAdminOptions>(configuration.GetSection(DevAdminOptions.SectionName));
+        services.AddScoped<DevAdminSeeder>();
         services.AddScheduler();
         services.AddTransient<EmailOutboxDispatchJob>();
         services.AddTransient<EmailOutboxPurgeJob>();
