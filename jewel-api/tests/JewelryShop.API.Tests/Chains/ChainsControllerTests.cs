@@ -63,6 +63,15 @@ public class ChainsControllerTests
     }
 
     [Fact]
+    public async Task Transmet_les_tags_demandes()
+    {
+        await _controller.GetAll(null, null, null, tags: "mer,dore");
+
+        var sent = Assert.IsType<GetChainsQuery>(_sender.LastRequest);
+        Assert.Equal("mer,dore", sent.Tags);
+    }
+
+    [Fact]
     public async Task Demande_le_detail_sans_champs_admin_pour_un_utilisateur()
     {
         await _controller.GetById(7, CancellationToken.None);

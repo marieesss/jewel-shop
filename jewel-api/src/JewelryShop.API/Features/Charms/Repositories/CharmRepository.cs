@@ -1,4 +1,5 @@
 using JewelryShop.Common.Persistence;
+using JewelryShop.Features.Tags.Common;
 using JewelryShop.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,6 +19,7 @@ public class CharmRepository : Repository<Charm>, ICharmRepository
         bool? inStockOnly,
         decimal? minPrice,
         decimal? maxPrice,
+        TagFilter tagFilter,
         int page,
         int pageSize,
         long? favoritesFirstForUserId,
@@ -36,6 +38,9 @@ public class CharmRepository : Repository<Charm>, ICharmRepository
 
         if (maxPrice.HasValue)
             query = query.Where(c => c.Price <= maxPrice.Value);
+
+        foreach (var tagIds in tagFilter.TagIdGroups)
+            query = query.Where(c => c.CharmTags.Any(ct => tagIds.Contains(ct.TagId)));
 
         query = favoritesFirstForUserId is { } userId
             ? query.OrderByDescending(c => c.Favorites.Any(f => f.UserId == userId)).ThenBy(c => c.Id)

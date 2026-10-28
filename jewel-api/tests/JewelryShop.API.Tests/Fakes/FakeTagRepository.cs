@@ -37,4 +37,12 @@ public class FakeTagRepository : InMemoryRepository<Tag>, ITagRepository
 
     public Task<IReadOnlyList<Tag>> GetByIdsAsync(IReadOnlyCollection<long> ids, CancellationToken cancellationToken = default)
         => Task.FromResult<IReadOnlyList<Tag>>(Entities.Where(t => ids.Contains(t.Id)).ToList());
+
+    public int SlugLookups { get; private set; }
+
+    public Task<IReadOnlyList<Tag>> GetBySlugsAsync(IReadOnlyCollection<string> slugs, CancellationToken cancellationToken = default)
+    {
+        SlugLookups++;
+        return Task.FromResult<IReadOnlyList<Tag>>(Entities.Where(t => slugs.Contains(t.Slug)).ToList());
+    }
 }

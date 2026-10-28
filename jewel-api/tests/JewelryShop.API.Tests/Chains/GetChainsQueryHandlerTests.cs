@@ -3,6 +3,8 @@ using JewelryShop.Common.Enums;
 using JewelryShop.Features.ChainLengths.Entities;
 using JewelryShop.Features.Chains.Entities;
 using JewelryShop.Features.Chains.Queries;
+using JewelryShop.Features.Tags.Entities;
+using static JewelryShop.API.Tests.Tags.TagFixtures;
 
 namespace JewelryShop.API.Tests.Chains;
 
@@ -10,9 +12,10 @@ public class GetChainsQueryHandlerTests
 {
     private readonly FakeChainRepository _chains = new();
     private readonly FakeChainLengthRepository _lengths = new();
+    private readonly FakeTagRepository _tags = new();
     private readonly GetChainsQueryHandler _handler;
 
-    public GetChainsQueryHandlerTests() => _handler = new GetChainsQueryHandler(_chains, _lengths);
+    public GetChainsQueryHandlerTests() => _handler = new GetChainsQueryHandler(_chains, _lengths, _tags);
 
     [Fact]
     public async Task Transmet_au_repository_l_utilisateur_dont_les_favoris_passent_en_premier()
@@ -29,6 +32,24 @@ public class GetChainsQueryHandlerTests
         await _handler.Handle(new GetChainsQuery(null, null, null), CancellationToken.None);
 
         Assert.Null(_chains.LastFavoritesFirstForUserId);
+    }
+
+    [Fact]
+    public async Task Transmet_au_repository_les_tags_demandes_groupes_par_categorie()
+    {
+        _tags.Seed(Tag(1, "Mer"), Tag(2, "Plage"), Tag(3, "Doré", TagCategory.Color));
+
+        await _handler.Handle(new GetChainsQuery(null, null, null, Tags: "mer,plage,dore"), CancellationToken.None);
+
+        Assert.Equal([[1L, 2L], [3L]], _chains.LastTagFilter!.TagIdGroups);
+    }
+
+    [Fact]
+    public async Task Ne_filtre_pas_par_tag_sans_le_parametre()
+    {
+        await _handler.Handle(new GetChainsQuery(null, null, null), CancellationToken.None);
+
+        Assert.True(_chains.LastTagFilter!.IsEmpty);
     }
 
     [Fact]

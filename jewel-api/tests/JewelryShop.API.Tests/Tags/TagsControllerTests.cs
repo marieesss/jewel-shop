@@ -31,9 +31,21 @@ public class TagsControllerTests
         IReadOnlyList<TagDto> tags = [new TagDto(1, "Mer", "mer", "Theme")];
         _sender.Response = tags;
 
-        var response = await _controller.GetAll(CancellationToken.None);
+        var response = await _controller.GetAll(null, CancellationToken.None);
 
         Assert.IsType<GetTagsQuery>(_sender.LastRequest);
+        Assert.Same(tags, Assert.IsType<OkObjectResult>(response).Value);
+    }
+
+    [Fact]
+    public async Task Demande_le_nombre_d_articles_par_tag_avec_le_type_d_article()
+    {
+        IReadOnlyList<TagCountDto> tags = [new TagCountDto(1, "Mer", "mer", "Theme", 10)];
+        _sender.Response = tags;
+
+        var response = await _controller.GetAll("charm", CancellationToken.None);
+
+        Assert.Equal(new GetTagCountsQuery("charm"), _sender.LastRequest);
         Assert.Same(tags, Assert.IsType<OkObjectResult>(response).Value);
     }
 }
