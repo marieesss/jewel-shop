@@ -37,6 +37,19 @@ public static class TagRepositoryExtensions
         return found;
     }
 
+    /// <summary>
+    /// Filtre du catalogue pour le paramètre <c>tags</c> (slugs séparés par des virgules). Un slug inconnu est ignoré :
+    /// si aucun n'est connu, le catalogue n'est pas filtré.
+    /// </summary>
+    public static async Task<TagFilter> GetCatalogFilterAsync(this ITagRepository tags, string? slugs, CancellationToken cancellationToken)
+    {
+        var parsed = TagFilter.ParseSlugs(slugs);
+        if (parsed.Count == 0)
+            return TagFilter.None;
+
+        return TagFilter.From(await tags.GetBySlugsAsync(parsed, cancellationToken));
+    }
+
     /// <summary>Clé sous laquelle les erreurs sur les tags d'un article sont renvoyées.</summary>
     public const string TagIdsKey = "TagIds";
 

@@ -1,4 +1,5 @@
 using JewelryShop.Common.Persistence;
+using JewelryShop.Features.Tags.Common;
 using JewelryShop.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,6 +19,7 @@ public class ChainRepository : Repository<Chain>, IChainRepository
         ProductColor? color,
         decimal? minPrice,
         decimal? maxPrice,
+        TagFilter tagFilter,
         int page,
         int pageSize,
         long? favoritesFirstForUserId,
@@ -33,6 +35,9 @@ public class ChainRepository : Repository<Chain>, IChainRepository
 
         if (maxPrice.HasValue)
             query = query.Where(c => (c.Price ?? c.PricePerMeter) <= maxPrice.Value);
+
+        foreach (var tagIds in tagFilter.TagIdGroups)
+            query = query.Where(c => c.ChainTags.Any(ct => tagIds.Contains(ct.TagId)));
 
         query = favoritesFirstForUserId is { } userId
             ? query.OrderByDescending(c => c.Favorites.Any(f => f.UserId == userId)).ThenBy(c => c.Id)

@@ -12,4 +12,5 @@ public record GetCharmsQuery(
     int Page = 1,
     int PageSize = 20,
     bool IncludeAdminFields = false,
-    long? FavoritesFirstForUserId = null) : IRequest<PagedResult<CharmDto>>;
+    long? FavoritesFirstForUserId = null,
+    string? Tags = null) : IRequest<PagedResult<CharmDto>>;
