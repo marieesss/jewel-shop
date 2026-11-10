@@ -12,6 +12,7 @@ import {
   mergeTargetOptions,
   tagFormErrorsFromApi,
   tagUsageCount,
+  tagNameFormErrors,
   validateTagName,
 } from './tagAdmin';
 
@@ -141,6 +142,19 @@ describe('validateTagName', () => {
 
   it.each(['---', '!!', '« »'])('refuse un nom sans lettre ni chiffre : %s', (name) => {
     expect(validateTagName(name)).toBe(NAME_WITHOUT_LETTER_OR_DIGIT_MESSAGE);
+  });
+});
+
+describe('tagNameFormErrors', () => {
+  it('ne renvoie aucune erreur pour un nom valide', () => {
+    expect(tagNameFormErrors('Mer')).toEqual({ fields: {}, form: null });
+  });
+
+  it('place le message de validation sous le nom', () => {
+    expect(tagNameFormErrors('  ')).toEqual({
+      fields: { name: NAME_REQUIRED_MESSAGE },
+      form: null,
+    });
   });
 });
 

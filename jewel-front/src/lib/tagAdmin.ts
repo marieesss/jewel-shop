@@ -80,6 +80,12 @@ export function validateTagName(raw: string): string | undefined {
   return undefined;
 }
 
+/** Erreurs d'un formulaire de tag pour un nom donné : vide si le nom est valide. */
+export function tagNameFormErrors(raw: string): TagFormErrors {
+  const nameError = validateTagName(raw);
+  return nameError ? { fields: { name: nameError }, form: null } : noTagFormErrors;
+}
+
 // Les clés de `errors` sont les noms de propriétés C# (`Name`) : la politique camelCase de l'API ne s'applique pas aux clés de dictionnaire.
 const API_ERROR_KEYS: Record<string, TagField> = {
   name: 'name',

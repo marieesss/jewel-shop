@@ -12,7 +12,7 @@ import {
   TAG_NAME_MAX_LENGTH,
   noTagFormErrors,
   tagFormErrorsFromApi,
-  validateTagName,
+  tagNameFormErrors,
   type TagFormErrors,
 } from '../../lib/tagAdmin';
 
@@ -33,9 +33,9 @@ export function TagCreateForm({ onSubmitStart, onCreated }: TagCreateFormProps) 
     e.preventDefault();
     onSubmitStart?.();
 
-    const nameError = validateTagName(name);
-    setErrors({ fields: nameError ? { name: nameError } : {}, form: null });
-    if (nameError) return;
+    const nameErrors = tagNameFormErrors(name);
+    setErrors(nameErrors);
+    if (nameErrors.fields.name) return;
 
     setSaving(true);
     try {
