@@ -1,6 +1,12 @@
 import { AxiosError } from 'axios';
 import { extractApiError } from '../api/errors';
-import { TAG_CATEGORIES, type AdminTag, type Tag, type TagCategory } from '../api/tags';
+import {
+  TAG_CATEGORIES,
+  TAG_CATEGORY_LABELS,
+  type AdminTag,
+  type Tag,
+  type TagCategory,
+} from '../api/tags';
 import type { SelectOption } from '../components/ui/Select';
 
 // Reprend TagRules et TagMessages côté API.
@@ -17,13 +23,6 @@ export const DELETE_SUCCESS_MESSAGE = 'Tag supprimé.';
 export const MERGE_SUCCESS_MESSAGE = 'Tags fusionnés.';
 
 export const DEFAULT_TAG_CATEGORY: TagCategory = 'Theme';
-
-export const TAG_CATEGORY_LABELS: Record<TagCategory, string> = {
-  Theme: 'Thème',
-  Color: 'Couleur',
-  Material: 'Matière',
-  Occasion: 'Occasion',
-};
 
 export const TAG_CATEGORY_OPTIONS: (SelectOption & { value: TagCategory })[] = TAG_CATEGORIES.map(
   (category) => ({ value: category, label: TAG_CATEGORY_LABELS[category] })
