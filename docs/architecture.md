@@ -162,6 +162,7 @@ erDiagram
 - Le schéma est créé par des **migrations SQL Evolve** (`jewel-api/db/migrations/V<n>__*.sql`). EF Core ne sert que d'ORM. Son mapping (`Infrastructure/Persistence/Configurations/`) reprend le schéma en snake_case.
 - `IsEraseDisabled = true` empêche Evolve d'effacer la base. `EnableClusterMode` pose un verrou Postgres pour que deux instances ne migrent pas en même temps.
 - Les migrations sont jouées au démarrage en local (`Database__MigrateOnStartup`, `true` par défaut) et par la commande `dotnet JewelryShop.API.dll --migrate` en déploiement.
+- En `Development` seulement, `DevAdminSeeder` (`Features/Auth/Seeding`) crée ensuite un compte admin à partir de `DevAdmin__Email` et `DevAdmin__Password`, si aucun compte n'a cet email. Un compte existant n'est jamais modifié. Variables vides : rien n'est fait. Hors `Development`, le code ne crée jamais de compte.
 
 ### Envoi de mails
 
