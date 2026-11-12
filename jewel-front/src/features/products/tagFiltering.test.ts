@@ -9,7 +9,7 @@ import {
   toggleTagSlug,
   visibleTagGroups,
   withTagSlugs,
-} from './tagFilters';
+} from './tagFiltering';
 
 const tag = (
   id: number,

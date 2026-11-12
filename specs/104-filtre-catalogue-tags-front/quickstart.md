@@ -15,7 +15,7 @@
 cd jewel-front && npm run lint && npm run format:check && npm run build && npm test
 ```
 
-`tagFilters.test.ts` doit couvrir : lecture du paramètre (vide, absent, espaces, doublons), écriture (ajout, retrait, suppression du paramètre, autres paramètres conservés), bascule, tags visibles (tag à 0 masqué, tag à 0 coché visible, catégorie vide absente, ordre), libellé « Mer (2) » et retour en page 1.
+`tagFiltering.test.ts` doit couvrir : lecture du paramètre (vide, absent, espaces, doublons), écriture (ajout, retrait, suppression du paramètre, autres paramètres conservés), bascule, tags visibles (tag à 0 masqué, tag à 0 coché visible, catégorie vide absente, ordre), libellé « Mer (2) » et retour en page 1.
 
 ## Parcours manuels
 

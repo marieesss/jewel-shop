@@ -35,7 +35,7 @@ Ajouter aux listes `/charms` et `/chains` un bloc de filtres par tags, groupés 
 | Principe | Vérification | Statut |
 |---|---|---|
 | I. L'issue est la source du besoin | Issue #104 `ready`, dépendance #103 fermée. Dossier `specs/104-filtre-catalogue-tags-front`. Les deux points ouverts (portée d'« Effacer les filtres », décision 80) ont été tranchés par la responsable le 2026-11-12 et notés dans la spec. | ✅ |
-| II. On se calque sur l'existant | Fonctionnalité la plus proche : `features/products/TagPicker` (tags par catégorie en cases à cocher, chargés par `useAsync`) et sa logique pure `tagSelection.ts`. Le nouveau bloc reprend ce découpage (`TagFilters.tsx` + `tagFilters.ts` + `tagFilters.test.ts`). Appel d'API dans `api/tags.ts`, documenté par sa route. Lecture de l'adresse par `useSearchParams`, déjà utilisé (`AuthPage`, `RegisterPage`). Aucune nouvelle dépendance ni nouveau motif. | ✅ |
+| II. On se calque sur l'existant | Fonctionnalité la plus proche : `features/products/TagPicker` (tags par catégorie en cases à cocher, chargés par `useAsync`) et sa logique pure `tagSelection.ts`. Le nouveau bloc reprend ce découpage (`TagFilters.tsx` + `tagFiltering.ts` + `tagFiltering.test.ts`). Appel d'API dans `api/tags.ts`, documenté par sa route. Lecture de l'adresse par `useSearchParams`, déjà utilisé (`AuthPage`, `RegisterPage`). Aucune nouvelle dépendance ni nouveau motif. | ✅ |
 | III. Une validation, deux côtés | Aucune commande ni formulaire envoyé. Le nettoyage des slugs côté front (vides, doublons) est un sous-ensemble de `TagFilter.ParseSlugs` côté API, qui reste l'arbitre. | ✅ (N/A) |
 | IV. Rien ne casse la production | Aucune migration, aucun changement d'API. Fonctionnalité terminée par cette issue : visible dès le merge, comme l'indique l'issue. Aucun secret. | ✅ |
 | V. Chaque étape est testée | Fonctions pures testées (lecture/écriture du paramètre, bascule, tags visibles, page courante). Chaque tâche est un commit qui passe lint, format, build et tests. | ✅ |
@@ -72,8 +72,8 @@ jewel-front/src/
 │   ├── tags.ts                     # + TagCountKind, TagCountDto, getTagCounts(kind)
 │   └── products.ts                 # ProductListParams : + tags?: string
 ├── features/products/
-│   ├── tagFilters.ts               # nouveau : fonctions pures (paramètre ?tags=, bascule, tags visibles)
-│   ├── tagFilters.test.ts          # nouveau : tests Vitest
+│   ├── tagFiltering.ts               # nouveau : fonctions pures (paramètre ?tags=, bascule, tags visibles)
+│   ├── tagFiltering.test.ts          # nouveau : tests Vitest
 │   ├── TagFilters.tsx              # nouveau : bloc réutilisable (#125)
 │   └── ProductFilters.tsx          # + emplacement `children` sous les filtres existants
 └── pages/user/

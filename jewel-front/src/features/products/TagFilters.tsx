@@ -8,7 +8,7 @@ import {
   tagFilterLabel,
   toggleTagSlug,
   visibleTagGroups,
-} from './tagFilters';
+} from './tagFiltering';
 
 interface TagFiltersProps {
   /** Type d'article dont on affiche les tags et les nombres. */

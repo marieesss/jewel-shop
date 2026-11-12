@@ -18,7 +18,7 @@ Aucun point du contexte technique n'était marqué « NEEDS CLARIFICATION ». Le
 
 ## R3. Lecture et écriture du paramètre
 
-- **Décision** : fonctions pures dans `features/products/tagFilters.ts` :
+- **Décision** : fonctions pures dans `features/products/tagFiltering.ts` :
   - `parseTagSlugs(param: string | null): string[]` découpe sur `,`, retire les espaces autour, les valeurs vides et les doublons, et garde l'ordre ;
   - `withTagSlugs(params: URLSearchParams, slugs: string[]): URLSearchParams` renvoie une copie avec `tags` défini, ou supprimé si la liste est vide (FR-004) ;
   - `toggleTagSlug(slugs, slug)` ajoute ou retire un slug.
