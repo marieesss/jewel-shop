@@ -67,6 +67,15 @@ export function RulerIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+export function TagIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base(props)}>
+      <path d="M2 3.5V8.2L9.8 16L16 9.8L8.2 2H3.5A1.5 1.5 0 0 0 2 3.5Z" />
+      <circle cx="5.5" cy="5.5" r="1.2" />
+    </svg>
+  );
+}
+
 export function LogoutIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg {...base(props)}>
