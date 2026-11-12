@@ -1,4 +1,5 @@
 using JewelryShop.Common.Persistence;
+using JewelryShop.Features.Tags.Common;
 
 namespace JewelryShop.Features.Charms.Repositories;
 
@@ -9,13 +10,15 @@ public interface ICharmRepository : IRepository<Charm>
 
     /// <summary>
     /// Liste paginée, triée par id, avec les tags de chaque breloque. Avec <paramref name="favoritesFirstForUserId"/>, les favoris
-    /// de cet utilisateur passent d'abord, puis les autres, chaque groupe trié par id.
+    /// de cet utilisateur passent d'abord, puis les autres, chaque groupe trié par id. Seules les breloques qui portent
+    /// un tag de chaque groupe de <paramref name="tagFilter"/> sont renvoyées.
     /// </summary>
     Task<(IReadOnlyList<Charm> Items, int TotalCount)> GetPagedAsync(
         ProductColor? color,
         bool? inStockOnly,
         decimal? minPrice,
         decimal? maxPrice,
+        TagFilter tagFilter,
         int page,
         int pageSize,
         long? favoritesFirstForUserId,

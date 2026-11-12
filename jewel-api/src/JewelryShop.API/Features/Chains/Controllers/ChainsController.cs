@@ -10,7 +10,8 @@ public class ChainsController : ApiControllerBase
 {
     /// <summary>
     /// Liste paginée avec filtres optionnels. <c>favoritesFirst=true</c> place d'abord les favoris
-    /// de l'utilisateur connecté ; il est ignoré pour un appel anonyme.
+    /// de l'utilisateur connecté ; il est ignoré pour un appel anonyme. <c>tags=mer,plage,dore</c> garde les chaînes
+    /// qui portent un tag de chaque catégorie demandée (Mer ou Plage, et Doré) ; un slug inconnu est ignoré.
     /// </summary>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -21,11 +22,12 @@ public class ChainsController : ApiControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         [FromQuery] bool favoritesFirst = false,
+        [FromQuery] string? tags = null,
         CancellationToken ct = default)
     {
         ProductColor? colorEnum = Enum.TryParse<ProductColor>(color, ignoreCase: true, out var c) ? c : null;
         var favoritesFirstForUserId = favoritesFirst ? GetUserIdOrNull() : null;
-        var query = new GetChainsQuery(colorEnum, minPrice, maxPrice, page, pageSize, IsAdmin, favoritesFirstForUserId);
+        var query = new GetChainsQuery(colorEnum, minPrice, maxPrice, page, pageSize, IsAdmin, favoritesFirstForUserId, tags);
         var result = await Sender.Send(query, ct);
         return Ok(result);
     }

@@ -15,6 +15,9 @@ public interface ITagRepository : IRepository<Tag>
     /// </summary>
     Task<IReadOnlyList<Tag>> GetByIdsAsync(IReadOnlyCollection<long> ids, CancellationToken cancellationToken = default);
 
+    /// <summary>Les tags dont le slug est dans <paramref name="slugs"/>, toutes catégories confondues. Un slug inconnu ne renvoie rien.</summary>
+    Task<IReadOnlyList<Tag>> GetBySlugsAsync(IReadOnlyCollection<string> slugs, CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Un autre tag que <paramref name="excludedId"/> de la catégorie dont le nom (sans tenir compte de la casse)
     /// ou le slug est déjà pris, ou null.
