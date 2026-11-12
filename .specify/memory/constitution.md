@@ -103,11 +103,14 @@ Raison : une PR ciblée se relit et se revert facilement.
 ## Déroulé et contrôles qualité
 
 1. Spec (`spec.md`) écrite depuis l'issue, sans choix technique, puis clarifiée jusqu'à ce qu'il ne
-   reste aucun `[NEEDS CLARIFICATION]`.
+   reste aucun `[NEEDS CLARIFICATION]`. Elle se lance depuis `main` à jour, avec
+   `GIT_BRANCH_NAME=<type>/<n°-issue>-<slug>` et `SPECIFY_FEATURE_DIRECTORY=specs/<n°-issue>-<slug>` :
+   l'extension git crée alors la branche au bon format. Ses commits automatiques restent
+   désactivés.
 2. Plan (`plan.md`, contrat d'API et modèle de données si besoin) vérifié principe par principe
    contre cette constitution. Un écart est justifié dans le plan ou corrigé.
 3. Tâches (`tasks.md`) ordonnées, chacune correspondant à un commit.
-4. Implémentation sur une branche `<type>/<n°-issue>-<slug>`, commits Conventional Commits.
+4. Implémentation sur cette branche, commits Conventional Commits en français, faits à la main.
 5. PR vers `main` avec la checklist de la Definition of Done. Le dossier `specs/…` fait partie de la
    PR.
 
