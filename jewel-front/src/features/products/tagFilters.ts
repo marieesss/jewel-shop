@@ -10,6 +10,10 @@ export const TAGS_PARAM = 'tags';
 
 const TAG_SLUG_SEPARATOR = ',';
 
+/** Affiché à la place des tags quand leur chargement échoue : les autres filtres restent utilisables. */
+export const TAGS_LOAD_ERROR_MESSAGE =
+  'Impossible de charger les tags. Vous pouvez filtrer la liste sans les tags.';
+
 /** Slugs lus dans le paramètre `tags`, sans espace, valeur vide ni doublon, dans l'ordre de l'adresse. */
 export function parseTagSlugs(param: string | null): string[] {
   if (!param) return [];
