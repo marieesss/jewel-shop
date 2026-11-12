@@ -49,6 +49,8 @@ export interface ProductListParams extends PageParams {
   maxPrice?: number;
   /** Spécifique aux breloques (ignoré pour les chaînes). */
   inStockOnly?: boolean;
+  /** Slugs de tags séparés par des virgules (OU dans une catégorie, ET entre catégories). */
+  tags?: string;
 }
 
 /* ── Charm (breloque) ── */
@@ -88,7 +90,7 @@ export async function createCharm(payload: CreateCharmPayload): Promise<CharmDto
   return data;
 }
 
-/** GET /api/charms → liste paginée (filtres : color, inStockOnly, minPrice, maxPrice) */
+/** GET /api/charms → liste paginée (filtres : color, inStockOnly, minPrice, maxPrice, tags) */
 export async function getCharms(params: ProductListParams = {}): Promise<PagedResult<CharmDto>> {
   const { data } = await api.get<PagedResult<CharmDto>>('/api/charms', { params });
   return data;
@@ -178,7 +180,7 @@ export async function createChain(payload: CreateChainPayload): Promise<ChainDto
   return data;
 }
 
-/** GET /api/chains → liste paginée (filtres : color, minPrice, maxPrice) */
+/** GET /api/chains → liste paginée (filtres : color, minPrice, maxPrice, tags) */
 export async function getChains(params: ProductListParams = {}): Promise<PagedResult<ChainDto>> {
   const { data } = await api.get<PagedResult<ChainDto>>('/api/chains', { params });
   return data;
