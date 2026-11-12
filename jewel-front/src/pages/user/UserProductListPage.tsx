@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { Spinner } from '../../components/ui/Spinner';
 import { Alert } from '../../components/ui/Alert';
@@ -13,6 +14,15 @@ import {
   emptyFilters,
   type ProductFilterValues,
 } from '../../features/products/ProductFilters';
+import { TagFilters } from '../../features/products/TagFilters';
+import {
+  TAGS_PARAM,
+  currentPage,
+  parseTagSlugs,
+  serializeTagSlugs,
+  withTagSlugs,
+  type TagFilteredPage,
+} from '../../features/products/tagFiltering';
 import type { ProductListParams } from '../../api/products';
 import type { ProductKind } from '../../stores/ProductAdminStore';
 
@@ -22,16 +32,23 @@ interface Props {
   kind: ProductKind;
 }
 
-/** Catalogue côté utilisateur : filtres + grille cliquable + favoris. */
+/** Catalogue côté utilisateur : filtres (tags cochés dans l'adresse) + grille cliquable + favoris. */
 export function UserProductListPage({ kind }: Props) {
   const config = PRODUCT_CONFIG[kind];
-  const [page, setPage] = useState(1);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tagsParam = searchParams.get(TAGS_PARAM);
+  const tagSlugs = parseTagSlugs(tagsParam);
+  // La page est mémorisée avec les tags du moment : changer de tags ramène en page 1.
+  const [pageState, setPageState] = useState<TagFilteredPage>({ page: 1, tagsParam });
+  const page = currentPage(pageState, tagsParam);
+  const setPage = (next: number) => setPageState({ page: next, tagsParam });
   const [filters, setFilters] = useState<ProductFilterValues>(emptyFilters);
 
   // Repart proprement quand on change de type via la navbar.
   useEffect(() => {
     setPage(1);
     setFilters(emptyFilters);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kind]);
 
   const params: ProductListParams = {
@@ -41,11 +58,12 @@ export function UserProductListPage({ kind }: Props) {
     minPrice: filters.minPrice !== '' ? Number(filters.minPrice) : undefined,
     maxPrice: filters.maxPrice !== '' ? Number(filters.maxPrice) : undefined,
     inStockOnly: config.hasStock && filters.inStockOnly ? true : undefined,
+    tags: serializeTagSlugs(tagSlugs),
   };
 
   const { data, loading, error } = useAsync(
     () => config.fetchList(params),
-    [kind, page, filters.color, filters.minPrice, filters.maxPrice, filters.inStockOnly]
+    [kind, page, tagsParam, filters.color, filters.minPrice, filters.maxPrice, filters.inStockOnly]
   );
 
   const patchFilters = (patch: Partial<ProductFilterValues>) => {
@@ -57,6 +75,9 @@ export function UserProductListPage({ kind }: Props) {
     setFilters(emptyFilters);
     setPage(1);
   };
+
+  // Chaque changement ajoute une entrée d'historique : Précédent revient à la sélection d'avant.
+  const changeTags = (slugs: string[]) => setSearchParams((prev) => withTagSlugs(prev, slugs));
 
   return (
     <div className="mx-auto w-full max-w-[1100px]">
@@ -71,7 +92,9 @@ export function UserProductListPage({ kind }: Props) {
             onChange={patchFilters}
             onReset={resetFilters}
             showStock={config.hasStock}
-          />
+          >
+            <TagFilters kind={kind} selectedSlugs={tagSlugs} onChange={changeTags} />
+          </ProductFilters>
         </aside>
 
         {/* Résultats */}

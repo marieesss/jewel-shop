@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Select } from '../../components/ui/Select';
 import { TextField } from '../../components/ui/TextField';
 import { Checkbox } from '../../components/ui/Checkbox';
@@ -24,6 +25,8 @@ interface ProductFiltersProps {
   onReset: () => void;
   /** Affiche le filtre « en stock » (breloques uniquement). */
   showStock?: boolean;
+  /** Filtres supplémentaires, affichés en bas du panneau (filtres par tags). */
+  children?: ReactNode;
 }
 
 const COLOR_OPTIONS = [
@@ -32,7 +35,13 @@ const COLOR_OPTIONS = [
 ];
 
 /** Panneau de filtres latéral réutilisable pour le listing produit. */
-export function ProductFilters({ value, onChange, onReset, showStock }: ProductFiltersProps) {
+export function ProductFilters({
+  value,
+  onChange,
+  onReset,
+  showStock,
+  children,
+}: ProductFiltersProps) {
   return (
     <div className="rounded-[18px] border border-lin bg-white p-4 shadow-card">
       <p className="mb-4 font-comfortaa text-base font-light text-storm">Filtres</p>
@@ -75,6 +84,8 @@ export function ProductFilters({ value, onChange, onReset, showStock }: ProductF
           Réinitialiser les filtres
         </Button>
       </div>
+
+      {children && <div className="mt-4 border-t border-lin pt-4">{children}</div>}
     </div>
   );
 }
