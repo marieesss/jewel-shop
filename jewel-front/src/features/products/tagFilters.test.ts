@@ -1,12 +1,28 @@
 import { describe, expect, it } from 'vitest';
+import type { TagCountDto } from '../../api/tags';
 import {
   TAGS_PARAM,
   currentPage,
   parseTagSlugs,
   serializeTagSlugs,
+  tagFilterLabel,
   toggleTagSlug,
+  visibleTagGroups,
   withTagSlugs,
 } from './tagFilters';
+
+const tag = (
+  id: number,
+  name: string,
+  slug: string,
+  category: string,
+  count: number
+): TagCountDto => ({ id, name, slug, category, count });
+
+const mer = tag(1, 'Mer', 'mer', 'Theme', 2);
+const plage = tag(2, 'Plage', 'plage', 'Theme', 1);
+const dore = tag(3, 'Doré', 'dore', 'Color', 1);
+const acier = tag(4, 'Acier', 'acier', 'Material', 3);
 
 describe('parseTagSlugs', () => {
   it('renvoie une liste vide quand le paramètre est absent', () => {
@@ -90,5 +106,37 @@ describe('currentPage', () => {
 
   it('revient en page 1 quand un premier tag est coché', () => {
     expect(currentPage({ page: 2, tagsParam: null }, 'mer')).toBe(1);
+  });
+});
+
+describe('visibleTagGroups', () => {
+  it("range les catégories dans leur ordre même si l'API les mélange", () => {
+    expect(visibleTagGroups([acier, dore, mer])).toEqual([
+      { category: 'Theme', label: 'Thème', tags: [mer] },
+      { category: 'Color', label: 'Couleur', tags: [dore] },
+      { category: 'Material', label: 'Matière', tags: [acier] },
+    ]);
+  });
+
+  it("garde l'ordre des tags reçu de l'API dans une catégorie", () => {
+    expect(visibleTagGroups([plage, mer])[0].tags).toEqual([plage, mer]);
+  });
+
+  it("n'affiche pas une catégorie sans tag", () => {
+    const categories = visibleTagGroups([mer, dore]).map((group) => group.category);
+    expect(categories).not.toContain('Occasion');
+  });
+
+  it("n'affiche pas un tag d'une catégorie inconnue", () => {
+    const inconnu = tag(9, 'Autre', 'autre', 'Inconnue', 5);
+    expect(visibleTagGroups([inconnu, mer])).toEqual([
+      { category: 'Theme', label: 'Thème', tags: [mer] },
+    ]);
+  });
+});
+
+describe('tagFilterLabel', () => {
+  it("affiche le nom du tag suivi de son nombre d'articles", () => {
+    expect(tagFilterLabel({ ...mer, count: 10 })).toBe('Mer (10)');
   });
 });

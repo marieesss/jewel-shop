@@ -1,3 +1,10 @@
+import {
+  TAG_CATEGORIES,
+  TAG_CATEGORY_LABELS,
+  type TagCategory,
+  type TagCountDto,
+} from '../../api/tags';
+
 /** Nom du paramètre d'adresse qui porte les tags cochés (`/charms?tags=mer,dore`). */
 export const TAGS_PARAM = 'tags';
 
@@ -41,4 +48,29 @@ export interface TagFilteredPage {
 /** Page à afficher : la page mémorisée si les tags n'ont pas changé depuis, sinon la première. */
 export function currentPage(state: TagFilteredPage, tagsParam: string | null): number {
   return state.tagsParam === tagsParam ? state.page : 1;
+}
+
+/** Tags proposés dans une catégorie du filtre. */
+export interface VisibleTagGroup {
+  category: TagCategory;
+  label: string;
+  tags: TagCountDto[];
+}
+
+/**
+ * Tags du filtre groupés par catégorie, dans l'ordre de `TAG_CATEGORIES`, et dans l'ordre de l'API
+ * à l'intérieur d'une catégorie. Une catégorie sans tag est absente ; une catégorie inconnue est
+ * ignorée.
+ */
+export function visibleTagGroups(tags: TagCountDto[]): VisibleTagGroup[] {
+  return TAG_CATEGORIES.map((category) => ({
+    category,
+    label: TAG_CATEGORY_LABELS[category],
+    tags: tags.filter((tag) => tag.category === category),
+  })).filter((group) => group.tags.length > 0);
+}
+
+/** Libellé d'une case du filtre : « Mer (10) ». */
+export function tagFilterLabel(tag: TagCountDto): string {
+  return `${tag.name} (${tag.count})`;
 }
