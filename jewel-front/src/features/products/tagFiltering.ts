@@ -62,15 +62,17 @@ export interface VisibleTagGroup {
 }
 
 /**
- * Tags du filtre groupés par catégorie, dans l'ordre de `TAG_CATEGORIES`, et dans l'ordre de l'API
- * à l'intérieur d'une catégorie. Une catégorie sans tag est absente ; une catégorie inconnue est
- * ignorée.
+ * Tags proposés dans le filtre, groupés par catégorie, dans l'ordre de `TAG_CATEGORIES`, et dans
+ * l'ordre de l'API à l'intérieur d'une catégorie. Un tag porté par aucun article est masqué, sauf
+ * s'il est coché (pour pouvoir le décocher). Une catégorie sans tag proposé est absente ; une
+ * catégorie inconnue est ignorée.
  */
-export function visibleTagGroups(tags: TagCountDto[]): VisibleTagGroup[] {
+export function visibleTagGroups(tags: TagCountDto[], selectedSlugs: string[]): VisibleTagGroup[] {
+  const isOffered = (tag: TagCountDto) => tag.count > 0 || selectedSlugs.includes(tag.slug);
   return TAG_CATEGORIES.map((category) => ({
     category,
     label: TAG_CATEGORY_LABELS[category],
-    tags: tags.filter((tag) => tag.category === category),
+    tags: tags.filter((tag) => tag.category === category && isOffered(tag)),
   })).filter((group) => group.tags.length > 0);
 }
 

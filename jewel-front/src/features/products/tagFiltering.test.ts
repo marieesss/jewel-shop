@@ -111,7 +111,7 @@ describe('currentPage', () => {
 
 describe('visibleTagGroups', () => {
   it("range les catégories dans leur ordre même si l'API les mélange", () => {
-    expect(visibleTagGroups([acier, dore, mer])).toEqual([
+    expect(visibleTagGroups([acier, dore, mer], [])).toEqual([
       { category: 'Theme', label: 'Thème', tags: [mer] },
       { category: 'Color', label: 'Couleur', tags: [dore] },
       { category: 'Material', label: 'Matière', tags: [acier] },
@@ -119,18 +119,43 @@ describe('visibleTagGroups', () => {
   });
 
   it("garde l'ordre des tags reçu de l'API dans une catégorie", () => {
-    expect(visibleTagGroups([plage, mer])[0].tags).toEqual([plage, mer]);
+    expect(visibleTagGroups([plage, mer], [])[0].tags).toEqual([plage, mer]);
   });
 
   it("n'affiche pas une catégorie sans tag", () => {
-    const categories = visibleTagGroups([mer, dore]).map((group) => group.category);
+    const categories = visibleTagGroups([mer, dore], []).map((group) => group.category);
     expect(categories).not.toContain('Occasion');
   });
 
   it("n'affiche pas un tag d'une catégorie inconnue", () => {
     const inconnu = tag(9, 'Autre', 'autre', 'Inconnue', 5);
-    expect(visibleTagGroups([inconnu, mer])).toEqual([
+    expect(visibleTagGroups([inconnu, mer], [])).toEqual([
       { category: 'Theme', label: 'Thème', tags: [mer] },
+    ]);
+  });
+});
+
+describe('visibleTagGroups : tags sans article', () => {
+  const mariage = tag(5, 'Mariage', 'mariage', 'Occasion', 0);
+  const corail = tag(6, 'Corail', 'corail', 'Theme', 0);
+
+  it("masque un tag porté par aucun article quand il n'est pas coché", () => {
+    expect(visibleTagGroups([mer, corail], [])[0].tags).toEqual([mer]);
+  });
+
+  it('affiche un tag porté par aucun article quand il est coché', () => {
+    expect(visibleTagGroups([mer, corail], ['corail'])[0].tags).toEqual([mer, corail]);
+  });
+
+  it("n'affiche pas une catégorie dont tous les tags sont à 0", () => {
+    const categories = visibleTagGroups([mer, mariage], []).map((group) => group.category);
+    expect(categories).toEqual(['Theme']);
+  });
+
+  it("affiche la catégorie quand l'un de ses tags à 0 est coché", () => {
+    expect(visibleTagGroups([mer, mariage], ['mariage'])).toEqual([
+      { category: 'Theme', label: 'Thème', tags: [mer] },
+      { category: 'Occasion', label: 'Occasion', tags: [mariage] },
     ]);
   });
 });

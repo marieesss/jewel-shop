@@ -30,7 +30,7 @@ export function TagFilters({ kind, selectedSlugs, onChange }: TagFiltersProps) {
 
   if (loading) return <Spinner className="py-4" label="Chargement des tags…" />;
 
-  const groups = error ? [] : visibleTagGroups(data ?? []);
+  const groups = error ? [] : visibleTagGroups(data ?? [], selectedSlugs);
   // Le bouton reste proposé même sans tag affiché (slug inconnu, échec du chargement)
   // pour pouvoir vider l'adresse.
   const hasSelection = selectedSlugs.length > 0;
