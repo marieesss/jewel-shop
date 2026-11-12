@@ -18,6 +18,7 @@ const validCommon: ProductCommonValues = {
   url: '',
   cost: '4.5',
   price: '20',
+  tagIds: [2, 5],
 };
 
 const validSpecific: ChainSpecificValues = {
@@ -109,6 +110,7 @@ describe('toCreateChainPayload', () => {
       pricePerMeter: 20,
       claspCost: 0.8,
       claspPrice: 3,
+      tagIds: [2, 5],
       initialRollLengthCm: 500,
     });
   });
@@ -134,7 +136,12 @@ describe('toUpdateChainPayload', () => {
       pricePerMeter: 20,
       claspCost: 0.8,
       claspPrice: 3,
+      tagIds: [2, 5],
     });
+  });
+
+  it('envoie une liste de tags vide pour retirer tous les tags', () => {
+    expect(toUpdateChainPayload({ ...validCommon, tagIds: [] }, validSpecific).tagIds).toEqual([]);
   });
 
   it("n'envoie ni l'ancien format ni de rouleau", () => {
@@ -162,6 +169,10 @@ describe('pré-remplissage depuis une chaîne', () => {
     claspCost: 1,
     claspPrice: 4.5,
     stockCm: 1200,
+    tags: [
+      { id: 4, name: 'Mer', slug: 'mer', category: 'Theme' },
+      { id: 9, name: 'Argenté', slug: 'argente', category: 'Color' },
+    ],
   };
 
   it('reprend les prix au mètre dans le coût et le prix', () => {
@@ -172,6 +183,7 @@ describe('pré-remplissage depuis une chaîne', () => {
       url: 'https://exemple.com/chaine',
       cost: '5.25',
       price: '22',
+      tagIds: [4, 9],
     });
   });
 

@@ -146,6 +146,35 @@ cd jewel-front && npm ci && npm run dev
 
 L'API lit sa configuration dans `jewel-api/.env` (modèle : `jewel-api/.env.example`, à compléter avec le mot de passe `postgres`, une clé JWT et les identifiants Cloudinary).
 
+### Premier compte admin en local
+
+L'inscription exige une invitation, et seul un admin peut inviter. Pour qu'une base neuve soit utilisable sans passer par SQL, l'API crée un compte admin au démarrage, juste après les migrations, **en environnement `Development` uniquement**, à partir de `DevAdmin__Email` et `DevAdmin__Password`.
+
+- Aucun compte n'a cet email : un compte `Admin` (« Admin Local ») est créé, et l'API journalise « Compte admin de développement créé : … ».
+- Un compte existe déjà avec cet email : rien n'est modifié, ni son rôle ni son mot de passe.
+- Une des deux variables est vide : aucun compte n'est créé.
+- Hors `Development` (staging, production), aucun compte n'est jamais créé, même si les variables sont présentes.
+
+**Hors Docker** : renseignez les deux variables dans `jewel-api/.env`, puis démarrez l'API avec le profil `http` (qui fixe `ASPNETCORE_ENVIRONMENT=Development`).
+
+```bash
+DevAdmin__Email=admin@mycharmly.local
+DevAdmin__Password=un-mot-de-passe-local
+```
+
+**Tout en Docker** : l'image de l'API tourne en `Production` et ne lit pas `jewel-api/.env`. Passez l'environnement et les identifiants dans un `compose.override.yaml` à la racine (fichier local, à ne pas commiter), que `docker compose` fusionne automatiquement avec `compose.yaml` :
+
+```yaml
+services:
+  api:
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      DevAdmin__Email: admin@mycharmly.local
+      DevAdmin__Password: un-mot-de-passe-local
+```
+
+Connectez-vous ensuite avec ces identifiants : le compte a le rôle `Admin` et peut envoyer des invitations.
+
 ### Vérifications avant de pousser
 
 ```bash

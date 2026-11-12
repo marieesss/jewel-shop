@@ -2,6 +2,7 @@ import type { ChainDto, CreateChainPayload, UpdateChainPayload } from '../../api
 import {
   COST_MESSAGE,
   PRICE_MESSAGE,
+  tagIdsOf,
   toNumber,
   validateAmount,
   validateCommon,
@@ -47,6 +48,7 @@ export function chainCommonFromProduct(chain: ChainDto): ProductCommonValues {
     url: chain.url ?? '',
     cost: toInput(chain.costPerMeter),
     price: toInput(chain.pricePerMeter),
+    tagIds: tagIdsOf(chain.tags),
   };
 }
 
@@ -98,7 +100,10 @@ export function validateChain(
   return errors;
 }
 
-/** Corps de `PUT /api/chains/{id}` : nouveau format uniquement (ni `cost`, ni `price`, ni `length`). */
+/**
+ * Corps de `PUT /api/chains/{id}` : nouveau format uniquement (ni `cost`, ni `price`, ni `length`).
+ * `tagIds` est toujours envoyé : une liste vide retire tous les tags.
+ */
 export function toUpdateChainPayload(
   common: ProductCommonValues,
   specific: ChainSpecificValues
@@ -112,6 +117,7 @@ export function toUpdateChainPayload(
     pricePerMeter: toNumber(common.price),
     claspCost: toNumber(specific.claspCost),
     claspPrice: toNumber(specific.claspPrice),
+    tagIds: common.tagIds,
   };
 }
 
