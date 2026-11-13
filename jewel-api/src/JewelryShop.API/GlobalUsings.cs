@@ -22,6 +22,7 @@ global using JewelryShop.Features.Invitations.Repositories;
 global using JewelryShop.Features.Options.Entities;
 global using JewelryShop.Features.Options.Repositories;
 global using JewelryShop.Features.Orders.Entities;
+global using JewelryShop.Features.Orders.Repositories;
 global using JewelryShop.Features.Tags.Entities;
 global using JewelryShop.Features.Tags.Repositories;
 global using JewelryShop.Features.Users.Entities;

@@ -5,13 +5,13 @@ namespace JewelryShop.API.Tests.Orders;
 
 public class OrderStateMachineTests
 {
-    private static readonly (OrderStatus From, OrderStatus To)[] CustomerTransitions =
+    private static readonly (OrderStatus From, OrderStatus To)[] _customerTransitions =
     [
         (OrderStatus.Pending, OrderStatus.Cancelled),
         (OrderStatus.Shipped, OrderStatus.Received)
     ];
 
-    private static readonly (OrderStatus From, OrderStatus To)[] AdminTransitions =
+    private static readonly (OrderStatus From, OrderStatus To)[] _adminTransitions =
     [
         (OrderStatus.Pending, OrderStatus.Processing),
         (OrderStatus.Pending, OrderStatus.Shipped),
@@ -30,13 +30,13 @@ public class OrderStateMachineTests
         (OrderStatus.Received, OrderStatus.Shipped)
     ];
 
-    public static TheoryData<OrderStatus, OrderStatus> AllowedForCustomer() => ToTheoryData(CustomerTransitions);
+    public static TheoryData<OrderStatus, OrderStatus> AllowedForCustomer() => ToTheoryData(_customerTransitions);
 
-    public static TheoryData<OrderStatus, OrderStatus> RefusedForCustomer() => ToTheoryData(AllPairs().Except(CustomerTransitions));
+    public static TheoryData<OrderStatus, OrderStatus> RefusedForCustomer() => ToTheoryData(AllPairs().Except(_customerTransitions));
 
-    public static TheoryData<OrderStatus, OrderStatus> AllowedForAdmin() => ToTheoryData(AdminTransitions);
+    public static TheoryData<OrderStatus, OrderStatus> AllowedForAdmin() => ToTheoryData(_adminTransitions);
 
-    public static TheoryData<OrderStatus, OrderStatus> RefusedForAdmin() => ToTheoryData(AllPairs().Except(AdminTransitions));
+    public static TheoryData<OrderStatus, OrderStatus> RefusedForAdmin() => ToTheoryData(AllPairs().Except(_adminTransitions));
 
     [Theory]
     [MemberData(nameof(AllowedForCustomer))]
