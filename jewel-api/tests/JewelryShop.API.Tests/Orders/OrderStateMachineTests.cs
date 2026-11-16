@@ -52,12 +52,6 @@ public class OrderStateMachineTests
         Assert.False(OrderStateMachine.CanTransition(from, to, OrderActor.Customer));
     }
 
-    [Fact]
-    public void Refuse_au_client_l_annulation_d_une_commande_en_traitement()
-    {
-        Assert.False(OrderStateMachine.CanTransition(OrderStatus.Processing, OrderStatus.Cancelled, OrderActor.Customer));
-    }
-
     [Theory]
     [MemberData(nameof(AllowedForAdmin))]
     public void Accepte_les_transitions_de_l_admin_entre_statuts_actifs_et_l_annulation_avant_reception(OrderStatus from, OrderStatus to)
@@ -69,20 +63,6 @@ public class OrderStateMachineTests
     [MemberData(nameof(RefusedForAdmin))]
     public void Refuse_a_l_admin_les_transitions_depuis_annulee_l_annulation_d_une_commande_recue_et_le_meme_statut(
         OrderStatus from, OrderStatus to)
-    {
-        Assert.False(OrderStateMachine.CanTransition(from, to, OrderActor.Admin));
-    }
-
-    [Fact]
-    public void Accepte_que_l_admin_repasse_une_commande_recue_en_traitement()
-    {
-        Assert.True(OrderStateMachine.CanTransition(OrderStatus.Received, OrderStatus.Processing, OrderActor.Admin));
-    }
-
-    [Theory]
-    [InlineData(OrderStatus.Cancelled, OrderStatus.Pending)]
-    [InlineData(OrderStatus.Received, OrderStatus.Cancelled)]
-    public void Refuse_a_l_admin_de_reprendre_une_commande_annulee_ou_d_annuler_une_commande_recue(OrderStatus from, OrderStatus to)
     {
         Assert.False(OrderStateMachine.CanTransition(from, to, OrderActor.Admin));
     }
