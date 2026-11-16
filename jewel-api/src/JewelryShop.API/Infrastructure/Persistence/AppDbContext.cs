@@ -23,6 +23,10 @@ public class AppDbContext : DbContext
     public DbSet<Tag> Tags => Set<Tag>();
     public DbSet<ChainTag> ChainTags => Set<ChainTag>();
     public DbSet<CharmTag> CharmTags => Set<CharmTag>();
+    public DbSet<Order> Orders => Set<Order>();
+    public DbSet<OrderLine> OrderLines => Set<OrderLine>();
+    public DbSet<OrderStatusHistory> OrderStatusHistory => Set<OrderStatusHistory>();
+    public DbSet<OrderNote> OrderNotes => Set<OrderNote>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
