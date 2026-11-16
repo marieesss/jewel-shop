@@ -10,6 +10,9 @@ public class FakeChainRepository : InMemoryRepository<Chain>, IChainRepository
     public Task<Chain?> GetByIdWithRollsAndTagsAsync(long id, CancellationToken cancellationToken = default)
         => GetByIdAsync(id, cancellationToken);
 
+    public Task<Chain?> GetByIdWithRollsAsync(long id, CancellationToken cancellationToken = default)
+        => GetByIdAsync(id, cancellationToken);
+
     public long? LastFavoritesFirstForUserId { get; private set; }
 
     public TagFilter? LastTagFilter { get; private set; }

@@ -8,6 +8,9 @@ public interface ICharmRepository : IRepository<Charm>
     /// <summary>Charge la breloque avec ses tags, renvoyés dans le DTO.</summary>
     Task<Charm?> GetByIdWithTagsAsync(long id, CancellationToken cancellationToken = default);
 
+    /// <summary>Les breloques de <paramref name="ids"/> qui existent, en une seule requête et sans ordre garanti.</summary>
+    Task<IReadOnlyList<Charm>> GetByIdsAsync(IReadOnlyCollection<long> ids, CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Liste paginée, triée par id, avec les tags de chaque breloque. Avec <paramref name="favoritesFirstForUserId"/>, les favoris
     /// de cet utilisateur passent d'abord, puis les autres, chaque groupe trié par id. Seules les breloques qui portent
