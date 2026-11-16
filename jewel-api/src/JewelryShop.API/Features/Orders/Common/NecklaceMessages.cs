@@ -9,6 +9,9 @@ public static class NecklaceMessages
     public const string CharmNotFound = "Breloque introuvable.";
     public const string LengthNotOffered = "Longueur non proposée.";
 
+    public static string NotForSale(string productName) =>
+        $"« {productName} » n'est pas en vente pour le moment.";
+
     public static string OutOfStock(string productName) =>
         $"Le stock de « {productName} » ne permet plus cette commande.";
 }

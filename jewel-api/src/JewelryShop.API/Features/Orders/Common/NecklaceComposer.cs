@@ -29,6 +29,9 @@ public class NecklaceComposer
 
         var charms = await LoadCharmsInOrderAsync(composition.CharmIds, cancellationToken);
 
+        if (chain.PricePerMeter is null)
+            throw new ConflictException(NecklaceMessages.NotForSale(chain.Name));
+
         if (!chain.CanSell(composition.LengthCm))
             throw new ConflictException(NecklaceMessages.OutOfStock(chain.Name));
 

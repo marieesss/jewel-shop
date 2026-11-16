@@ -115,7 +115,7 @@ public class NecklaceComposerTests
 
         var error = await Assert.ThrowsAsync<ConflictException>(() => ComposeAsync(45, CloverId));
 
-        Assert.Equal("Le stock de « Forçat » ne permet plus cette commande.", error.Message);
+        Assert.Equal("« Forçat » n'est pas en vente pour le moment.", error.Message);
     }
 
     [Fact]
