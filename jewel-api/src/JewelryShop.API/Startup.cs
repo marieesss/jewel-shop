@@ -9,6 +9,7 @@ using JewelryShop.Features.Auth.Jobs;
 using JewelryShop.Features.Auth.Seeding;
 using JewelryShop.Features.Emails.Jobs;
 using JewelryShop.Features.Invitations.Jobs;
+using JewelryShop.Features.Orders.Common;
 using JewelryShop.Infrastructure.Email;
 using JewelryShop.Infrastructure.Middlewares;
 using JewelryShop.Infrastructure.Persistence;
@@ -213,6 +214,7 @@ public static class Startup
         services.AddValidatorsFromAssembly(assembly);
         ValidationCulture.UseFrench();
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+        services.AddScoped<NecklaceComposer>();
     }
 
     private static void AddInfrastructureServices(IServiceCollection services, IConfiguration configuration)
