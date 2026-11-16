@@ -34,6 +34,14 @@ export interface AdminTag extends Tag {
   charmCount: number;
 }
 
+/** Type d'article dont on veut le nombre par tag (mêmes valeurs que `ProductKind`). */
+export type TagCountKind = 'chain' | 'charm';
+
+/** Tag avec le nombre global d'articles du type demandé qui le portent (≥ 0). */
+export interface TagCountDto extends TagDto {
+  count: number;
+}
+
 export interface CreateTagPayload {
   name: string;
   category: TagCategory;
@@ -42,6 +50,12 @@ export interface CreateTagPayload {
 /** GET /api/tags → tags triés par catégorie puis par nom */
 export async function getTags(): Promise<TagDto[]> {
   const { data } = await api.get<TagDto[]>('/api/tags');
+  return data;
+}
+
+/** GET /api/tags?kind=chain|charm → tags triés par catégorie puis par nom, avec leur nombre global d'articles */
+export async function getTagCounts(kind: TagCountKind): Promise<TagCountDto[]> {
+  const { data } = await api.get<TagCountDto[]>('/api/tags', { params: { kind } });
   return data;
 }
 
