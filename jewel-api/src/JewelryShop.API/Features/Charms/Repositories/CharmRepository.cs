@@ -14,6 +14,9 @@ public class CharmRepository : Repository<Charm>, ICharmRepository
     public async Task<Charm?> GetByIdWithTagsAsync(long id, CancellationToken cancellationToken = default)
         => await WithTags(DbSet).FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
 
+    public async Task<IReadOnlyList<Charm>> GetByIdsAsync(IReadOnlyCollection<long> ids, CancellationToken cancellationToken = default)
+        => await DbSet.AsNoTracking().Where(c => ids.Contains(c.Id)).ToListAsync(cancellationToken);
+
     public async Task<(IReadOnlyList<Charm> Items, int TotalCount)> GetPagedAsync(
         ProductColor? color,
         bool? inStockOnly,

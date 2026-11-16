@@ -14,6 +14,9 @@ public class FakeCharmRepository : InMemoryRepository<Charm>, ICharmRepository
     public Task<Charm?> GetByIdWithTagsAsync(long id, CancellationToken cancellationToken = default)
         => GetByIdAsync(id, cancellationToken);
 
+    public Task<IReadOnlyList<Charm>> GetByIdsAsync(IReadOnlyCollection<long> ids, CancellationToken cancellationToken = default)
+        => Task.FromResult<IReadOnlyList<Charm>>(Entities.Where(c => ids.Contains(c.Id)).ToList());
+
     /// <summary>Renvoie les breloques semées sans filtrer ni trier : le tri est fait par EF.</summary>
     public Task<(IReadOnlyList<Charm> Items, int TotalCount)> GetPagedAsync(
         ProductColor? color,

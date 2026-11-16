@@ -15,6 +15,10 @@ public class ChainRepository : Repository<Chain>, IChainRepository
         => await WithRollsAndTags(DbSet)
             .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
 
+    public async Task<Chain?> GetByIdWithRollsAsync(long id, CancellationToken cancellationToken = default)
+        => await WithRolls(DbSet.AsNoTracking())
+            .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+
     public async Task<(IReadOnlyList<Chain> Items, int TotalCount)> GetPagedAsync(
         ProductColor? color,
         decimal? minPrice,
@@ -55,8 +59,10 @@ public class ChainRepository : Repository<Chain>, IChainRepository
     // Deux collections incluses dans une seule requête multiplieraient les lignes (rouleaux × tags) :
     // chacune est chargée par sa propre requête, une fois pour toute la page.
     private static IQueryable<Chain> WithRollsAndTags(IQueryable<Chain> chains)
-        => chains
-            .Include(c => c.Rolls)
+        => WithRolls(chains)
             .Include(c => c.ChainTags).ThenInclude(ct => ct.Tag)
             .AsSplitQuery();
+
+    private static IQueryable<Chain> WithRolls(IQueryable<Chain> chains)
+        => chains.Include(c => c.Rolls);
 }
