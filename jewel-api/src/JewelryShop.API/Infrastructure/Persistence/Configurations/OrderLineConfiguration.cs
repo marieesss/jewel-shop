@@ -8,7 +8,11 @@ public class OrderLineConfiguration : IEntityTypeConfiguration<OrderLine>
 {
     public void Configure(EntityTypeBuilder<OrderLine> builder)
     {
-        builder.ToTable("order_lines");
+        builder.ToTable("order_lines", t =>
+            t.HasCheckConstraint(
+                "chk_order_lines_kind_product",
+                "(kind = 'Chain' AND chain_id IS NOT NULL AND charm_id IS NULL) "
+                + "OR (kind = 'Charm' AND charm_id IS NOT NULL AND chain_id IS NULL)"));
 
         builder.HasKey(l => l.Id);
         builder.Property(l => l.Id).HasColumnName("id");

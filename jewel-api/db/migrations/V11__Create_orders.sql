@@ -35,7 +35,12 @@ CREATE TABLE IF NOT EXISTS order_lines (
     price_per_meter NUMERIC(10, 2) NULL,
     clasp_price     NUMERIC(10, 2) NULL,
     unit_price      NUMERIC(10, 2) NOT NULL,
-    position        INT            NULL
+    position        INT            NULL,
+    -- Une ligne Chain pointe sur une chaîne, une ligne Charm sur une breloque, jamais sur les deux :
+    -- sans cela, le produit échapperait à la vérification faite avant sa suppression.
+    CONSTRAINT chk_order_lines_kind_product
+        CHECK ((kind = 'Chain' AND chain_id IS NOT NULL AND charm_id IS NULL)
+            OR (kind = 'Charm' AND charm_id IS NOT NULL AND chain_id IS NULL))
 );
 CREATE INDEX IF NOT EXISTS ix_order_lines_order_id ON order_lines (order_id);
 CREATE INDEX IF NOT EXISTS ix_order_lines_chain_id ON order_lines (chain_id);
