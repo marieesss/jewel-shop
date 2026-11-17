@@ -17,4 +17,16 @@ public static class EmailTemplates
     /// RegisterUrl, ExpiresAt (date déjà formatée en dd/MM/yyyy).
     /// </summary>
     public const string Invitation = "Invitation";
+
+    /// <summary>
+    /// Confirmation d'une nouvelle commande au client. Modèle : FirstName, Order (<c>OrderEmailSummary</c>),
+    /// OrderUrl.
+    /// </summary>
+    public const string OrderConfirmation = "OrderConfirmation";
+
+    /// <summary>
+    /// Avis de nouvelle commande à un admin. Modèle : CustomerName, CustomerEmail, Order (<c>OrderEmailSummary</c>),
+    /// OrderUrl (page admin de la commande).
+    /// </summary>
+    public const string OrderCreatedAdmin = "OrderCreatedAdmin";
 }
