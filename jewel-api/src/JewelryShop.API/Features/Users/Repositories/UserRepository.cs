@@ -13,11 +13,19 @@ public class UserRepository : Repository<User>, IUserRepository
     public async Task<User?> GetByIdAsNoTrackingAsync(long id, CancellationToken cancellationToken = default)
         => await DbSet.AsNoTracking().FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
 
+    public async Task<IReadOnlyList<User>> GetByIdsAsNoTrackingAsync(
+        IReadOnlyCollection<long> ids, CancellationToken cancellationToken = default)
+        => await DbSet.AsNoTracking().Where(u => ids.Contains(u.Id)).ToListAsync(cancellationToken);
+
     public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
         => await DbSet.FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
 
     public async Task<bool> ExistsByEmailAsync(string email, CancellationToken cancellationToken = default)
         => await DbSet.AnyAsync(u => u.Email == email, cancellationToken);
+
+    public async Task<IReadOnlyList<User>> GetByRoleAsNoTrackingAsync(
+        UserRole role, CancellationToken cancellationToken = default)
+        => await DbSet.AsNoTracking().Where(u => u.Role == role).OrderBy(u => u.Id).ToListAsync(cancellationToken);
 
     public async Task<(IReadOnlyList<User> Items, int TotalCount)> GetPagedAsync(
         int page, int pageSize, CancellationToken cancellationToken = default)

@@ -15,4 +15,138 @@ public class OrderRepository : Repository<Order>, IOrderRepository
 
     public Task<bool> ContainsCharmAsync(long charmId, CancellationToken cancellationToken = default)
         => Context.OrderLines.AnyAsync(l => l.CharmId == charmId, cancellationToken);
+
+    public Task<Order?> GetByIdWithDetailsAsNoTrackingAsync(long id, CancellationToken cancellationToken = default)
+        => DbSet.AsNoTracking()
+            .Include(o => o.Lines)
+            .Include(o => o.StatusHistory)
+            .AsSplitQuery()
+            .FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
+
+    public Task<Order?> GetByIdWithDetailsAsync(long id, CancellationToken cancellationToken = default)
+        => DbSet
+            .Include(o => o.Lines)
+            .Include(o => o.StatusHistory)
+            .AsSplitQuery()
+            .FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
+
+    public Task<Order?> GetByIdWithDetailsAndNotesAsNoTrackingAsync(long id, CancellationToken cancellationToken = default)
+        => DbSet.AsNoTracking()
+            .Include(o => o.Lines)
+            .Include(o => o.StatusHistory)
+            .Include(o => o.Notes)
+            .AsSplitQuery()
+            .FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
+
+    public Task<bool> ExistsAsync(long id, CancellationToken cancellationToken = default)
+        => DbSet.AnyAsync(o => o.Id == id, cancellationToken);
+
+    public async Task<(IReadOnlyList<Order> Items, int TotalCount)> GetPagedAsync(
+        OrderStatus? status, int page, int pageSize, CancellationToken cancellationToken = default)
+    {
+        var filtered = status is { } wanted ? DbSet.Where(o => o.Status == wanted) : DbSet;
+        var query = filtered.AsNoTracking()
+            .OrderByDescending(o => o.CreatedAt)
+            .ThenByDescending(o => o.Id);
+
+        var total = await query.CountAsync(cancellationToken);
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return (items, total);
+    }
+
+    public Task<OrderNote?> GetNoteAsync(long orderId, long noteId, CancellationToken cancellationToken = default)
+        => Context.OrderNotes.FirstOrDefaultAsync(n => n.Id == noteId && n.OrderId == orderId, cancellationToken);
+
+    public async Task AddNoteAsync(OrderNote note, CancellationToken cancellationToken = default)
+        => await Context.OrderNotes.AddAsync(note, cancellationToken);
+
+    public async Task<(IReadOnlyList<Order> Items, int TotalCount)> GetPagedByUserAsync(
+        long userId, int page, int pageSize, CancellationToken cancellationToken = default)
+    {
+        var query = DbSet.AsNoTracking()
+            .Where(o => o.UserId == userId)
+            .OrderByDescending(o => o.CreatedAt)
+            .ThenByDescending(o => o.Id);
+
+        var total = await query.CountAsync(cancellationToken);
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return (items, total);
+    }
+
+    public Task InTransactionAsync(Func<Task> work, CancellationToken cancellationToken)
+    {
+        // EnableRetryOnFailure interdit une transaction ouverte à la main hors de la stratégie
+        // d'exécution. Si la stratégie rejoue le bloc, on repart d'un contexte vide.
+        var strategy = Context.Database.CreateExecutionStrategy();
+        return strategy.ExecuteAsync(async () =>
+        {
+            Context.ChangeTracker.Clear();
+            await using var transaction = await Context.Database.BeginTransactionAsync(cancellationToken);
+            await work();
+            await transaction.CommitAsync(cancellationToken);
+        });
+    }
+
+    public async Task<long?> TakeChainLengthAsync(long chainId, int lengthCm, CancellationToken cancellationToken)
+    {
+        var candidateRollIds = await Context.Database
+            .SqlQuery<long>($"""
+                SELECT id AS "Value" FROM chain_rolls
+                WHERE chain_id = {chainId} AND remaining_length_cm >= {lengthCm}
+                ORDER BY remaining_length_cm, id
+                """)
+            .ToListAsync(cancellationToken);
+
+        // Une commande simultanée peut avoir entamé un candidat depuis la lecture : la condition
+        // de l'UPDATE le refuse alors, et on passe au rouleau suivant.
+        foreach (var rollId in candidateRollIds)
+        {
+            var updated = await Context.Database.ExecuteSqlAsync($"""
+                UPDATE chain_rolls SET remaining_length_cm = remaining_length_cm - {lengthCm}
+                WHERE id = {rollId} AND remaining_length_cm >= {lengthCm}
+                """, cancellationToken);
+
+            if (updated == 1)
+                return rollId;
+        }
+
+        return null;
+    }
+
+    public async Task<bool> TakeCharmStockAsync(long charmId, int quantity, CancellationToken cancellationToken)
+        => await Context.Database.ExecuteSqlAsync($"""
+            UPDATE charms SET stock = stock - {quantity}
+            WHERE id = {charmId} AND stock >= {quantity}
+            """, cancellationToken) == 1;
+
+    public async Task<bool> TryChangeStatusAsync(
+        long orderId, long userId, OrderStatus from, OrderStatus to, DateTime now, CancellationToken cancellationToken)
+        => await Context.Database.ExecuteSqlAsync($"""
+            UPDATE orders SET status = {to.ToString()}, updated_at = {now}
+            WHERE id = {orderId} AND user_id = {userId} AND status = {from.ToString()}
+            """, cancellationToken) == 1;
+
+    public async Task ReturnChainLengthAsync(long rollId, int lengthCm, CancellationToken cancellationToken)
+        => await Context.Database.ExecuteSqlAsync($"""
+            UPDATE chain_rolls SET remaining_length_cm = LEAST(initial_length_cm, remaining_length_cm + {lengthCm})
+            WHERE id = {rollId}
+            """, cancellationToken);
+
+    public async Task ReturnCharmStockAsync(long charmId, int quantity, CancellationToken cancellationToken)
+        => await Context.Database.ExecuteSqlAsync($"""
+            UPDATE charms SET stock = stock + {quantity} WHERE id = {charmId}
+            """, cancellationToken);
+
+    public Task<long> NextNumberSequenceValueAsync(CancellationToken cancellationToken)
+        => Context.Database
+            .SqlQuery<long>($"""SELECT nextval('order_number_seq') AS "Value" """)
+            .SingleAsync(cancellationToken);
 }
