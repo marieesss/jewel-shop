@@ -13,6 +13,9 @@ public interface IOrderRepository : IRepository<Order>
     /// <summary>Commande avec ses lignes et son historique, en lecture seule.</summary>
     Task<Order?> GetByIdWithDetailsAsNoTrackingAsync(long id, CancellationToken cancellationToken = default);
 
+    /// <summary>Commande avec ses lignes et son historique, suivie pour être modifiée.</summary>
+    Task<Order?> GetByIdWithDetailsAsync(long id, CancellationToken cancellationToken = default);
+
     /// <summary>Commandes de l'utilisateur, des plus récentes aux plus anciennes, sans leurs lignes.</summary>
     Task<(IReadOnlyList<Order> Items, int TotalCount)> GetPagedByUserAsync(
         long userId, int page, int pageSize, CancellationToken cancellationToken = default);
@@ -31,6 +34,22 @@ public interface IOrderRepository : IRepository<Order>
 
     /// <summary>Retire la quantité du stock de la breloque si elle y est encore. Faux sinon, sans rien modifier.</summary>
     Task<bool> TakeCharmStockAsync(long charmId, int quantity, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Passe la commande de l'utilisateur de <paramref name="from"/> à <paramref name="to"/> si elle est encore
+    /// dans le statut de départ. Faux sinon, sans rien modifier : une action simultanée l'a déjà changée.
+    /// </summary>
+    Task<bool> TryChangeStatusAsync(
+        long orderId, long userId, OrderStatus from, OrderStatus to, DateTime now, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Remet la longueur dans le rouleau, sans dépasser sa longueur de départ si le rouleau a été raccourci
+    /// entre-temps.
+    /// </summary>
+    Task ReturnChainLengthAsync(long rollId, int lengthCm, CancellationToken cancellationToken);
+
+    /// <summary>Remet la quantité dans le stock de la breloque.</summary>
+    Task ReturnCharmStockAsync(long charmId, int quantity, CancellationToken cancellationToken);
 
     /// <summary>Valeur suivante de la séquence des numéros de commande.</summary>
     Task<long> NextNumberSequenceValueAsync(CancellationToken cancellationToken);

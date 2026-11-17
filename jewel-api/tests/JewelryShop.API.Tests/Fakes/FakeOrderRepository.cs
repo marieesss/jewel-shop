@@ -5,7 +5,8 @@ namespace JewelryShop.API.Tests.Fakes;
 
 /// <summary>
 /// Dépôt des commandes en mémoire. Les rouleaux et les stocks de breloques sont tenus ici, comme les colonnes
-/// que modifient les UPDATE conditionnels ; une transaction qui échoue les remet dans leur état de départ.
+/// que modifient les UPDATE conditionnels ; une transaction qui échoue les remet dans leur état de départ,
+/// avec le statut et l'historique des commandes.
 /// </summary>
 public class FakeOrderRepository : InMemoryRepository<Order>, IOrderRepository
 {
@@ -28,6 +29,9 @@ public class FakeOrderRepository : InMemoryRepository<Order>, IOrderRepository
     public Task<Order?> GetByIdWithDetailsAsNoTrackingAsync(long id, CancellationToken cancellationToken = default)
         => GetByIdAsync(id, cancellationToken);
 
+    public Task<Order?> GetByIdWithDetailsAsync(long id, CancellationToken cancellationToken = default)
+        => GetByIdAsync(id, cancellationToken);
+
     public Task<(IReadOnlyList<Order> Items, int TotalCount)> GetPagedByUserAsync(
         long userId, int page, int pageSize, CancellationToken cancellationToken = default)
     {
@@ -46,6 +50,7 @@ public class FakeOrderRepository : InMemoryRepository<Order>, IOrderRepository
         var rolls = new Dictionary<long, (long, int)>(Rolls);
         var stocks = new Dictionary<long, int>(CharmStocks);
         var orders = Entities.ToList();
+        var states = orders.ToDictionary(o => o, o => (o.Status, o.UpdatedAt, o.StatusHistory.ToList()));
         try
         {
             await work();
@@ -56,6 +61,12 @@ public class FakeOrderRepository : InMemoryRepository<Order>, IOrderRepository
             Restore(CharmStocks, stocks);
             Entities.Clear();
             Entities.AddRange(orders);
+            foreach (var (order, (status, updatedAt, history)) in states)
+            {
+                order.Status = status;
+                order.UpdatedAt = updatedAt;
+                order.StatusHistory = history;
+            }
             throw;
         }
     }
@@ -81,6 +92,32 @@ public class FakeOrderRepository : InMemoryRepository<Order>, IOrderRepository
 
         CharmStocks[charmId] -= quantity;
         return Task.FromResult(true);
+    }
+
+    public Task<bool> TryChangeStatusAsync(
+        long orderId, long userId, OrderStatus from, OrderStatus to, DateTime now, CancellationToken cancellationToken)
+    {
+        var order = Entities.SingleOrDefault(o => o.Id == orderId && o.UserId == userId && o.Status == from);
+        if (order is null)
+            return Task.FromResult(false);
+
+        order.Status = to;
+        order.UpdatedAt = now;
+        return Task.FromResult(true);
+    }
+
+    public Task ReturnChainLengthAsync(long rollId, int lengthCm, CancellationToken cancellationToken)
+    {
+        if (Rolls.TryGetValue(rollId, out var roll))
+            Rolls[rollId] = (roll.ChainId, roll.RemainingCm + lengthCm);
+        return Task.CompletedTask;
+    }
+
+    public Task ReturnCharmStockAsync(long charmId, int quantity, CancellationToken cancellationToken)
+    {
+        if (CharmStocks.ContainsKey(charmId))
+            CharmStocks[charmId] += quantity;
+        return Task.CompletedTask;
     }
 
     /// <summary>Attribue un id aux nouvelles commandes, comme la colonne identity de la base.</summary>

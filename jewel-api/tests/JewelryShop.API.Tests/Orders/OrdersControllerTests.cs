@@ -85,6 +85,40 @@ public class OrdersControllerTests
     }
 
     [Fact]
+    public async Task Annule_la_commande_pour_l_utilisateur_connecte()
+    {
+        var order = Order();
+        _sender.Response = order;
+
+        var response = await _controller.Cancel(42, CancellationToken.None);
+
+        Assert.Equal(new CancelOrderCommand(ConnectedUserId, 42), _sender.LastRequest);
+        Assert.Same(order, Assert.IsType<OkObjectResult>(response).Value);
+    }
+
+    [Fact]
+    public async Task Marque_recue_la_commande_pour_l_utilisateur_connecte()
+    {
+        var order = Order();
+        _sender.Response = order;
+
+        var response = await _controller.Receive(42, CancellationToken.None);
+
+        Assert.Equal(new ReceiveOrderCommand(ConnectedUserId, 42), _sender.LastRequest);
+        Assert.Same(order, Assert.IsType<OkObjectResult>(response).Value);
+    }
+
+    [Theory]
+    [InlineData(nameof(OrdersController.Cancel), "{id:long}/cancel")]
+    [InlineData(nameof(OrdersController.Receive), "{id:long}/receive")]
+    public void Expose_les_actions_du_client_en_post(string action, string template)
+    {
+        var post = typeof(OrdersController).GetMethod(action)!.GetCustomAttribute<HttpPostAttribute>();
+
+        Assert.Equal(template, post?.Template);
+    }
+
+    [Fact]
     public void Est_reserve_aux_utilisateurs_connectes_sous_la_route_api_orders()
     {
         var authorize = typeof(OrdersController).GetCustomAttribute<AuthorizeAttribute>();

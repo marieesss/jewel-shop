@@ -23,6 +23,13 @@ public class OrderRepository : Repository<Order>, IOrderRepository
             .AsSplitQuery()
             .FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
 
+    public Task<Order?> GetByIdWithDetailsAsync(long id, CancellationToken cancellationToken = default)
+        => DbSet
+            .Include(o => o.Lines)
+            .Include(o => o.StatusHistory)
+            .AsSplitQuery()
+            .FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
+
     public async Task<(IReadOnlyList<Order> Items, int TotalCount)> GetPagedByUserAsync(
         long userId, int page, int pageSize, CancellationToken cancellationToken = default)
     {
@@ -85,6 +92,24 @@ public class OrderRepository : Repository<Order>, IOrderRepository
             UPDATE charms SET stock = stock - {quantity}
             WHERE id = {charmId} AND stock >= {quantity}
             """, cancellationToken) == 1;
+
+    public async Task<bool> TryChangeStatusAsync(
+        long orderId, long userId, OrderStatus from, OrderStatus to, DateTime now, CancellationToken cancellationToken)
+        => await Context.Database.ExecuteSqlAsync($"""
+            UPDATE orders SET status = {to.ToString()}, updated_at = {now}
+            WHERE id = {orderId} AND user_id = {userId} AND status = {from.ToString()}
+            """, cancellationToken) == 1;
+
+    public async Task ReturnChainLengthAsync(long rollId, int lengthCm, CancellationToken cancellationToken)
+        => await Context.Database.ExecuteSqlAsync($"""
+            UPDATE chain_rolls SET remaining_length_cm = LEAST(initial_length_cm, remaining_length_cm + {lengthCm})
+            WHERE id = {rollId}
+            """, cancellationToken);
+
+    public async Task ReturnCharmStockAsync(long charmId, int quantity, CancellationToken cancellationToken)
+        => await Context.Database.ExecuteSqlAsync($"""
+            UPDATE charms SET stock = stock + {quantity} WHERE id = {charmId}
+            """, cancellationToken);
 
     public Task<long> NextNumberSequenceValueAsync(CancellationToken cancellationToken)
         => Context.Database
