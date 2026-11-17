@@ -1,0 +1,9 @@
+Bonjour,
+
+{{ customer_name }} ({{ customer_email }}) a confirmé avoir reçu la commande {{ order.number }} du {{ order.date }}.
+
+Total : {{ order.total }}
+
+Pour consulter la commande, ouvrez le lien ci-dessous.
+
+{{ order_url }}

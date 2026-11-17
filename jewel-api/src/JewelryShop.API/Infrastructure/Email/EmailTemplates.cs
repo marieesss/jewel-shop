@@ -29,4 +29,16 @@ public static class EmailTemplates
     /// OrderUrl (page admin de la commande).
     /// </summary>
     public const string OrderCreatedAdmin = "OrderCreatedAdmin";
+
+    /// <summary>
+    /// Avis à un admin qu'un client a annulé sa commande. Modèle : CustomerName, CustomerEmail,
+    /// Order (<c>OrderEmailSummary</c>), OrderUrl (page admin de la commande).
+    /// </summary>
+    public const string OrderCancelledByCustomerAdmin = "OrderCancelledByCustomerAdmin";
+
+    /// <summary>
+    /// Avis à un admin qu'un client a reçu sa commande. Modèle : CustomerName, CustomerEmail,
+    /// Order (<c>OrderEmailSummary</c>), OrderUrl (page admin de la commande).
+    /// </summary>
+    public const string OrderReceivedAdmin = "OrderReceivedAdmin";
 }

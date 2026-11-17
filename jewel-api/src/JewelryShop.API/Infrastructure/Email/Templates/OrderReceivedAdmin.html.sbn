@@ -1,0 +1,5 @@
+<p>Bonjour,</p>
+<p>{{ customer_name | html.escape }} ({{ customer_email | html.escape }}) a confirmé avoir reçu la commande {{ order.number | html.escape }} du {{ order.date | html.escape }}.</p>
+<p>Total : {{ order.total | html.escape }}</p>
+<p>Pour consulter la commande, ouvrez le lien ci-dessous.</p>
+<p><a href="{{ order_url | html.escape }}">{{ order_url | html.escape }}</a></p>
