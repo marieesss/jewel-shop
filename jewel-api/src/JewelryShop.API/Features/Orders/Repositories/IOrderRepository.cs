@@ -16,6 +16,25 @@ public interface IOrderRepository : IRepository<Order>
     /// <summary>Commande avec ses lignes et son historique, suivie pour être modifiée.</summary>
     Task<Order?> GetByIdWithDetailsAsync(long id, CancellationToken cancellationToken = default);
 
+    /// <summary>Commande avec ses lignes, son historique et ses notes internes, en lecture seule.</summary>
+    Task<Order?> GetByIdWithDetailsAndNotesAsNoTrackingAsync(long id, CancellationToken cancellationToken = default);
+
+    /// <summary>Vrai si la commande existe.</summary>
+    Task<bool> ExistsAsync(long id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Commandes de tous les clients au statut demandé (tous si null), des plus récentes aux plus anciennes,
+    /// sans leurs lignes.
+    /// </summary>
+    Task<(IReadOnlyList<Order> Items, int TotalCount)> GetPagedAsync(
+        OrderStatus? status, int page, int pageSize, CancellationToken cancellationToken = default);
+
+    /// <summary>Note de la commande, suivie pour être modifiée. Null si la note n'appartient pas à cette commande.</summary>
+    Task<OrderNote?> GetNoteAsync(long orderId, long noteId, CancellationToken cancellationToken = default);
+
+    /// <summary>Ajoute une note interne, enregistrée au prochain <c>SaveChangesAsync</c>.</summary>
+    Task AddNoteAsync(OrderNote note, CancellationToken cancellationToken = default);
+
     /// <summary>Commandes de l'utilisateur, des plus récentes aux plus anciennes, sans leurs lignes.</summary>
     Task<(IReadOnlyList<Order> Items, int TotalCount)> GetPagedByUserAsync(
         long userId, int page, int pageSize, CancellationToken cancellationToken = default);

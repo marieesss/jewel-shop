@@ -13,6 +13,10 @@ public class UserRepository : Repository<User>, IUserRepository
     public async Task<User?> GetByIdAsNoTrackingAsync(long id, CancellationToken cancellationToken = default)
         => await DbSet.AsNoTracking().FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
 
+    public async Task<IReadOnlyList<User>> GetByIdsAsNoTrackingAsync(
+        IReadOnlyCollection<long> ids, CancellationToken cancellationToken = default)
+        => await DbSet.AsNoTracking().Where(u => ids.Contains(u.Id)).ToListAsync(cancellationToken);
+
     public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
         => await DbSet.FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
 

@@ -9,6 +9,10 @@ public class FakeUserRepository : InMemoryRepository<User>, IUserRepository
     public Task<User?> GetByIdAsNoTrackingAsync(long id, CancellationToken cancellationToken = default)
         => GetByIdAsync(id, cancellationToken);
 
+    public Task<IReadOnlyList<User>> GetByIdsAsNoTrackingAsync(
+        IReadOnlyCollection<long> ids, CancellationToken cancellationToken = default)
+        => Task.FromResult<IReadOnlyList<User>>(Entities.Where(u => ids.Contains(u.Id)).ToList());
+
     public Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
         => Task.FromResult(Entities.FirstOrDefault(u => u.Email == email));
 

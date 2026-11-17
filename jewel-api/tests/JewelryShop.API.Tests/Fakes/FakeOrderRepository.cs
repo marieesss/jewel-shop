@@ -32,6 +32,34 @@ public class FakeOrderRepository : InMemoryRepository<Order>, IOrderRepository
     public Task<Order?> GetByIdWithDetailsAsync(long id, CancellationToken cancellationToken = default)
         => GetByIdAsync(id, cancellationToken);
 
+    public Task<Order?> GetByIdWithDetailsAndNotesAsNoTrackingAsync(long id, CancellationToken cancellationToken = default)
+        => GetByIdAsync(id, cancellationToken);
+
+    public Task<bool> ExistsAsync(long id, CancellationToken cancellationToken = default)
+        => Task.FromResult(Entities.Any(o => o.Id == id));
+
+    public Task<(IReadOnlyList<Order> Items, int TotalCount)> GetPagedAsync(
+        OrderStatus? status, int page, int pageSize, CancellationToken cancellationToken = default)
+    {
+        var matching = Entities
+            .Where(o => status is null || o.Status == status)
+            .OrderByDescending(o => o.CreatedAt)
+            .ThenByDescending(o => o.Id)
+            .ToList();
+        IReadOnlyList<Order> pageItems = matching.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+        return Task.FromResult((pageItems, matching.Count));
+    }
+
+    public Task<OrderNote?> GetNoteAsync(long orderId, long noteId, CancellationToken cancellationToken = default)
+        => Task.FromResult(Notes.FirstOrDefault(n => n.Id == noteId && n.OrderId == orderId));
+
+    /// <summary>Range la note dans sa commande, où la relecture de la commande avec ses notes la retrouve.</summary>
+    public Task AddNoteAsync(OrderNote note, CancellationToken cancellationToken = default)
+    {
+        Entities.Single(o => o.Id == note.OrderId).Notes.Add(note);
+        return Task.CompletedTask;
+    }
+
     public Task<(IReadOnlyList<Order> Items, int TotalCount)> GetPagedByUserAsync(
         long userId, int page, int pageSize, CancellationToken cancellationToken = default)
     {
@@ -120,11 +148,14 @@ public class FakeOrderRepository : InMemoryRepository<Order>, IOrderRepository
         return Task.CompletedTask;
     }
 
-    /// <summary>Attribue un id aux nouvelles commandes, comme la colonne identity de la base.</summary>
+    /// <summary>Attribue un id aux nouvelles commandes et notes, comme les colonnes identity de la base.</summary>
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         foreach (var order in Entities.Where(o => o.Id == 0))
             order.Id = Entities.Max(o => o.Id) + 1;
+
+        foreach (var note in Notes.Where(n => n.Id == 0).ToList())
+            note.Id = Notes.Max(n => n.Id) + 1;
 
         return base.SaveChangesAsync(cancellationToken);
     }
@@ -133,6 +164,8 @@ public class FakeOrderRepository : InMemoryRepository<Order>, IOrderRepository
         => Task.FromResult(_nextNumber++);
 
     private IEnumerable<OrderLine> Lines => Entities.SelectMany(o => o.Lines);
+
+    private IEnumerable<OrderNote> Notes => Entities.SelectMany(o => o.Notes);
 
     private static void Restore<TKey, TValue>(Dictionary<TKey, TValue> target, Dictionary<TKey, TValue> snapshot)
         where TKey : notnull

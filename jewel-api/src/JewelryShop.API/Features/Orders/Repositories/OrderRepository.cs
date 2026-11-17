@@ -30,6 +30,40 @@ public class OrderRepository : Repository<Order>, IOrderRepository
             .AsSplitQuery()
             .FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
 
+    public Task<Order?> GetByIdWithDetailsAndNotesAsNoTrackingAsync(long id, CancellationToken cancellationToken = default)
+        => DbSet.AsNoTracking()
+            .Include(o => o.Lines)
+            .Include(o => o.StatusHistory)
+            .Include(o => o.Notes)
+            .AsSplitQuery()
+            .FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
+
+    public Task<bool> ExistsAsync(long id, CancellationToken cancellationToken = default)
+        => DbSet.AnyAsync(o => o.Id == id, cancellationToken);
+
+    public async Task<(IReadOnlyList<Order> Items, int TotalCount)> GetPagedAsync(
+        OrderStatus? status, int page, int pageSize, CancellationToken cancellationToken = default)
+    {
+        var filtered = status is { } wanted ? DbSet.Where(o => o.Status == wanted) : DbSet;
+        var query = filtered.AsNoTracking()
+            .OrderByDescending(o => o.CreatedAt)
+            .ThenByDescending(o => o.Id);
+
+        var total = await query.CountAsync(cancellationToken);
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return (items, total);
+    }
+
+    public Task<OrderNote?> GetNoteAsync(long orderId, long noteId, CancellationToken cancellationToken = default)
+        => Context.OrderNotes.FirstOrDefaultAsync(n => n.Id == noteId && n.OrderId == orderId, cancellationToken);
+
+    public async Task AddNoteAsync(OrderNote note, CancellationToken cancellationToken = default)
+        => await Context.OrderNotes.AddAsync(note, cancellationToken);
+
     public async Task<(IReadOnlyList<Order> Items, int TotalCount)> GetPagedByUserAsync(
         long userId, int page, int pageSize, CancellationToken cancellationToken = default)
     {
