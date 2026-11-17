@@ -11,6 +11,7 @@ import { UserProductDetailPage } from './pages/user/UserProductDetailPage';
 import { FavoritesPage } from './pages/user/FavoritesPage';
 import { ProfilePage } from './pages/user/ProfilePage';
 import { OrdersPage } from './pages/user/OrdersPage';
+import { OrderDetailPage } from './pages/user/OrderDetailPage';
 import { AdminLayout } from './features/admin/AdminLayout';
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { ProductCreatePage } from './pages/admin/ProductCreatePage';
@@ -44,6 +45,7 @@ export default function App() {
               <Route path="/profile" element={<ProfilePage />} />
               {/* Sans lien dans la navigation jusqu'à #127. */}
               <Route path="/orders" element={<OrdersPage />} />
+              <Route path="/orders/:id" element={<OrderDetailPage />} />
             </Route>
           </Route>
 
