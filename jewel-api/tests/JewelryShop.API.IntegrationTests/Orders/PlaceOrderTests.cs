@@ -53,6 +53,42 @@ public class PlaceOrderTests
     }
 
     [Fact]
+    public async Task Met_en_file_la_confirmation_au_client_et_un_avis_a_chaque_admin()
+    {
+        var admin = await _api.CreateClientAsAsync(UserRole.Admin);
+        await _api.CreateUserAsync(UserRole.Admin);
+        var chainId = await admin.CreateQuoteChainAsync();
+        var charm = await admin.CreateQuoteCharmAsync();
+        var customer = await _api.CreateCustomerClientAsync();
+
+        // L'envoi est désactivé dans les tests : la commande passe sans serveur de mail.
+        var response = await customer.PostAsJsonAsync(OrdersApi.Path, OrdersApi.OrderBody(chainId, charm.Id));
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var order = await response.Content.ReadFromJsonAsync<OrderDto>();
+        Assert.NotNull(order);
+        var (customerEmail, adminEmails, mails) = await _api.QueryAsync(async services =>
+        {
+            var db = services.GetRequiredService<AppDbContext>();
+            var userId = await db.Orders.Where(o => o.Id == order.Id).Select(o => o.UserId).SingleAsync();
+            var customerEmail = await db.Users.Where(u => u.Id == userId).Select(u => u.Email).SingleAsync();
+            var adminEmails = await db.Users.Where(u => u.Role == UserRole.Admin).Select(u => u.Email).ToListAsync();
+            var mails = await db.EmailOutboxMessages
+                .Where(m => m.Subject.Contains(order.Number))
+                .Select(m => new { m.ToAddress, m.Subject, m.TextBody })
+                .ToListAsync();
+            return (customerEmail, adminEmails, mails);
+        });
+        var confirmation = Assert.Single(mails, m => m.ToAddress == customerEmail);
+        Assert.Equal($"Votre commande {order.Number} est bien enregistrée", confirmation.Subject);
+        Assert.Contains($"/orders/{order.Id}", confirmation.TextBody);
+        var notices = mails.Where(m => m.Subject.StartsWith("Nouvelle commande")).ToList();
+        Assert.True(adminEmails.Count >= 2);
+        Assert.Equal(adminEmails.Order(), notices.Select(m => m.ToAddress).Order());
+        Assert.All(notices, m => Assert.Contains($"/admin/orders/{order.Id}", m.TextBody));
+    }
+
+    [Fact]
     public async Task Prend_45_cm_dans_le_rouleau_de_50_plutot_que_dans_celui_de_200()
     {
         var admin = await _api.CreateClientAsAsync(UserRole.Admin);

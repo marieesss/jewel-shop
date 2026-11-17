@@ -68,6 +68,15 @@ public class FakeOrderRepository : InMemoryRepository<Order>, IOrderRepository
         return Task.FromResult(true);
     }
 
+    /// <summary>Attribue un id aux nouvelles commandes, comme la colonne identity de la base.</summary>
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        foreach (var order in Entities.Where(o => o.Id == 0))
+            order.Id = Entities.Max(o => o.Id) + 1;
+
+        return base.SaveChangesAsync(cancellationToken);
+    }
+
     public Task<long> NextNumberSequenceValueAsync(CancellationToken cancellationToken)
         => Task.FromResult(_nextNumber++);
 

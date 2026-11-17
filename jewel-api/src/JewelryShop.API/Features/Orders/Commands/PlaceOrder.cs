@@ -1,30 +1,44 @@
 using FluentValidation.Results;
+using JewelryShop.Common;
+using JewelryShop.Common.Enums;
 using JewelryShop.Common.Exceptions;
+using JewelryShop.Common.Interfaces;
 using JewelryShop.Features.Orders.Common;
 using JewelryShop.Features.Orders.DTOs;
 using JewelryShop.Features.Users.Common;
 using MediatR;
+using Microsoft.Extensions.Options;
 
 namespace JewelryShop.Features.Orders.Commands;
 
 /// <summary>
 /// Crée une commande <c>Pending</c> et prélève son stock dans la même transaction. Le stock est retiré par des
 /// UPDATE conditionnels : une commande simultanée qui a pris le dernier stock fait échouer celle-ci en 409,
-/// et tout est annulé, commande comprise.
+/// et tout est annulé, commande comprise. La confirmation au client et l'avis aux admins sont mis en file
+/// dans la même transaction (outbox) : un serveur de mail indisponible ne fait pas échouer la commande.
 /// </summary>
 public class PlaceOrderCommandHandler : IRequestHandler<PlaceOrderCommand, OrderDto>
 {
     private readonly IOrderRepository _orders;
     private readonly IUserRepository _users;
     private readonly NecklaceComposer _composer;
+    private readonly IEmailQueue _emailQueue;
+    private readonly AppOptions _appOptions;
     private readonly TimeProvider _timeProvider;
 
     public PlaceOrderCommandHandler(
-        IOrderRepository orders, IUserRepository users, NecklaceComposer composer, TimeProvider timeProvider)
+        IOrderRepository orders,
+        IUserRepository users,
+        NecklaceComposer composer,
+        IEmailQueue emailQueue,
+        IOptions<AppOptions> appOptions,
+        TimeProvider timeProvider)
     {
         _orders = orders;
         _users = users;
         _composer = composer;
+        _emailQueue = emailQueue;
+        _appOptions = appOptions.Value;
         _timeProvider = timeProvider;
     }
 
@@ -36,6 +50,7 @@ public class PlaceOrderCommandHandler : IRequestHandler<PlaceOrderCommand, Order
         var recipient = ResolveRecipient(request.Recipient, user);
         var address = ResolveAddress(request.Address, user);
         var necklace = await _composer.ComposeAsync(request, cancellationToken);
+        var admins = await _users.GetByRoleAsNoTrackingAsync(UserRole.Admin, cancellationToken);
 
         Order order = null!;
         await _orders.InTransactionAsync(async () =>
@@ -53,6 +68,9 @@ public class PlaceOrderCommandHandler : IRequestHandler<PlaceOrderCommand, Order
             if (request.SaveAddressToProfile && request.Address is not null)
                 await SaveAddressToProfileAsync(request.UserId, address, cancellationToken);
 
+            // Les liens des mails portent l'id de la commande, attribué par la base au premier enregistrement.
+            await _orders.SaveChangesAsync(cancellationToken);
+            OrderCreatedEmails.Enqueue(_emailQueue, _appOptions, order, user, admins);
             await _orders.SaveChangesAsync(cancellationToken);
         }, cancellationToken);
 
@@ -165,7 +183,7 @@ public class PlaceOrderCommandHandler : IRequestHandler<PlaceOrderCommand, Order
                     FromStatus = null,
                     ToStatus = OrderStatus.Pending,
                     ChangedBy = request.UserId,
-                    CustomerNotified = false,
+                    CustomerNotified = true,
                     CreatedAt = now
                 }
             ]

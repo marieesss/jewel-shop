@@ -1,4 +1,5 @@
 using JewelryShop.API.Tests.Fakes;
+using JewelryShop.Common;
 using JewelryShop.Common.Enums;
 using JewelryShop.Common.Exceptions;
 using JewelryShop.Features.ChainLengths.Entities;
@@ -9,6 +10,8 @@ using JewelryShop.Features.Orders.Common;
 using JewelryShop.Features.Orders.DTOs;
 using JewelryShop.Features.Orders.Entities;
 using JewelryShop.Features.Users.Entities;
+using JewelryShop.Infrastructure.Email;
+using Microsoft.Extensions.Options;
 
 namespace JewelryShop.API.Tests.Orders;
 
@@ -26,12 +29,19 @@ public class PlaceOrderCommandHandlerTests
     private readonly FakeChainRepository _chains = new();
     private readonly FakeChainLengthRepository _lengths = new();
     private readonly FakeCharmRepository _charms = new();
+    private readonly FakeEmailOutboxRepository _outbox = new();
     private readonly PlaceOrderCommandHandler _handler;
 
     public PlaceOrderCommandHandlerTests()
     {
+        var timeProvider = new FakeTimeProvider(_now);
         _handler = new PlaceOrderCommandHandler(
-            _orders, _users, new NecklaceComposer(_chains, _lengths, _charms), new FakeTimeProvider(_now));
+            _orders,
+            _users,
+            new NecklaceComposer(_chains, _lengths, _charms),
+            new EmailQueue(new ScribanEmailTemplateRenderer(), _outbox, timeProvider),
+            Options.Create(new AppOptions()),
+            timeProvider);
 
         var chain = new Chain { Id = 3, Name = "Forçat", Color = ProductColor.Gold, PricePerMeter = 10m, ClaspPrice = 2m };
         chain.AddRoll(50, _now);
@@ -60,7 +70,9 @@ public class PlaceOrderCommandHandlerTests
                 PostalCode = "75011",
                 City = "Paris"
             },
-            new User { Id = NewcomerId, Name = "Léa", Surname = "Petit", Email = "lea@example.com" });
+            new User { Id = NewcomerId, Name = "Léa", Surname = "Petit", Email = "lea@example.com" },
+            new User { Id = 1, Name = "Alice", Surname = "Admin", Email = "admin1@mycharmly.eu", Role = UserRole.Admin },
+            new User { Id = 2, Name = "Bruno", Surname = "Admin", Email = "admin2@mycharmly.eu", Role = UserRole.Admin });
     }
 
     private static PlaceOrderCommand Command(long userId = CustomerId, params long[] charmIds) =>
@@ -80,7 +92,8 @@ public class PlaceOrderCommandHandlerTests
         var saved = Assert.Single(_orders.All);
         Assert.Equal(OrderStatus.Pending, saved.Status);
         Assert.Equal(CustomerId, saved.UserId);
-        Assert.Equal(1, _orders.SaveChangesCount);
+        // Un premier enregistrement donne son id à la commande, le second ajoute les mails qui la citent.
+        Assert.Equal(2, _orders.SaveChangesCount);
         Assert.Equal(1, _orders.TransactionCount);
     }
 
@@ -120,14 +133,42 @@ public class PlaceOrderCommandHandlerTests
     }
 
     [Fact]
-    public async Task Ecrit_la_creation_dans_l_historique_sans_notifier_le_client()
+    public async Task Ecrit_la_creation_dans_l_historique_en_notant_le_client_prevenu()
     {
         var order = await _handler.Handle(Command(), CancellationToken.None);
 
         Assert.Equal([new OrderStatusChangeDto(null, "Pending", _now)], order.StatusHistory);
         var history = Assert.Single(_orders.All.Single().StatusHistory);
         Assert.Equal(CustomerId, history.ChangedBy);
-        Assert.False(history.CustomerNotified);
+        Assert.True(history.CustomerNotified);
+    }
+
+    [Fact]
+    public async Task Met_en_file_la_confirmation_au_client_et_un_avis_a_chaque_admin()
+    {
+        var order = await _handler.Handle(Command(), CancellationToken.None);
+
+        Assert.Equal(
+            ["marie@example.com", "admin1@mycharmly.eu", "admin2@mycharmly.eu"],
+            _outbox.All.Select(m => m.ToAddress));
+        Assert.Equal($"Votre commande {order.Number} est bien enregistrée", _outbox.All[0].Subject);
+        Assert.Contains($"http://localhost:5173/orders/{order.Id}", _outbox.All[0].TextBody);
+        Assert.All(_outbox.All.Skip(1), m =>
+        {
+            Assert.Equal($"Nouvelle commande {order.Number} de Marie Durand", m.Subject);
+            Assert.Contains($"http://localhost:5173/admin/orders/{order.Id}", m.TextBody);
+        });
+    }
+
+    [Fact]
+    public async Task Met_en_file_seulement_la_confirmation_quand_aucun_admin_n_existe()
+    {
+        foreach (var admin in _users.All.Where(u => u.Role == UserRole.Admin).ToList())
+            _users.Delete(admin);
+
+        await _handler.Handle(Command(), CancellationToken.None);
+
+        Assert.Equal("marie@example.com", Assert.Single(_outbox.All).ToAddress);
     }
 
     [Fact]
@@ -144,6 +185,7 @@ public class PlaceOrderCommandHandlerTests
         Assert.Equal(50, _orders.Rolls[SmallRollId].RemainingCm);
         Assert.Empty(_orders.All);
         Assert.Equal(0, _orders.SaveChangesCount);
+        Assert.Empty(_outbox.All);
     }
 
     [Fact]
