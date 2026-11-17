@@ -216,6 +216,7 @@ public static class Startup
         ValidationCulture.UseFrench();
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
         services.AddScoped<NecklaceComposer>();
+        services.AddScoped<CustomerOrderTransition>();
     }
 
     private static void AddInfrastructureServices(IServiceCollection services, IConfiguration configuration)

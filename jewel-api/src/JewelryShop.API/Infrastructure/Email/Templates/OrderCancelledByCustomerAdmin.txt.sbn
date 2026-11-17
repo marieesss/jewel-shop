@@ -1,0 +1,15 @@
+Bonjour,
+
+{{ customer_name }} ({{ customer_email }}) a annulé la commande {{ order.number }} du {{ order.date }}.
+
+Articles :
+{{- for line in order.lines }}
+- {{ line.label }} : {{ line.price }}
+{{- end }}
+Total : {{ order.total }}
+
+Le stock de la chaîne et des breloques a été recrédité.
+
+Pour consulter la commande, ouvrez le lien ci-dessous.
+
+{{ order_url }}
