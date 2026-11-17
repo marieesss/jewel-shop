@@ -10,6 +10,13 @@ public interface IOrderRepository : IRepository<Order>
     /// <summary>Vrai si au moins une ligne de commande, quel que soit son statut, porte cette breloque.</summary>
     Task<bool> ContainsCharmAsync(long charmId, CancellationToken cancellationToken = default);
 
+    /// <summary>Commande avec ses lignes et son historique, en lecture seule.</summary>
+    Task<Order?> GetByIdWithDetailsAsNoTrackingAsync(long id, CancellationToken cancellationToken = default);
+
+    /// <summary>Commandes de l'utilisateur, des plus récentes aux plus anciennes, sans leurs lignes.</summary>
+    Task<(IReadOnlyList<Order> Items, int TotalCount)> GetPagedByUserAsync(
+        long userId, int page, int pageSize, CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Exécute <paramref name="work"/> dans une transaction : tout est annulé si une étape lève une exception.
     /// Le contexte est vidé au début du bloc, qui doit donc recharger les entités qu'il modifie.

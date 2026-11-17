@@ -1,8 +1,10 @@
 using System.Reflection;
 using JewelryShop.API.Tests.Fakes;
+using JewelryShop.Common;
 using JewelryShop.Features.Orders.Commands;
 using JewelryShop.Features.Orders.Controllers;
 using JewelryShop.Features.Orders.DTOs;
+using JewelryShop.Features.Orders.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -56,6 +58,30 @@ public class OrdersControllerTests
         var created = Assert.IsType<CreatedResult>(response);
         Assert.Equal("/api/orders/42", created.Location);
         Assert.Same(order, created.Value);
+    }
+
+    [Fact]
+    public async Task Liste_les_commandes_de_l_utilisateur_connecte_avec_la_pagination_demandee()
+    {
+        var page = new PagedResult<OrderSummaryDto>([], 0, 2, 10);
+        _sender.Response = page;
+
+        var response = await _controller.GetMyOrders(2, 10, CancellationToken.None);
+
+        Assert.Equal(new GetMyOrdersQuery(ConnectedUserId, 2, 10), _sender.LastRequest);
+        Assert.Same(page, Assert.IsType<OkObjectResult>(response).Value);
+    }
+
+    [Fact]
+    public async Task Consulte_la_commande_pour_l_utilisateur_connecte()
+    {
+        var order = Order();
+        _sender.Response = order;
+
+        var response = await _controller.GetById(42, CancellationToken.None);
+
+        Assert.Equal(new GetMyOrderByIdQuery(ConnectedUserId, 42), _sender.LastRequest);
+        Assert.Same(order, Assert.IsType<OkObjectResult>(response).Value);
     }
 
     [Fact]

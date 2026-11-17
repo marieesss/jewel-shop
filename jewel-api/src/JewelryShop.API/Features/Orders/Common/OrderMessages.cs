@@ -8,4 +8,7 @@ public static class OrderMessages
     public const string RecipientSurnameRequired = "Le nom est requis.";
     public const string RecipientNameTooLong = "100 caractères maximum.";
     public const string CommentTooLong = "1000 caractères maximum.";
+    public const string NotFound = "Commande introuvable.";
+    public const string CannotBeCancelled = "Cette commande ne peut plus être annulée.";
+    public const string CannotBeReceived = "Cette commande ne peut pas être marquée comme reçue.";
 }

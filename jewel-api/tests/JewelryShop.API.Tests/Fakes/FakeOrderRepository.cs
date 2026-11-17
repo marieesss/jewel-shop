@@ -25,6 +25,21 @@ public class FakeOrderRepository : InMemoryRepository<Order>, IOrderRepository
     public Task<bool> ContainsCharmAsync(long charmId, CancellationToken cancellationToken = default)
         => Task.FromResult(Lines.Any(l => l.CharmId == charmId));
 
+    public Task<Order?> GetByIdWithDetailsAsNoTrackingAsync(long id, CancellationToken cancellationToken = default)
+        => GetByIdAsync(id, cancellationToken);
+
+    public Task<(IReadOnlyList<Order> Items, int TotalCount)> GetPagedByUserAsync(
+        long userId, int page, int pageSize, CancellationToken cancellationToken = default)
+    {
+        var mine = Entities
+            .Where(o => o.UserId == userId)
+            .OrderByDescending(o => o.CreatedAt)
+            .ThenByDescending(o => o.Id)
+            .ToList();
+        IReadOnlyList<Order> pageItems = mine.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+        return Task.FromResult((pageItems, mine.Count));
+    }
+
     public async Task InTransactionAsync(Func<Task> work, CancellationToken cancellationToken)
     {
         TransactionCount++;

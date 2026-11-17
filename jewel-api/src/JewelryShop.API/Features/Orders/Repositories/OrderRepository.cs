@@ -16,6 +16,30 @@ public class OrderRepository : Repository<Order>, IOrderRepository
     public Task<bool> ContainsCharmAsync(long charmId, CancellationToken cancellationToken = default)
         => Context.OrderLines.AnyAsync(l => l.CharmId == charmId, cancellationToken);
 
+    public Task<Order?> GetByIdWithDetailsAsNoTrackingAsync(long id, CancellationToken cancellationToken = default)
+        => DbSet.AsNoTracking()
+            .Include(o => o.Lines)
+            .Include(o => o.StatusHistory)
+            .AsSplitQuery()
+            .FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
+
+    public async Task<(IReadOnlyList<Order> Items, int TotalCount)> GetPagedByUserAsync(
+        long userId, int page, int pageSize, CancellationToken cancellationToken = default)
+    {
+        var query = DbSet.AsNoTracking()
+            .Where(o => o.UserId == userId)
+            .OrderByDescending(o => o.CreatedAt)
+            .ThenByDescending(o => o.Id);
+
+        var total = await query.CountAsync(cancellationToken);
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return (items, total);
+    }
+
     public Task InTransactionAsync(Func<Task> work, CancellationToken cancellationToken)
     {
         // EnableRetryOnFailure interdit une transaction ouverte à la main hors de la stratégie
