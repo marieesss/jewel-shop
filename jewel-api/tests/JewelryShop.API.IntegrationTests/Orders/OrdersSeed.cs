@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JewelryShop.API.IntegrationTests.Orders;
 
-/// <summary>Aucun endpoint ne crée encore de commande : les tests l'insèrent directement en base.</summary>
+/// <summary>Commande insérée directement en base, avec une seule ligne choisie par le test.</summary>
 public static class OrdersSeed
 {
     public const string ProductInOrder = "Ce produit figure dans une commande.";
