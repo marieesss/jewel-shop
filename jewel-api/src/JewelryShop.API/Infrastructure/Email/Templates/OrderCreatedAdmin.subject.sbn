@@ -1,0 +1,1 @@
+Nouvelle commande {{ order.number }} de {{ customer_name }}
