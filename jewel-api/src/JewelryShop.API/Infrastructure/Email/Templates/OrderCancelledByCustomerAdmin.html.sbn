@@ -1,0 +1,12 @@
+<p>Bonjour,</p>
+<p>{{ customer_name | html.escape }} ({{ customer_email | html.escape }}) a annulé la commande {{ order.number | html.escape }} du {{ order.date | html.escape }}.</p>
+<p>Articles :</p>
+<ul>
+{{- for line in order.lines }}
+<li>{{ line.label | html.escape }} : {{ line.price | html.escape }}</li>
+{{- end }}
+</ul>
+<p>Total : {{ order.total | html.escape }}</p>
+<p>Le stock de la chaîne et des breloques a été recrédité.</p>
+<p>Pour consulter la commande, ouvrez le lien ci-dessous.</p>
+<p><a href="{{ order_url | html.escape }}">{{ order_url | html.escape }}</a></p>

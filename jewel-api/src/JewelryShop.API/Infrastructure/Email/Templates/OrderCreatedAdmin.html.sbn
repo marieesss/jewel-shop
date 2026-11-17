@@ -1,0 +1,20 @@
+<p>Bonjour,</p>
+<p>{{ customer_name | html.escape }} ({{ customer_email | html.escape }}) a passé la commande {{ order.number | html.escape }} le {{ order.date | html.escape }}.</p>
+<p>Articles :</p>
+<ul>
+{{- for line in order.lines }}
+<li>{{ line.label | html.escape }} : {{ line.price | html.escape }}</li>
+{{- end }}
+</ul>
+<p>Total : {{ order.total | html.escape }}</p>
+<p>Livraison à :<br>
+{{ order.recipient | html.escape }}<br>
+{{- for address_line in order.address_lines }}
+{{ address_line | html.escape }}<br>
+{{- end }}
+Téléphone : {{ order.phone | html.escape }}</p>
+{{- if order.comment }}
+<p>Commentaire du client : {{ order.comment | html.escape }}</p>
+{{- end }}
+<p>Pour traiter la commande, ouvrez le lien ci-dessous.</p>
+<p><a href="{{ order_url | html.escape }}">{{ order_url | html.escape }}</a></p>

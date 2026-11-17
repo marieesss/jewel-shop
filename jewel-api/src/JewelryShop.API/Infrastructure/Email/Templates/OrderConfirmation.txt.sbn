@@ -1,0 +1,24 @@
+Bonjour {{ first_name }},
+
+Nous avons bien reçu votre commande {{ order.number }} du {{ order.date }}.
+
+Articles :
+{{- for line in order.lines }}
+- {{ line.label }} : {{ line.price }}
+{{- end }}
+Total : {{ order.total }}
+
+Livraison à :
+{{ order.recipient }}
+{{- for address_line in order.address_lines }}
+{{ address_line }}
+{{- end }}
+Téléphone : {{ order.phone }}
+{{- if order.comment }}
+
+Votre commentaire : {{ order.comment }}
+{{- end }}
+
+Pour suivre votre commande, ouvrez le lien ci-dessous.
+
+{{ order_url }}

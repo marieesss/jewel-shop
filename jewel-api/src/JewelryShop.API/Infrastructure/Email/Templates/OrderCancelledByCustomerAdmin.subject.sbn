@@ -1,0 +1,1 @@
+Commande {{ order.number }} annulée par {{ customer_name }}
